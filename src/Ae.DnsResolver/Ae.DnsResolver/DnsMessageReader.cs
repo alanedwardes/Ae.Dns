@@ -197,6 +197,9 @@ namespace Ae.DnsResolver
                 // get segment length or detect termination of segments
                 int segmentLength = bytes[offset];
 
+                byte test = bytes[offset];
+                byte test2 = bytes[offset + 1];
+
                 // compressed name
                 if ((segmentLength & 0xC0) == 0xC0)
                 {
@@ -207,23 +210,29 @@ namespace Ae.DnsResolver
                         compressionOffset = offset;
                     }
 
-                    //if (segmentLength != 192)
-                    {
-                        var mask = (1 << 14) - 1;
-                        var pointer = ((ushort)(segmentLength + (bytes[offset] << 8))).SwapEndian() & mask;
-                        offset = pointer;
-                        segmentLength = pointer;
+                    var mask = (1 << 14) - 1;
+                    var pointer = ((ushort)(segmentLength + (bytes[offset] << 8))).SwapEndian() & mask;
 
-                        if (offset != bytes[offset])
+                    if (segmentLength != 192)
+                    {
+                        if (pointer != bytes[offset])
                         {
                             Debugger.Break();
                         }
+
+                        offset = pointer;
+                        segmentLength = pointer;
                     }
-                    //else
+                    else
                     {
+                        if (pointer != bytes[offset])
+                        {
+                            Debugger.Break();
+                        }
+
                         // move pointer to compression segment
-                        //offset = bytes[offset];
-                        //segmentLength = bytes[offset];
+                        offset = bytes[offset];
+                        segmentLength = bytes[offset];
                     }
                 }
 
@@ -325,7 +334,7 @@ namespace Ae.DnsResolver
 
             if (resourceType == Qtype.CNAME)
             {
-                rdata = bytes.ReadString(ref offset).SelectMany(x => x.ToArray()).Select(x => (byte)x).ToArray();
+                //rdata = bytes.ReadString(ref offset).SelectMany(x => x.ToArray()).Select(x => (byte)x).ToArray();
             }
 
             return new DnsResourceRecord
