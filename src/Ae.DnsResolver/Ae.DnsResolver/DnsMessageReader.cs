@@ -210,27 +210,27 @@ namespace Ae.DnsResolver
                     var mask = (1 << 14) - 1;
                     var pointer = ((ushort)(segmentLength + (bytes[offset] << 8))).SwapEndian() & mask;
 
-                    if (segmentLength != 192)
-                    {
-                        if (pointer != bytes[offset])
-                        {
-                            Debugger.Break();
-                        }
+                    //if (segmentLength != 192)
+                    //{
+                    //    if (pointer != bytes[offset])
+                    //    {
+                    //        Debugger.Break();
+                    //    }
 
-                        offset = pointer;
-                        segmentLength = pointer;
-                    }
-                    else
-                    {
-                        if (pointer != bytes[offset])
-                        {
-                            Debugger.Break();
-                        }
+                    //    offset = pointer;
+                    //    segmentLength = pointer;
+                    //}
+                    //else
+                    //{
+                    //    if (pointer != bytes[offset])
+                    //    {
+                    //        Debugger.Break();
+                    //    }
 
                         // move pointer to compression segment
                         offset = bytes[offset];
                         segmentLength = bytes[offset];
-                    }
+                    //}
                 }
 
                 if (segmentLength == 0x00)

@@ -2,6 +2,8 @@
 {
     public static class SampleDnsPackets
     {
+        public static byte[][] Examples => new[] { new byte[0], Example1, Example2, Example3, Example4 };
+
         public static readonly byte[] Example1 = new byte[]
         {
             // Win10: arpa request via 1.1.1.1
