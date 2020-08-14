@@ -1,84 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
-namespace Ae.DnsResolver
+namespace Ae.DnsResolver.Client
 {
-    public enum Qtype : ushort
-    {
-        A = 0x0001,
-        NS = 0x0002,
-        MD = 0x0003,
-        MF = 0x0004,
-        CNAME = 0x0005,
-        SOA = 0x0006,
-        MB = 0x0007,
-        MG = 0x0008,
-        MR = 0x0009,
-        NULL = 0x000a,
-        WKS = 0x000b,
-        PTR = 0x000c,
-        HINFO = 0x000d,
-        MINFO = 0x000e,
-        MX = 0x000f,
-        TEXT = 0x0010,
-        RP = 0x0011,
-        AFSDB = 0x0012,
-        X25 = 0x0013,
-        ISDN = 0x0014,
-        RT = 0x0015,
-        NSAP = 0x0016,
-        NSAPPTR = 0x0017,
-        SIG = 0x0018,
-        KEY = 0x0019,
-        PX = 0x001a,
-        GPOS = 0x001b,
-        AAAA = 0x001c,
-        LOC = 0x001d,
-        NXT = 0x001e,
-        EID = 0x001f,
-        NIMLOC = 0x0020,
-        SRV = 0x0021,
-        ATMA = 0x0022,
-        NAPTR = 0x0023,
-        KX = 0x0024,
-        CERT = 0x0025,
-        A6 = 0x0026,
-        DNAME = 0x0027,
-        SINK = 0x0028,
-        OPT = 0x0029,
-        DS = 0x002B,
-        RRSIG = 0x002E,
-        NSEC = 0x002F,
-        DNSKEY = 0x0030,
-        DHCID = 0x0031,
-        UINFO = 0x0064,
-        UID = 0x0065,
-        GID = 0x0066,
-        UNSPEC = 0x0067,
-        ADDRS = 0x00f8,
-        TKEY = 0x00f9,
-        TSIG = 0x00fa,
-        IXFR = 0x00fb,
-        AXFR = 0x00fc,
-        MAILB = 0x00fd,
-        MAILA = 0x00fe,
-        ALL = 0x00ff,
-        ANY = 0x00ff,
-        WINS = 0xff01,
-        WINSR = 0xff02,
-        NBSTAT = WINSR
-    }
-
-    public enum Qclass : short
-    {
-        None = 0,
-        IN = 1,
-        CS = 2,
-        CH = 3,
-        HS = 4
-    }
-
     public abstract class DnsMessage
     {
         public short Id;
@@ -89,120 +14,23 @@ namespace Ae.DnsResolver
         public short Arcount;
 
         public string[] Labels;
-        public Qtype Qtype;
-        public Qclass Qclass;
-    }
-
-    public static class EndianExtensions
-    {
-        private static short SwapEndian(this short val)
-        {
-            return BitConverter.IsLittleEndian ? (short)((val << 8) | (val >> 8)) : val;
-        }
-
-        private static ushort SwapEndian(this ushort val)
-        {
-            return BitConverter.IsLittleEndian ? (ushort)((val << 8) | (val >> 8)) : val;
-        }
-
-        private static uint SwapEndian(this uint val)
-        {
-            return BitConverter.IsLittleEndian ? (uint)((val << 16) | (val >> 16)) : val;
-        }
-
-        public static byte ReadByte(this byte[] bytes, ref int offset)
-        {
-            return bytes[offset++];
-        }
-
-        public static short ReadInt16(this byte[] bytes, ref int offset)
-        {
-            offset += sizeof(short);
-            return BitConverter.ToInt16(bytes, offset - sizeof(short)).SwapEndian();
-        }
-
-        public static ushort ReadUInt16(this byte[] bytes, ref int offset)
-        {
-            offset += sizeof(ushort);
-            return BitConverter.ToUInt16(bytes, offset - sizeof(ushort)).SwapEndian();
-        }
-
-        public static uint ReadUInt32(this byte[] bytes, ref int offset)
-        {
-            offset += sizeof(uint);
-            return BitConverter.ToUInt32(bytes, offset - sizeof(uint)).SwapEndian();
-        }
-
-        public static byte[] ReadBytes(this byte[] bytes, int length, ref int offset)
-        {
-            var data = new byte[length];
-            Array.Copy(bytes, offset, data, 0, length);
-            offset += length;
-            return data;
-        }
-
-        public static string[] ReadString(this byte[] bytes, ref int offset)
-        {
-            var parts = new List<string>();
-
-            int compressionOffset = -1;
-            while (true)
-            {
-                // get segment length or detect termination of segments
-                int segmentLength = bytes[offset];
-
-                // compressed name
-                if ((segmentLength & 0xC0) == 0xC0)
-                {
-                    offset++;
-                    if (compressionOffset == -1)
-                    {
-                        // only record origin, and follow all pointers thereafter
-                        compressionOffset = offset;
-                    }
-
-                    var mask = (1 << 14) - 1;
-                    var pointer = ((ushort)(segmentLength + (bytes[offset] << 8))).SwapEndian() & mask;
-
-                    if (segmentLength != 192)
-                    {
-                        offset = pointer;
-                        segmentLength = bytes[offset];
-                    }
-                    else
-                    {
-                        // move pointer to compression segment
-                        offset = bytes[offset];
-                        segmentLength = bytes[offset];
-                    }
-                }
-
-                if (segmentLength == 0x00)
-                {
-                    if (compressionOffset != -1)
-                    {
-                        offset = compressionOffset;
-                    }
-                    // move past end of name \0
-                    offset++;
-                    break;
-                }
-
-                // move pass length and get segment text
-                offset++;
-                parts.Add(Encoding.ASCII.GetString(bytes, offset, segmentLength));
-                offset += segmentLength;
-            }
-
-
-
-            return parts.ToArray();
-        }
+        public DnsQueryType Qtype;
+        public DnsQueryClass Qclass;
     }
 
     public class DnsRequestMessage : DnsMessage
     {
         public override string ToString() => string.Format("REQUEST: Domain: {0}, type: {1}, class: {2}", string.Join(".", Labels), Qtype, Qclass);
+
+        public byte[] ToBytes()
+        {
+            var parts = new List<byte>();
+
+            parts.AddRange(Labels.WriteStrings());
+            //parts.Add(type)
+
+            return null;
+        }
     }
 
     public class DnsResponseMessage : DnsMessage
@@ -216,8 +44,8 @@ namespace Ae.DnsResolver
     public class DnsResourceRecord
     {
         public string[] Name;
-        public Qtype Type;
-        public Qclass Class;
+        public DnsQueryType Type;
+        public DnsQueryClass Class;
         public TimeSpan Ttl;
         public int DataOffset;
         public int DataLength;
@@ -226,8 +54,8 @@ namespace Ae.DnsResolver
     public class DnsQuestionRecord
     {
         public string[] Name;
-        public Qtype Type;
-        public Qclass Class;
+        public DnsQueryType Type;
+        public DnsQueryClass Class;
     }
 
     public static class DnsMessageReader
@@ -264,14 +92,13 @@ namespace Ae.DnsResolver
 
         private static DnsQuestionRecord ReadQuestionRecord(byte[] bytes, ref int offset)
         {
-            var resourceName = ReadName2(bytes, ref offset);
-
-            var resourceType = (Qtype)bytes.ReadUInt16(ref offset);
-            var resourceClass = (Qclass)bytes.ReadUInt16(ref offset);
+            var resourceName = bytes.ReadString(ref offset);
+            var resourceType = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            var resourceClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
 
             return new DnsQuestionRecord
             {
-                Name = resourceName,
+                Name = resourceName.ToArray(),
                 Class = resourceClass,
                 Type = resourceType
             };
@@ -280,8 +107,8 @@ namespace Ae.DnsResolver
         private static DnsResourceRecord ReadResourceRecord(byte[] bytes, ref int offset)
         {
             var resourceName = bytes.ReadString(ref offset);
-            var resourceType = (Qtype)bytes.ReadUInt16(ref offset);
-            var resourceClass = (Qclass)bytes.ReadUInt16(ref offset);
+            var resourceType = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            var resourceClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
             var ttl = bytes.ReadUInt32(ref offset);
             var rdlength = bytes.ReadUInt16(ref offset);
 
@@ -291,32 +118,13 @@ namespace Ae.DnsResolver
 
             return new DnsResourceRecord
             {
-                Name = resourceName,
+                Name = resourceName.ToArray(),
                 Type = resourceType,
                 Class = resourceClass,
                 Ttl = TimeSpan.FromSeconds(ttl),
                 DataOffset = dataOffset,
                 DataLength = rdlength
             };
-        }
-
-        public static string[] ReadName2(byte[] bytes, ref int offset)
-        {
-            var parts = new List<string>();
-
-            var octets = bytes.ReadByte(ref offset);
-            while (octets > 0 && (octets & 0xC0) != 0xC0)
-            {
-                parts.Add(ReadSingleString(bytes, octets, ref offset));
-                octets = bytes.ReadByte(ref offset);
-            }
-
-            return parts.ToArray();
-        }
-
-        public static string ReadSingleString(byte[] bytes, int length, ref int offset)
-        {
-            return Encoding.ASCII.GetString(bytes.ReadBytes(length, ref offset));
         }
 
         private static DnsMessage ReadDnsMessage(byte[] bytes, DnsMessage result, ref int offset)
@@ -327,9 +135,9 @@ namespace Ae.DnsResolver
             result.Ancount = bytes.ReadInt16(ref offset);
             result.Nscount = bytes.ReadInt16(ref offset);
             result.Arcount = bytes.ReadInt16(ref offset);
-            result.Labels = ReadName2(bytes, ref offset);
-            result.Qtype = (Qtype)bytes.ReadInt16(ref offset);
-            result.Qclass = (Qclass)bytes.ReadInt16(ref offset);
+            result.Labels = bytes.ReadString(ref offset).ToArray();
+            result.Qtype = (DnsQueryType)bytes.ReadInt16(ref offset);
+            result.Qclass = (DnsQueryClass)bytes.ReadInt16(ref offset);
             return result;
         }
     }

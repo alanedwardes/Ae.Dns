@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using Ae.DnsResolver.Client;
+using Xunit;
 
 namespace Ae.DnsResolver.Tests.DnsMessage
 {
@@ -13,7 +14,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         [InlineData(2, 344, new[] { "187170-ipv4", "farm", "dprodmgd104", "aa-rt", "sharepoint", "com", "spo-0004", "spo-msedge", "net" })]
         public void ReadStringTests(int example, int offset, string[] expected)
         {
-            var value = EndianExtensions.ReadString(SampleDnsPackets.ExampleAnswers[example], ref offset);
+            var value = ByteExtensions.ReadString(SampleDnsPackets.Answers[example], ref offset);
             Assert.Equal(expected, value);
         }
 
@@ -26,7 +27,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         [InlineData(4, 104, new[] { "alanedwardes", "com" })]
         public void ReadCnameRecordTests(int example, int offset, string[] expected)
         {
-            var value = EndianExtensions.ReadString(SampleDnsPackets.ExampleAnswers[example], ref offset);
+            var value = ByteExtensions.ReadString(SampleDnsPackets.Answers[example], ref offset);
             Assert.Equal(expected, value);
         }
 
@@ -38,7 +39,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         [InlineData(4, 166, new byte[] { 143, 204, 191, 110 })]
         public void ReadARecordTests(int example, int offset, byte[] expected)
         {
-            var value = SampleDnsPackets.ExampleAnswers[example].ReadBytes(4, ref offset);
+            var value = SampleDnsPackets.Answers[example].ReadBytes(4, ref offset);
             Assert.Equal(expected, value);
         }
     }
