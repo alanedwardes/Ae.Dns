@@ -145,14 +145,6 @@ namespace Ae.DnsResolver
             return data;
         }
 
-        public static bool IsBitSet(this byte octet, int position)
-        {
-            // Endianness fix
-            //octet = (byte)((octet << 4) | (octet >> 4));
-            return (octet & (1 << position)) != 0;
-            //return ((octet >> position) & 1) != 0;
-        }
-
         public static string[] ReadString2(this byte[] bytes, ref int offset)
         {
             var parts = new List<string>();
@@ -210,27 +202,17 @@ namespace Ae.DnsResolver
                     var mask = (1 << 14) - 1;
                     var pointer = ((ushort)(segmentLength + (bytes[offset] << 8))).SwapEndian() & mask;
 
-                    //if (segmentLength != 192)
-                    //{
-                    //    if (pointer != bytes[offset])
-                    //    {
-                    //        Debugger.Break();
-                    //    }
-
-                    //    offset = pointer;
-                    //    segmentLength = pointer;
-                    //}
-                    //else
-                    //{
-                    //    if (pointer != bytes[offset])
-                    //    {
-                    //        Debugger.Break();
-                    //    }
-
+                    if (segmentLength != 192)
+                    {
+                        offset = pointer;
+                        segmentLength = pointer;
+                    }
+                    else
+                    {
                         // move pointer to compression segment
                         offset = bytes[offset];
                         segmentLength = bytes[offset];
-                    //}
+                    }
                 }
 
                 if (segmentLength == 0x00)
@@ -263,9 +245,10 @@ namespace Ae.DnsResolver
 
     public class DnsResponseMessage : DnsMessage
     {
-        public DnsResourceRecord[] Records;
+        public DnsResourceRecord[] Answers;
+        public DnsQuestionRecord[] Questions;
 
-        public override string ToString() => string.Format("RESPONSE: Domain: {0}, type: {1}, class: {2}, records: {3}", string.Join(".", Labels), Qtype, Qclass, Records.Length);
+        public override string ToString() => string.Format("RESPONSE: Domain: {0}, type: {1}, class: {2}, records: {3}", string.Join(".", Labels), Qtype, Qclass, Answers.Length);
     }
 
     public class DnsResourceRecord
@@ -276,7 +259,13 @@ namespace Ae.DnsResolver
         public TimeSpan Ttl;
         public int DataOffset;
         public int DataLength;
-        public byte[] Data;
+    }
+
+    public class DnsQuestionRecord
+    {
+        public string[] Name;
+        public Qtype Type;
+        public Qclass Class;
     }
 
     public static class DnsMessageReader
@@ -289,22 +278,41 @@ namespace Ae.DnsResolver
             return result;
         }
 
-        public static DnsResponseMessage ReadDnsResponse(byte[] bytes)
+        public static DnsResponseMessage ReadDnsResponse(byte[] bytes, ref int offset)
         {
             var result = new DnsResponseMessage();
-            var offset = 0;
             ReadDnsMessage(bytes, result, ref offset);
 
             var records = new List<DnsResourceRecord>();
-
-            for (var i = 0; i < result.Ancount; i++)
+            for (var i = 0; i < result.Ancount + result.Nscount; i++)
             {
                 records.Add(ReadResourceRecord(bytes, ref offset));
             }
+            result.Answers = records.ToArray();
 
-            result.Records = records.ToArray();
+            var questions = new List<DnsQuestionRecord>();
+            for (var i = 0; i < result.Qdcount; i++)
+            {
+                //questions.Add(ReadQuestionRecord(bytes, ref offset));
+            }
+            result.Questions = questions.ToArray();
 
             return result;
+        }
+
+        private static DnsQuestionRecord ReadQuestionRecord(byte[] bytes, ref int offset)
+        {
+            var resourceName = ReadName2(bytes, ref offset);
+
+            var resourceType = (Qtype)bytes.ReadUInt16(ref offset);
+            var resourceClass = (Qclass)bytes.ReadUInt16(ref offset);
+
+            return new DnsQuestionRecord
+            {
+                Name = resourceName,
+                Class = resourceClass,
+                Type = resourceType
+            };
         }
 
         private static DnsResourceRecord ReadResourceRecord(byte[] bytes, ref int offset)
