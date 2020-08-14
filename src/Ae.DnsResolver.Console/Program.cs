@@ -48,7 +48,7 @@ namespace Ae.DnsResolver
 
                     var test = string.Join(",", result.Buffer.Select(x => x));
 
-                    //var message = DnsMessageReader.ReadDnsResponse(result.Buffer);
+                    var message = DnsMessageReader.ReadDnsResponse(result.Buffer);
 
                     //Console.WriteLine(message);
 

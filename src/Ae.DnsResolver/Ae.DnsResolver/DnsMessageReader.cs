@@ -153,39 +153,39 @@ namespace Ae.DnsResolver
             //return ((octet >> position) & 1) != 0;
         }
 
-        //public static string[] ReadString2(this byte[] bytes, ref int offset)
-        //{
-        //    var parts = new List<string>();
+        public static string[] ReadString2(this byte[] bytes, ref int offset)
+        {
+            var parts = new List<string>();
 
-        //    while (true)
-        //    {
-        //        var octet = bytes[offset];
-        //        if (octet == 0)
-        //        {
-        //            offset++;
-        //            break;
-        //        }
+            while (true)
+            {
+                var octet = bytes[offset];
+                if (octet == 0)
+                {
+                    offset++;
+                    break;
+                }
 
-        //        if ((octet & 0xC0) == 0xC0)
-        //        {
-        //            var pointer = (int)bytes[offset + 1];
-        //            parts.AddRange(DnsMessageReader.ReadName2(bytes, ref pointer));
-        //            offset += 2;
+                if ((octet & 0xC0) == 0xC0)
+                {
+                    var pointer = (int)bytes[offset + 1];
+                    parts.AddRange(ReadString2(bytes, ref pointer));
+                    offset += 2;
 
-        //            if (bytes[offset] == 0)
-        //            {
-        //                break;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            offset++;
-        //            parts.Add(DnsMessageReader.ReadSingleString(bytes, octet, ref offset));
-        //        }
-        //    }
+                    //if (bytes[offset] == 0)
+                    //{
+                    //    break;
+                    //}
+                }
+                else
+                {
+                    offset++;
+                    parts.Add(DnsMessageReader.ReadSingleString(bytes, octet, ref offset));
+                }
+            }
 
-        //    return parts.ToArray();
-        //}
+            return parts.ToArray();
+        }
 
         public static string[] ReadString(this byte[] bytes, ref int offset)
         {
@@ -315,15 +315,15 @@ namespace Ae.DnsResolver
         {
             var test = bytes.Select(x => (char)x).ToArray();
 
-            //var originalOffset = offset;
+            var originalOffset = offset;
             var resourceName = bytes.ReadString(ref offset);
-            //var expectedOffset = offset;
-            //offset = originalOffset;
+            var expectedOffset = offset;
+            offset = originalOffset;
 
-            //var resourceName2 = bytes.ReadString2(ref offset);
+            var resourceName2 = bytes.ReadString2(ref offset);
 
-            //Debug.Assert(offset == expectedOffset);
-            //Debug.Assert(resourceName.SequenceEqual(resourceName2));
+            Debug.Assert(offset == expectedOffset);
+            Debug.Assert(resourceName.SequenceEqual(resourceName2));
 
             var resourceType = (Qtype)bytes.ReadUInt16(ref offset);
             var resourceClass = (Qclass)bytes.ReadUInt16(ref offset);
