@@ -51,12 +51,12 @@ namespace Ae.DnsResolver
                     var offset = 0;
                     var message = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
 
-                    //Console.WriteLine(message);
+                    Console.WriteLine(message);
 
-                    //if (_cache.TryGetValue(ToRecordType(message), out var completionSource))
-                    //{
-                    //    completionSource.SetResult(result.Buffer);
-                    //}
+                    if (_cache.TryGetValue(ToRecordType(message), out var completionSource))
+                    {
+                        completionSource.SetResult(result.Buffer);
+                    }
                 }
             });
 
@@ -80,6 +80,8 @@ namespace Ae.DnsResolver
         public static async void Respond(UdpReceiveResult r, UdpClient client, UdpClient listener)
         {
             var message = DnsMessageReader.ReadDnsMessage(r.Buffer);
+
+            var test = string.Join(", ", r.Buffer.Select(x => x));
 
             Console.WriteLine(message);
 

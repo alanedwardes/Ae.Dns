@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Ae.DnsResolver.Client\Ae.DnsResolver.Client.csproj" />
     <ProjectReference Include="..\..\src\Ae.DnsResolver\Ae.DnsResolver\Ae.DnsResolver.csproj" />
   </ItemGroup>
 

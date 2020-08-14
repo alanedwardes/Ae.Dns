@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ae.DnsResolver\Ae.DnsResolver\Ae.DnsResolver.csproj" />
+    <ProjectReference Include="..\Ae.DnsResolver.Client\Ae.DnsResolver.Client.csproj" />
   </ItemGroup>
 
 </Project>

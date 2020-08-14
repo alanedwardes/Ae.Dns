@@ -2,16 +2,16 @@ using System;
 using System.Linq;
 using Xunit;
 
-namespace Ae.DnsResolver.Tests
+namespace Ae.DnsResolver.Tests.DnsMessage
 {
-    public class DnsMessageReaderTests
+    public class DnsAnswerTests
     {
         [Fact]
         public void ReadExampleExample1Packet()
         {
             int offset = 0;
-            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Example1, ref offset);
-            Assert.Equal(SampleDnsPackets.Example1.Length, offset);
+            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.ExampleAnswer1, ref offset);
+            Assert.Equal(SampleDnsPackets.ExampleAnswer1.Length, offset);
 
             Assert.Equal(Qclass.IN, message.Qclass);
             Assert.Equal(Qtype.PTR, message.Qtype);
@@ -34,8 +34,8 @@ namespace Ae.DnsResolver.Tests
         public void ReadExampleExample2Packet()
         {
             int offset = 0;
-            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Example2, ref offset);
-            Assert.Equal(SampleDnsPackets.Example2.Length, offset);
+            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.ExampleAnswer2, ref offset);
+            Assert.Equal(SampleDnsPackets.ExampleAnswer2.Length, offset);
 
             Assert.Equal(Qclass.IN, message.Qclass);
             Assert.Equal(Qtype.A, message.Qtype);
@@ -106,8 +106,8 @@ namespace Ae.DnsResolver.Tests
         public void ReadExampleExample3Packet()
         {
             int offset = 0;
-            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Example3, ref offset);
-            Assert.Equal(SampleDnsPackets.Example3.Length, offset);
+            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.ExampleAnswer3, ref offset);
+            Assert.Equal(SampleDnsPackets.ExampleAnswer3.Length, offset);
 
             Assert.Equal(Qclass.IN, message.Qclass);
             Assert.Equal(Qtype.A, message.Qtype);
@@ -128,8 +128,8 @@ namespace Ae.DnsResolver.Tests
         public void ReadExampleExample4Packet()
         {
             int offset = 0;
-            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Example4, ref offset);
-            Assert.Equal(SampleDnsPackets.Example4.Length, offset);
+            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.ExampleAnswer4, ref offset);
+            Assert.Equal(SampleDnsPackets.ExampleAnswer4.Length, offset);
 
             Assert.Equal(Qclass.IN, message.Qclass);
             Assert.Equal(Qtype.A, message.Qtype);
@@ -176,44 +176,6 @@ namespace Ae.DnsResolver.Tests
             Assert.Equal(4, record5.DataLength);
             Assert.Equal(new[] { "alanedwardes", "com" }, record5.Name);
             Assert.Equal(TimeSpan.Parse("04:16:00"), record5.Ttl);
-        }
-
-        [Theory]
-        [InlineData(2, 48, new[] { "alanedwardes-my", "sharepoint", "com" })]
-        [InlineData(2, 105, new[] { "alanedwardes", "sharepoint", "com" })]
-        [InlineData(2, 153, new[] { "302-ipv4e", "clump", "dprodmgd104", "aa-rt", "sharepoint", "com" })]
-        [InlineData(2, 185, new[] { "187170-ipv4e", "farm", "dprodmgd104", "aa-rt", "sharepoint", "com" })]
-        [InlineData(2, 260, new[] { "187170-ipv4e", "farm", "dprodmgd104", "sharepointonline", "com", "akadns", "net" })]
-        [InlineData(2, 344, new[] { "187170-ipv4", "farm", "dprodmgd104", "aa-rt", "sharepoint", "com", "spo-0004", "spo-msedge", "net" })]
-        public void ReadStringTests(int example, int offset, string[] expected)
-        {
-            var value = EndianExtensions.ReadString(SampleDnsPackets.Examples[example], ref offset);
-            Assert.Equal(expected, value);
-        }
-
-        [Theory]
-        [InlineData(2, 90, new[] { "alanedwardes", "sharepoint", "com" })]
-        [InlineData(2, 117, new[] { "302-ipv4e", "clump", "dprodmgd104", "aa-rt", "sharepoint", "com" })]
-        [InlineData(2, 165, new[] { "187170-ipv4e", "farm", "dprodmgd104", "aa-rt", "sharepoint", "com" })]
-        [InlineData(2, 197, new[] { "187170-ipv4e", "farm", "dprodmgd104", "sharepointonline", "com", "akadns", "net" })]
-        [InlineData(2, 272, new[] { "187170-ipv4", "farm", "dprodmgd104", "aa-rt", "sharepoint", "com", "spo-0004", "spo-msedge", "net" })]
-        [InlineData(4, 104, new[] { "alanedwardes", "com" })]
-        public void ReadCnameRecordTests(int example, int offset, string[] expected)
-        {
-            var value = EndianExtensions.ReadString(SampleDnsPackets.Examples[example], ref offset);
-            Assert.Equal(expected, value);
-        }
-
-        [Theory]
-        [InlineData(3, 50, new byte[] { 216, 58, 210, 206 })]
-        [InlineData(4, 118, new byte[] { 143, 204, 191, 46 })]
-        [InlineData(4, 134, new byte[] { 143, 204, 191, 37 })]
-        [InlineData(4, 150, new byte[] { 143, 204, 191, 71 })]
-        [InlineData(4, 166, new byte[] { 143, 204, 191, 110 })]
-        public void ReadARecordTests(int example, int offset, byte[] expected)
-        {
-            var value = SampleDnsPackets.Examples[example].ReadBytes(4, ref offset);
-            Assert.Equal(expected, value);
         }
     }
 }
