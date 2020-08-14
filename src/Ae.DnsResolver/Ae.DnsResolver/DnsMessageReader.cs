@@ -197,9 +197,6 @@ namespace Ae.DnsResolver
                 // get segment length or detect termination of segments
                 int segmentLength = bytes[offset];
 
-                byte test = bytes[offset];
-                byte test2 = bytes[offset + 1];
-
                 // compressed name
                 if ((segmentLength & 0xC0) == 0xC0)
                 {
@@ -277,10 +274,9 @@ namespace Ae.DnsResolver
         public Qtype Type;
         public Qclass Class;
         public TimeSpan Ttl;
+        public int DataOffset;
+        public int DataLength;
         public byte[] Data;
-
-        public string DataAsString => Encoding.ASCII.GetString(Data);
-        public IPAddress DataAsIp => new IPAddress(Data);
     }
 
     public static class DnsMessageReader
@@ -315,27 +311,24 @@ namespace Ae.DnsResolver
         {
             var test = bytes.Select(x => (char)x).ToArray();
 
-            var originalOffset = offset;
+            //var originalOffset = offset;
             var resourceName = bytes.ReadString(ref offset);
-            var expectedOffset = offset;
-            offset = originalOffset;
+            //var expectedOffset = offset;
+            //offset = originalOffset;
 
-            var resourceName2 = bytes.ReadString2(ref offset);
+            //var resourceName2 = bytes.ReadString2(ref offset);
 
-            Debug.Assert(offset == expectedOffset);
-            Debug.Assert(resourceName.SequenceEqual(resourceName2));
+            //Debug.Assert(offset == expectedOffset);
+            //Debug.Assert(resourceName.SequenceEqual(resourceName2));
 
             var resourceType = (Qtype)bytes.ReadUInt16(ref offset);
             var resourceClass = (Qclass)bytes.ReadUInt16(ref offset);
             var ttl = bytes.ReadUInt32(ref offset);
             var rdlength = bytes.ReadUInt16(ref offset);
 
-            byte[] rdata = bytes.ReadBytes(rdlength, ref offset);
+            var dataOffset = offset;
 
-            if (resourceType == Qtype.CNAME)
-            {
-                //rdata = bytes.ReadString(ref offset).SelectMany(x => x.ToArray()).Select(x => (byte)x).ToArray();
-            }
+            offset += rdlength;
 
             return new DnsResourceRecord
             {
@@ -343,7 +336,8 @@ namespace Ae.DnsResolver
                 Type = resourceType,
                 Class = resourceClass,
                 Ttl = TimeSpan.FromSeconds(ttl),
-                Data = rdata
+                DataOffset = dataOffset,
+                DataLength = rdlength
             };
         }
 
