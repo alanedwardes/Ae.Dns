@@ -1,4 +1,3 @@
-using Ae.DnsResolver.Client;
 using Ae.DnsResolver.Protocol;
 using System;
 using System.Linq;
@@ -9,7 +8,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
     public class DnsAnswerTests
     {
         [Fact]
-        public void ReadExampleExample1Packet()
+        public void ReadAnswer1()
         {
             int offset = 0;
             var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer1, ref offset);
@@ -33,7 +32,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         }
 
         [Fact]
-        public void ReadExampleExample2Packet()
+        public void ReadAnswer2()
         {
             int offset = 0;
             var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer2, ref offset);
@@ -105,7 +104,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         }
 
         [Fact]
-        public void ReadExampleExample3Packet()
+        public void ReadAnswer3()
         {
             int offset = 0;
             var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer3, ref offset);
@@ -127,7 +126,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         }
 
         [Fact]
-        public void ReadExampleExample4Packet()
+        public void ReadAnswer4()
         {
             int offset = 0;
             var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer4, ref offset);
@@ -178,6 +177,18 @@ namespace Ae.DnsResolver.Tests.DnsMessage
             Assert.Equal(4, record5.DataLength);
             Assert.Equal(new[] { "alanedwardes", "com" }, record5.Name);
             Assert.Equal(TimeSpan.Parse("04:16:00"), record5.Ttl);
+        }
+
+        [Fact]
+        public void ReadAnswer6()
+        {
+            int offset = 0;
+            var message = SampleDnsPackets.Answer6.ReadDnsHeader(ref offset);
+            Assert.Equal(SampleDnsPackets.Answer6.Length, offset);
+
+            var bytes = message.WriteDnsHeader().ToArray();
+
+            Assert.Equal(SampleDnsPackets.Answer6, bytes);
         }
     }
 }

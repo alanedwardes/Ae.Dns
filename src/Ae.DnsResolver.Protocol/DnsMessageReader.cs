@@ -32,16 +32,6 @@ namespace Ae.DnsResolver.Protocol
     public class DnsRequestMessage : DnsHeader
     {
         public override string ToString() => $"REQUEST: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {Qtype}, class: {Qclass}";
-
-        public byte[] ToBytes()
-        {
-            var parts = new List<byte>();
-
-            parts.AddRange(Labels.WriteStrings());
-            //parts.Add(type)
-
-            return null;
-        }
     }
 
     public class DnsResponseMessage : DnsHeader

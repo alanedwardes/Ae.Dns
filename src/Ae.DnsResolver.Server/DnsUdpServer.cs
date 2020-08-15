@@ -1,5 +1,5 @@
-﻿using Ae.DnsResolver.Client;
-using Ae.DnsResolver.Protocol;
+﻿using Ae.DnsResolver.Protocol;
+using Ae.DnsResolver.Repository;
 using System;
 using System.Net.Sockets;
 using System.Threading;
@@ -10,12 +10,12 @@ namespace Ae.DnsResolver.Server
     public sealed class DnsUdpServer
     {
         private readonly UdpClient _listner;
-        private readonly IDnsClient _dnsClient;
+        private readonly IDnsRepository _dnsRepository;
 
-        public DnsUdpServer(UdpClient listner, IDnsClient dnsClient)
+        public DnsUdpServer(UdpClient listner, IDnsRepository dnsRepository)
         {
             _listner = listner;
-            _dnsClient = dnsClient;
+            _dnsRepository = dnsRepository;
         }
 
         public async Task Recieve(CancellationToken token)
@@ -24,7 +24,8 @@ namespace Ae.DnsResolver.Server
             {
                 try
                 {
-                    Respond(await _listner.ReceiveAsync());
+                    var result = await _listner.ReceiveAsync();
+                    Respond(result);
                 }
                 catch (Exception e)
                 {
@@ -42,7 +43,7 @@ namespace Ae.DnsResolver.Server
             byte[] answer;
             try
             {
-                answer = await _dnsClient.LookupRaw(query.Buffer);
+                answer = await _dnsRepository.Resolve(query.Buffer);
             }
             catch (Exception e)
             {
@@ -50,10 +51,10 @@ namespace Ae.DnsResolver.Server
                 return;
             }
 
-            var offset = 0;
-            var response = DnsMessageReader.ReadDnsResponse(answer, ref offset);
+            //var offset = 0;
+            //var response = DnsMessageReader.ReadDnsResponse(answer, ref offset);
 
-            Console.WriteLine(response);
+            //Console.WriteLine(response);
 
             await _listner.SendAsync(answer, answer.Length, query.RemoteEndPoint);
         }

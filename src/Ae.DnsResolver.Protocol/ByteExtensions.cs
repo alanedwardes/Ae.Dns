@@ -113,19 +113,6 @@ namespace Ae.DnsResolver.Protocol
             return parts.ToArray();
         }
 
-        public static IEnumerable<byte> WriteStrings(this string[] strings)
-        {
-            foreach (var str in strings)
-            {
-                yield return (byte)str.Length;
-                foreach (var character in str)
-                {
-                    yield return (byte)character;
-                }
-            }
-            yield return 0;
-        }
-
         public static DnsHeader ReadDnsHeader(this byte[] bytes, ref int offset)
         {
             var header = new DnsHeader();
@@ -139,6 +126,60 @@ namespace Ae.DnsResolver.Protocol
             header.Qtype = (DnsQueryType)bytes.ReadInt16(ref offset);
             header.Qclass = (DnsQueryClass)bytes.ReadInt16(ref offset);
             return header;
+        }
+
+        public static IEnumerable<byte> WriteStrings(string[] strings)
+        {
+            foreach (var str in strings)
+            {
+                yield return (byte)str.Length;
+                foreach (var c in str)
+                {
+                    yield return (byte)c;
+                }
+            }
+
+            yield return 0;
+        }
+
+        public static IEnumerable<byte> WriteDnsHeader(this DnsHeader header)
+        {
+            var id = header.Id.SwapEndian();
+            yield return (byte)id;
+            yield return (byte)(id >> 8);
+
+            var headerSwapped = header.Header.SwapEndian();
+            yield return (byte)headerSwapped;
+            yield return (byte)(headerSwapped >> 8);
+
+            var qdcount = header.Qdcount.SwapEndian();
+            yield return (byte)qdcount;
+            yield return (byte)(qdcount >> 8);
+
+            var ancount = header.Ancount.SwapEndian();
+            yield return (byte)ancount;
+            yield return (byte)(ancount >> 8);
+
+            var nscount = header.Ancount.SwapEndian();
+            yield return (byte)nscount;
+            yield return (byte)(nscount >> 8);
+
+            var arcount = header.Ancount.SwapEndian();
+            yield return (byte)arcount;
+            yield return (byte)(arcount >> 8);
+
+            foreach (var b in WriteStrings(header.Labels))
+            {
+                yield return b;
+            }
+
+            var type = ((ushort)header.Qtype).SwapEndian();
+            yield return (byte)type;
+            yield return (byte)(type >> 8);
+
+            var qclass = ((ushort)header.Qclass).SwapEndian();
+            yield return (byte)qclass;
+            yield return (byte)(qclass >> 8);
         }
     }
 }
