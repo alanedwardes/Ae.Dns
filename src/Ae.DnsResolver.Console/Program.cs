@@ -17,12 +17,15 @@ namespace Ae.DnsResolver
 
         private static async Task DoWork()
         {
-            var client = new DnsUdpClient(new UdpClient("192.168.1.42", 53));
+            var cloudFlare = new DnsUdpClient(new UdpClient("1.1.1.1", 53));
+            var google1 = new DnsUdpClient(new UdpClient("8.8.8.8", 53));
+            var google2 = new DnsUdpClient(new UdpClient("8.8.4.4", 53));
 
             var filter1 = await DnsSetFilter.CrateFromRemoteHostsFile("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts");
             var filter2 = await DnsSetFilter.CrateFromRemoteHostsFile("https://mirror1.malwaredomains.com/files/justdomains");
+            var filter3 = await DnsSetFilter.CrateFromRemoteHostsFile("https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt");
 
-            var repository = new DnsRepository(client, new MemoryCache("dns"), new[] { filter1, filter2 });
+            var repository = new DnsRepository(new[] { cloudFlare, google1, google2 }, new MemoryCache("dns"), new[] { filter1, filter2, filter3 });
 
             var server = new DnsUdpServer(new UdpClient(53), repository);
 

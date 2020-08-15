@@ -10,15 +10,15 @@ namespace Ae.DnsResolver.Repository
 {
     public sealed class DnsRepository : IDnsRepository
     {
-        private readonly IDnsClient _dnsClient;
+        private readonly IReadOnlyCollection<IDnsClient> _dnsClients;
         private readonly ObjectCache _objectCache;
         private readonly IReadOnlyCollection<IDnsFilter> _dnsFilters;
 
         private string GetCacheKey(DnsHeader header) => $"{string.Join(".", header.Labels)}~{header.Qtype}~{header.Qclass}";
 
-        public DnsRepository(IDnsClient dnsClient, ObjectCache objectCache, IReadOnlyCollection<IDnsFilter> dnsFilters)
+        public DnsRepository(IReadOnlyCollection<IDnsClient> dnsClients, ObjectCache objectCache, IReadOnlyCollection<IDnsFilter> dnsFilters)
         {
-            _dnsClient = dnsClient;
+            _dnsClients = dnsClients;
             _objectCache = objectCache;
             _dnsFilters = dnsFilters;
         }
@@ -70,7 +70,9 @@ namespace Ae.DnsResolver.Repository
                 return answer;
             }
 
-            answer = await _dnsClient.LookupRaw(query);
+            var dnsClient =  _dnsClients.OrderBy(x => Guid.NewGuid()).First();
+
+            answer = await dnsClient.LookupRaw(query);
 
             offset = 0;
             var answerMessage = DnsMessageReader.ReadDnsResponse(answer, ref offset);
