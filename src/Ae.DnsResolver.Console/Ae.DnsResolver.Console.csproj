@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ae.DnsResolver.Client\Ae.DnsResolver.Client.csproj" />
+    <ProjectReference Include="..\Ae.DnsResolver.Server\Ae.DnsResolver.Server.csproj" />
   </ItemGroup>
 
 </Project>

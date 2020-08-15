@@ -1,4 +1,4 @@
-﻿namespace Ae.DnsResolver.Client
+﻿namespace Ae.DnsResolver.Protocol
 {
     public enum DnsQueryType : ushort
     {

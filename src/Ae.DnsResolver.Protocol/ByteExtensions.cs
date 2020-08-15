@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Ae.DnsResolver.Client
+namespace Ae.DnsResolver.Protocol
 {
     public static class ByteExtensions
     {

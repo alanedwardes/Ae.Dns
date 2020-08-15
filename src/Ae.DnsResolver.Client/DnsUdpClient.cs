@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ae.DnsResolver.Protocol;
+using System;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Threading;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Ae.DnsResolver.Client
 {
-    public sealed class DnsUdpClient : IDisposable
+    public sealed class DnsUdpClient : IDisposable, IDnsClient
     {
         public struct MessageId
         {
@@ -103,5 +104,10 @@ namespace Ae.DnsResolver.Client
         {
             _cancel.Cancel();
         }
+    }
+
+    public interface IDnsClient
+    {
+        Task<byte[]> LookupRaw(byte[] raw);
     }
 }

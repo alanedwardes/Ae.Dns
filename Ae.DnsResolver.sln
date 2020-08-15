@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ae.DnsResolver.Tests", "tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ae.DnsResolver.Client", "src\Ae.DnsResolver.Client\Ae.DnsResolver.Client.csproj", "{62E26557-4649-4A3B-9D46-3E4693048A5F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ae.DnsResolver.Protocol", "src\Ae.DnsResolver.Protocol\Ae.DnsResolver.Protocol.csproj", "{6FCA0226-5C61-4F03-9B24-EAA5B3152B0D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ae.DnsResolver.Server", "src\Ae.DnsResolver.Server\Ae.DnsResolver.Server.csproj", "{58758A14-179E-4CF4-AFB1-141F9EF865B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +35,14 @@ Global
 		{62E26557-4649-4A3B-9D46-3E4693048A5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62E26557-4649-4A3B-9D46-3E4693048A5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62E26557-4649-4A3B-9D46-3E4693048A5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FCA0226-5C61-4F03-9B24-EAA5B3152B0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FCA0226-5C61-4F03-9B24-EAA5B3152B0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FCA0226-5C61-4F03-9B24-EAA5B3152B0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FCA0226-5C61-4F03-9B24-EAA5B3152B0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58758A14-179E-4CF4-AFB1-141F9EF865B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58758A14-179E-4CF4-AFB1-141F9EF865B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58758A14-179E-4CF4-AFB1-141F9EF865B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58758A14-179E-4CF4-AFB1-141F9EF865B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -39,6 +51,8 @@ Global
 		{E2603FF3-F9BA-4B90-B98C-B0C1069FB0BF} = {0DE60274-AA05-4E64-A7C1-175005219903}
 		{232513BC-E1C3-400D-9B66-252F039C467F} = {ACB95C7B-DFE8-411A-8CC5-059505530ADB}
 		{62E26557-4649-4A3B-9D46-3E4693048A5F} = {0DE60274-AA05-4E64-A7C1-175005219903}
+		{6FCA0226-5C61-4F03-9B24-EAA5B3152B0D} = {0DE60274-AA05-4E64-A7C1-175005219903}
+		{58758A14-179E-4CF4-AFB1-141F9EF865B7} = {0DE60274-AA05-4E64-A7C1-175005219903}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2ABE6B23-17A6-4850-8DE8-02A4BF5684DC}

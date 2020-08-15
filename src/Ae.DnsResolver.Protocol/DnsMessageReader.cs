@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ae.DnsResolver.Client
+namespace Ae.DnsResolver.Protocol
 {
     public class DnsHeader
     {

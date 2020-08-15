@@ -1,4 +1,5 @@
 using Ae.DnsResolver.Client;
+using Ae.DnsResolver.Protocol;
 using System;
 using System.Linq;
 using Xunit;

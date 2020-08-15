@@ -4,8 +4,4 @@
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Ae.DnsResolver.Protocol\Ae.DnsResolver.Protocol.csproj" />
-  </ItemGroup>
-
 </Project>
