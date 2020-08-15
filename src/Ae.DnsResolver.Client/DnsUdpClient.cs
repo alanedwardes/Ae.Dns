@@ -8,24 +8,26 @@ namespace Ae.DnsResolver.Client
 {
     public sealed class DnsUdpClient : IDisposable
     {
-        public struct RecordType
+        public struct MessageId
         {
+            public ushort Id;
             public string Name;
             public DnsQueryType Type;
             public DnsQueryClass Class;
         }
 
-        public static RecordType ToRecordType(DnsMessage message)
+        public static MessageId ToMessageId(DnsHeader message)
         {
-            return new RecordType
+            return new MessageId
             {
+                Id = message.Id,
                 Name = string.Join(".", message.Labels),
                 Type = message.Qtype,
                 Class = message.Qclass
             };
         }
 
-        private static ConcurrentDictionary<RecordType, TaskCompletionSource<byte[]>> _cache = new ConcurrentDictionary<RecordType, TaskCompletionSource<byte[]>>();
+        private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
 
         private readonly UdpClient _client;
         private readonly Task _task;
@@ -46,34 +48,55 @@ namespace Ae.DnsResolver.Client
                 var offset = 0;
                 var message = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
 
-                if (_cache.TryGetValue(ToRecordType(message), out var completionSource))
+                if (_pending.TryRemove(ToMessageId(message), out TaskCompletionSource<byte[]> completionSource))
                 {
                     completionSource.SetResult(result.Buffer);
                 }
             }
         }
 
-        public Task<DnsMessage> Lookup(string name, DnsQueryType type)
+        private async Task RemoveFailedRequest(MessageId messageId)
         {
-            var dnsMessage = new DnsRequestMessage();
-            dnsMessage.Labels = name.Split(".");
-            dnsMessage.Qtype = type;
-            dnsMessage.Qclass = DnsQueryClass.IN;
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
+            {
+                completionSource.SetException(new TaskCanceledException());
+            }
+        }
+
+        private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] bytes)
+        {
+            _ = RemoveFailedRequest(messageId);
+            _ = _client.SendAsync(bytes, bytes.Length);
+            return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+
+        public Task<DnsHeader> Lookup(string name, DnsQueryType type)
+        {
+            var dnsMessage = new DnsRequestMessage
+            {
+                Labels = name.Split("."),
+                Qtype = type,
+                Qclass = DnsQueryClass.IN
+            };
 
             return null;
         }
 
         public async Task<byte[]> LookupRaw(byte[] raw)
         {
-            var message = DnsMessageReader.ReadDnsMessage(raw);
+            var query = DnsMessageReader.ReadDnsMessage(raw);
 
-            var completionSource = _cache.GetOrAdd(ToRecordType(message), key =>
-            {
-                _client.SendAsync(raw, raw.Length);
-                return new TaskCompletionSource<byte[]>();
-            });
+            var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, raw));
 
-            return await completionSource.Task;
+            var result = await completionSource.Task;
+
+            // Copy the same ID from the request
+            result[0] = raw[0];
+            result[1] = raw[1];
+
+            return result;
         }
 
         public void Dispose()

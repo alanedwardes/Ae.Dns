@@ -1,7 +1,7 @@
 ﻿using Ae.DnsResolver.Client;
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -19,6 +19,23 @@ namespace Ae.DnsResolver
         {
             var client = new DnsUdpClient(new UdpClient("1.1.1.1", 53));
 
+            await Task.WhenAll(ListenTcp(client), ListenUdp(client));
+        }
+
+        private static async Task ListenTcp(DnsUdpClient client)
+        {
+            var tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), 53);
+
+            tcpListener.Start();
+
+            while (true)
+            {
+                var accept = await tcpListener.AcceptSocketAsync();
+            }
+        }
+
+        private static async Task ListenUdp(DnsUdpClient client)
+        {
             var listener = new UdpClient(53);
 
             while (true)
@@ -44,7 +61,16 @@ namespace Ae.DnsResolver
 
             Console.WriteLine(message);
 
-            var result = await client.LookupRaw(r.Buffer);
+            byte[] result;
+            try
+            {
+                result = await client.LookupRaw(r.Buffer);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return;
+            }
 
             var offset = 0;
             var response = DnsMessageReader.ReadDnsResponse(result, ref offset);

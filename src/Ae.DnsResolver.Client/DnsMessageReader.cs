@@ -4,23 +4,34 @@ using System.Linq;
 
 namespace Ae.DnsResolver.Client
 {
-    public abstract class DnsMessage
+    public class DnsHeader
     {
-        public short Id;
-        public short Header;
-        public short Qdcount;
-        public short Ancount;
-        public short Nscount;
-        public short Arcount;
+        public ushort Id { get; set; }
+        public ushort Header { get; set; }
+        public short Qdcount { get; set; }
+        public short Ancount { get; set; }
+        public short Nscount { get; set; }
+        public short Arcount { get; set; }
+        public string[] Labels { get; set; }
+        public DnsQueryType Qtype { get; set; }
+        public DnsQueryClass Qclass { get; set; }
 
-        public string[] Labels;
-        public DnsQueryType Qtype;
-        public DnsQueryClass Qclass;
+        public bool Qr
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+                return;
+            }
+        }
     }
 
-    public class DnsRequestMessage : DnsMessage
+    public class DnsRequestMessage : DnsHeader
     {
-        public override string ToString() => string.Format("REQUEST: Domain: {0}, type: {1}, class: {2}", string.Join(".", Labels), Qtype, Qclass);
+        public override string ToString() => $"REQUEST: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {Qtype}, class: {Qclass}";
 
         public byte[] ToBytes()
         {
@@ -33,12 +44,12 @@ namespace Ae.DnsResolver.Client
         }
     }
 
-    public class DnsResponseMessage : DnsMessage
+    public class DnsResponseMessage : DnsHeader
     {
         public DnsResourceRecord[] Answers;
         public DnsQuestionRecord[] Questions;
 
-        public override string ToString() => string.Format("RESPONSE: Domain: {0}, type: {1}, class: {2}, records: {3}", string.Join(".", Labels), Qtype, Qclass, Answers.Length);
+        public override string ToString() => $"RESPONSE: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {Qtype}, class: {Qclass}, records: {Answers.Length}";
     }
 
     public class DnsResourceRecord
@@ -60,7 +71,7 @@ namespace Ae.DnsResolver.Client
 
     public static class DnsMessageReader
     {
-        public static DnsMessage ReadDnsMessage(byte[] bytes)
+        public static DnsHeader ReadDnsMessage(byte[] bytes)
         {
             var result = new DnsRequestMessage();
             var offset = 0;
@@ -127,10 +138,10 @@ namespace Ae.DnsResolver.Client
             };
         }
 
-        private static DnsMessage ReadDnsMessage(byte[] bytes, DnsMessage result, ref int offset)
+        private static DnsHeader ReadDnsMessage(byte[] bytes, DnsHeader result, ref int offset)
         {
-            result.Id = bytes.ReadInt16(ref offset);
-            result.Header = bytes.ReadInt16(ref offset);
+            result.Id = bytes.ReadUInt16(ref offset);
+            result.Header = bytes.ReadUInt16(ref offset);
             result.Qdcount = bytes.ReadInt16(ref offset);
             result.Ancount = bytes.ReadInt16(ref offset);
             result.Nscount = bytes.ReadInt16(ref offset);

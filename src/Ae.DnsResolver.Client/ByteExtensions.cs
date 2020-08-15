@@ -125,5 +125,20 @@ namespace Ae.DnsResolver.Client
             }
             yield return 0;
         }
+
+        public static DnsHeader ReadDnsHeader(this byte[] bytes, ref int offset)
+        {
+            var header = new DnsHeader();
+            header.Id = bytes.ReadUInt16(ref offset);
+            header.Header = bytes.ReadUInt16(ref offset);
+            header.Qdcount = bytes.ReadInt16(ref offset);
+            header.Ancount = bytes.ReadInt16(ref offset);
+            header.Nscount = bytes.ReadInt16(ref offset);
+            header.Arcount = bytes.ReadInt16(ref offset);
+            header.Labels = bytes.ReadString(ref offset);
+            header.Qtype = (DnsQueryType)bytes.ReadInt16(ref offset);
+            header.Qclass = (DnsQueryClass)bytes.ReadInt16(ref offset);
+            return header;
+        }
     }
 }
