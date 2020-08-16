@@ -51,11 +51,6 @@ namespace Ae.DnsResolver.Server
                 return;
             }
 
-            //var offset = 0;
-            //var response = DnsMessageReader.ReadDnsResponse(answer, ref offset);
-
-            //Console.WriteLine(response);
-
             await _listner.SendAsync(answer, answer.Length, query.RemoteEndPoint);
         }
     }

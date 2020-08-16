@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Ae.DnsResolver.Protocol;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,59 +14,57 @@ namespace Ae.DnsResolver.Repository
 
     public interface IDnsFilter
     {
-        public bool IsPermitted(string domain);
+        public bool IsPermitted(DnsHeader query);
     }
 
-    public sealed class DnsSetFilter : IDnsFilter
+    public sealed class DnsRemoteSetFilter : IDnsFilter
     {
-        private readonly ISet<string> _domains;
+        private readonly ISet<string> _domains = new HashSet<string>();
 
-        public DnsSetFilter(ISet<string> domains)
-        {
-            _domains = domains;
-        }
-
-        public bool IsPermitted(string domain)
-        {
-            return !_domains.Contains(domain);
-        }
-
-        public static async Task<IDnsFilter> CrateFromRemoteHostsFile(string hostsFileUrl)
+        public async Task AddRemoteList(Uri hostsFileUri)
         {
             var set = new HashSet<string>();
 
-            using (var httpClient = new HttpClient())
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetStreamAsync(hostsFileUri);
+            using var sr = new StreamReader(response);
+            while (!sr.EndOfStream)
             {
-                var response = await httpClient.GetStreamAsync(hostsFileUrl);
-                using (var sr = new StreamReader(response))
+                var line = sr.ReadLine();
+                if (line.StartsWith("#"))
                 {
-                    while (!sr.EndOfStream)
-                    {
-                        var line = sr.ReadLine();
-                        if (line.StartsWith("#"))
-                        {
-                            continue;
-                        }
+                    continue;
+                }
 
-                        if (string.IsNullOrWhiteSpace(line))
-                        {
-                            continue;
-                        }
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
 
-                        if (line.Contains(" "))
-                        {
-                            var domain = line.Replace("0.0.0.0", string.Empty).Trim();
-                            set.Add(domain);
-                        }
-                        else
-                        {
-                            set.Add(line.Trim());
-                        }
-                    }
+                if (line.Contains(" "))
+                {
+                    var domain = line.Replace("0.0.0.0", string.Empty).Trim();
+                    set.Add(domain);
+                }
+                else
+                {
+                    set.Add(line.Trim());
                 }
             }
 
-            return new DnsSetFilter(set);
+            lock (_domains)
+            {
+                foreach (var domain in set)
+                {
+                    _domains.Add(domain);
+                }
+            }
+        }
+
+        public bool IsPermitted(DnsHeader query)
+        {
+            var domain = string.Join(".", query.Labels);
+            return !_domains.Contains(domain);
         }
     }
 }

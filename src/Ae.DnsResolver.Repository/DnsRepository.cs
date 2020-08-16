@@ -1,7 +1,6 @@
 ﻿using Ae.DnsResolver.Client;
 using Ae.DnsResolver.Protocol;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Caching;
 using System.Threading.Tasks;
@@ -10,48 +9,38 @@ namespace Ae.DnsResolver.Repository
 {
     public sealed class DnsRepository : IDnsRepository
     {
-        private readonly IReadOnlyCollection<IDnsClient> _dnsClients;
+        private readonly IDnsClient _dnsClient;
         private readonly ObjectCache _objectCache;
-        private readonly IReadOnlyCollection<IDnsFilter> _dnsFilters;
+        private readonly IDnsFilter _dnsFilter;
+
+        public DnsRepository(IDnsClient dnsClient, ObjectCache objectCache, IDnsFilter dnsFilter)
+        {
+            _dnsClient = dnsClient;
+            _objectCache = objectCache;
+            _dnsFilter = dnsFilter;
+        }
 
         private string GetCacheKey(DnsHeader header) => $"{string.Join(".", header.Labels)}~{header.Qtype}~{header.Qclass}";
 
-        public DnsRepository(IReadOnlyCollection<IDnsClient> dnsClients, ObjectCache objectCache, IReadOnlyCollection<IDnsFilter> dnsFilters)
+        private byte[] CreateNullResponse(DnsHeader request) => new DnsHeader
         {
-            _dnsClients = dnsClients;
-            _objectCache = objectCache;
-            _dnsFilters = dnsFilters;
-        }
-
-        private byte[] CreateNullResponse(DnsHeader request)
-        {
-            var header = new DnsHeader
-            {
-                Id = request.Id,
-                Header = 33155,
-                Labels = request.Labels,
-                Qclass = request.Qclass,
-                Qdcount = request.Qdcount,
-                Qtype = request.Qtype
-            };
-
-            return header.WriteDnsHeader().ToArray();
-        }
+            Id = request.Id,
+            Header = 33155,
+            Labels = request.Labels,
+            Qclass = request.Qclass,
+            Qdcount = request.Qdcount,
+            Qtype = request.Qtype
+        }.WriteDnsHeader().ToArray();
 
         public async Task<byte[]> Resolve(byte[] query)
         {
             int offset = 0;
             var header = query.ReadDnsHeader(ref offset);
 
-            var domain = string.Join(".", header.Labels);
-
-            foreach (var filter in _dnsFilters)
+            if (!_dnsFilter.IsPermitted(header))
             {
-                if (!filter.IsPermitted(domain))
-                {
-                    Console.WriteLine($"BLOCKED DOMAIN: {domain}");
-                    return CreateNullResponse(header);
-                }
+                Console.WriteLine($"BLOCKED DOMAIN: {header}");
+                return CreateNullResponse(header);
             }
 
             byte[] answer;
@@ -70,9 +59,7 @@ namespace Ae.DnsResolver.Repository
                 return answer;
             }
 
-            var dnsClient =  _dnsClients.OrderBy(x => Guid.NewGuid()).First();
-
-            answer = await dnsClient.LookupRaw(query);
+            answer = await _dnsClient.LookupRaw(query);
 
             offset = 0;
             var answerMessage = DnsMessageReader.ReadDnsResponse(answer, ref offset);

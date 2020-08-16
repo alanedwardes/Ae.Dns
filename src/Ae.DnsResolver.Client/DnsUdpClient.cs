@@ -73,13 +73,15 @@ namespace Ae.DnsResolver.Client
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
-        public Task<DnsHeader> Lookup(string name, DnsQueryType type)
+        public Task<DnsHeader> Lookup(string name, DnsQueryClass queryClass, DnsQueryType queryType)
         {
             var dnsMessage = new DnsRequestMessage
             {
                 Labels = name.Split("."),
-                Qtype = type,
-                Qclass = DnsQueryClass.IN
+                Qtype = queryType,
+                Qclass = queryClass,
+                Qdcount = 1,
+                Header = 1
             };
 
             return null;
@@ -104,10 +106,5 @@ namespace Ae.DnsResolver.Client
         {
             _cancel.Cancel();
         }
-    }
-
-    public interface IDnsClient
-    {
-        Task<byte[]> LookupRaw(byte[] raw);
     }
 }
