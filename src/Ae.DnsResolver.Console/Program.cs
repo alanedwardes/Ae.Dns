@@ -21,11 +21,7 @@ namespace Ae.DnsResolver
         private static async Task DoWork()
         {
             var services = new ServiceCollection();
-            services.AddLogging(x =>
-            {
-                x.AddConsole();
-                x.SetMinimumLevel(LogLevel.Trace);
-            });
+            services.AddLogging(x => x.AddConsole());
             var provider = services.BuildServiceProvider();
 
             var cloudFlare1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("1.1.1.1", 53), "CloudFlare DNS Primary");
@@ -35,9 +31,9 @@ namespace Ae.DnsResolver
 
             var filter = new DnsRemoteSetFilter(provider.GetRequiredService<ILogger<DnsRemoteSetFilter>>());
 
-            _ = filter.AddRemoteList(new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"));
-            _ = filter.AddRemoteList(new Uri("https://mirror1.malwaredomains.com/files/justdomains"));
-            _ = filter.AddRemoteList(new Uri("https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt"));
+            _ = filter.AddRemoteBlockList(new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"));
+            _ = filter.AddRemoteBlockList(new Uri("https://mirror1.malwaredomains.com/files/justdomains"));
+            _ = filter.AddRemoteBlockList(new Uri("https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt"));
 
             var combinedDnsClient = new DnsCompositeClient(cloudFlare1, cloudFlare2, google1, google2);
 
