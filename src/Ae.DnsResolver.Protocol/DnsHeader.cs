@@ -24,6 +24,6 @@
             }
         }
 
-        public override string ToString() => $"REQUEST: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {Qtype}, class: {Qclass}";
+        public override string ToString() => $"Id: {Id}, Domain: {string.Join(".", Labels)}, type: {Qtype}, class: {Qclass}";
     }
 }

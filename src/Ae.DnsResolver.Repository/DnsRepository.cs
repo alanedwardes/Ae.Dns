@@ -1,5 +1,6 @@
 ﻿using Ae.DnsResolver.Client;
 using Ae.DnsResolver.Protocol;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Runtime.Caching;
@@ -9,12 +10,14 @@ namespace Ae.DnsResolver.Repository
 {
     public sealed class DnsRepository : IDnsRepository
     {
+        private readonly ILogger<DnsRepository> _logger;
         private readonly IDnsClient _dnsClient;
         private readonly ObjectCache _objectCache;
         private readonly IDnsFilter _dnsFilter;
 
-        public DnsRepository(IDnsClient dnsClient, ObjectCache objectCache, IDnsFilter dnsFilter)
+        public DnsRepository(ILogger<DnsRepository> logger, IDnsClient dnsClient, ObjectCache objectCache, IDnsFilter dnsFilter)
         {
+            _logger = logger;
             _dnsClient = dnsClient;
             _objectCache = objectCache;
             _dnsFilter = dnsFilter;
@@ -39,7 +42,7 @@ namespace Ae.DnsResolver.Repository
 
             if (!_dnsFilter.IsPermitted(header))
             {
-                Console.WriteLine($"BLOCKED DOMAIN: {header}");
+                _logger.LogWarning("Blocked domain: {0}", header);
                 return CreateNullResponse(header);
             }
 

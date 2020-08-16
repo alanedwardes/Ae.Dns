@@ -1,5 +1,6 @@
 ﻿using Ae.DnsResolver.Protocol;
 using Ae.DnsResolver.Repository;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Sockets;
 using System.Threading;
@@ -9,36 +10,41 @@ namespace Ae.DnsResolver.Server
 {
     public sealed class DnsUdpServer
     {
-        private readonly UdpClient _listner;
+        private readonly ILogger<DnsUdpServer> _logger;
+        private readonly UdpClient _listener;
         private readonly IDnsRepository _dnsRepository;
 
-        public DnsUdpServer(UdpClient listner, IDnsRepository dnsRepository)
+        public DnsUdpServer(ILogger<DnsUdpServer> logger, UdpClient listener, IDnsRepository dnsRepository)
         {
-            _listner = listner;
+            _logger = logger;
+            _listener = listener;
             _dnsRepository = dnsRepository;
         }
 
         public async Task Recieve(CancellationToken token)
         {
+            _logger.LogInformation("Server now listening");
+
             while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    var result = await _listner.ReceiveAsync();
+                    var result = await _listener.ReceiveAsync();
                     Respond(result);
                 }
                 catch (Exception e)
                 {
-                    // Do nothing
+                    _logger.LogWarning(e, "Error with incoming connection");
                 }
             }
         }
 
         private async void Respond(UdpReceiveResult query)
         {
-            var message = DnsMessageReader.ReadDnsMessage(query.Buffer);
+            var offset = 0;
+            var message = query.Buffer.ReadDnsHeader(ref offset);
 
-            Console.WriteLine(message);
+            _logger.LogTrace("Request: {0}", message);
 
             byte[] answer;
             try
@@ -47,11 +53,11 @@ namespace Ae.DnsResolver.Server
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _logger.LogError(e, "Unable to resolve {0}", message);
                 return;
             }
 
-            await _listner.SendAsync(answer, answer.Length, query.RemoteEndPoint);
+            await _listener.SendAsync(answer, answer.Length, query.RemoteEndPoint);
         }
     }
 }

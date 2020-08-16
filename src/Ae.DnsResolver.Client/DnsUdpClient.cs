@@ -1,4 +1,5 @@
 ﻿using Ae.DnsResolver.Protocol;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
@@ -15,6 +16,8 @@ namespace Ae.DnsResolver.Client
             public string Name;
             public DnsQueryType Type;
             public DnsQueryClass Class;
+
+            public override string ToString() => $"Id: {Id}, Name: {Name}, Type: {Type}, Class: {Class}";
         }
 
         public static MessageId ToMessageId(DnsHeader message)
@@ -29,13 +32,14 @@ namespace Ae.DnsResolver.Client
         }
 
         private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
-
+        private readonly ILogger<DnsUdpClient> _logger;
         private readonly UdpClient _client;
         private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
-        public DnsUdpClient(UdpClient client)
+        public DnsUdpClient(ILogger<DnsUdpClient> logger, UdpClient client)
         {
+            _logger = logger;
             _client = client;
             _task = Task.Run(RecieveTask);
         }
@@ -47,9 +51,19 @@ namespace Ae.DnsResolver.Client
                 var result = await _client.ReceiveAsync();
 
                 var offset = 0;
-                var message = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
 
-                if (_pending.TryRemove(ToMessageId(message), out TaskCompletionSource<byte[]> completionSource))
+                DnsResponseMessage answer;
+                try
+                {
+                    answer = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Recieved bad DNS response");
+                    continue;
+                }
+
+                if (_pending.TryRemove(ToMessageId(answer), out TaskCompletionSource<byte[]> completionSource))
                 {
                     completionSource.SetResult(result.Buffer);
                 }
@@ -62,6 +76,7 @@ namespace Ae.DnsResolver.Client
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
+                _logger.LogError("Timed out DNS request for {0} from {1}", messageId);
                 completionSource.SetException(new TaskCanceledException());
             }
         }
