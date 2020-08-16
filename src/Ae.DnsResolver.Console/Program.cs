@@ -28,9 +28,10 @@ namespace Ae.DnsResolver
             });
             var provider = services.BuildServiceProvider();
 
-            var cloudFlare = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("1.1.1.1", 53));
-            var google1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("8.8.8.8", 53));
-            var google2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("8.8.4.4", 53));
+            var cloudFlare1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("1.1.1.1", 53), "CloudFlare DNS Primary");
+            var cloudFlare2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("1.0.0.1", 53), "CloudFlare DNS Secondary");
+            var google1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("8.8.8.8", 53), "Google DNS Primary");
+            var google2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("8.8.4.4", 53), "Google DNS Secondary");
 
             var filter = new DnsRemoteSetFilter(provider.GetRequiredService<ILogger<DnsRemoteSetFilter>>());
 
@@ -38,7 +39,7 @@ namespace Ae.DnsResolver
             _ = filter.AddRemoteList(new Uri("https://mirror1.malwaredomains.com/files/justdomains"));
             _ = filter.AddRemoteList(new Uri("https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt"));
 
-            var combinedDnsClient = new DnsCompositeClient(cloudFlare, google1, google2);
+            var combinedDnsClient = new DnsCompositeClient(cloudFlare1, cloudFlare2, google1, google2);
 
             var repository = new DnsRepository(provider.GetRequiredService<ILogger<DnsRepository>>(), combinedDnsClient, new MemoryCache("dns"), filter);
 

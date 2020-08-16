@@ -10,7 +10,7 @@ namespace Ae.DnsResolver.Client
 {
     public sealed class DnsUdpClient : IDisposable, IDnsClient
     {
-        public struct MessageId
+        private struct MessageId
         {
             public ushort Id;
             public string Name;
@@ -20,7 +20,7 @@ namespace Ae.DnsResolver.Client
             public override string ToString() => $"Id: {Id}, Name: {Name}, Type: {Type}, Class: {Class}";
         }
 
-        public static MessageId ToMessageId(DnsHeader message)
+        private static MessageId ToMessageId(DnsHeader message)
         {
             return new MessageId
             {
@@ -34,13 +34,15 @@ namespace Ae.DnsResolver.Client
         private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
         private readonly UdpClient _client;
+        private readonly string _label;
         private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
-        public DnsUdpClient(ILogger<DnsUdpClient> logger, UdpClient client)
+        public DnsUdpClient(ILogger<DnsUdpClient> logger, UdpClient client, string label)
         {
             _logger = logger;
             _client = client;
+            _label = label;
             _task = Task.Run(RecieveTask);
         }
 
@@ -59,7 +61,7 @@ namespace Ae.DnsResolver.Client
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Recieved bad DNS response");
+                    _logger.LogError(e, "Recieved bad DNS response from {0}", _label);
                     continue;
                 }
 
@@ -76,7 +78,7 @@ namespace Ae.DnsResolver.Client
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
-                _logger.LogError("Timed out DNS request for {0} from {1}", messageId);
+                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _label);
                 completionSource.SetException(new TaskCanceledException());
             }
         }
