@@ -6,7 +6,7 @@ namespace Ae.DnsResolver.Protocol
 {
     public class DnsRequestMessage : DnsHeader
     {
-        public override string ToString() => $"REQUEST: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {Qtype}, class: {Qclass}";
+        public override string ToString() => $"REQUEST: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {QueryType}, class: {QueryClass}";
     }
 
     public class DnsResponseMessage : DnsHeader
@@ -14,7 +14,7 @@ namespace Ae.DnsResolver.Protocol
         public DnsResourceRecord[] Answers;
         public DnsQuestionRecord[] Questions;
 
-        public override string ToString() => $"RESPONSE: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {Qtype}, class: {Qclass}, records: {Answers.Length}";
+        public override string ToString() => $"RESPONSE: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {QueryType}, class: {QueryClass}, records: {Answers.Length}";
     }
 
     public class DnsResourceRecord
@@ -50,14 +50,14 @@ namespace Ae.DnsResolver.Protocol
             ReadDnsMessage(bytes, result, ref offset);
 
             var records = new List<DnsResourceRecord>();
-            for (var i = 0; i < result.Ancount + result.Nscount; i++)
+            for (var i = 0; i < result.AnswerRecordCount + result.NameServerRecordCount; i++)
             {
                 records.Add(ReadResourceRecord(bytes, ref offset));
             }
             result.Answers = records.ToArray();
 
             var questions = new List<DnsQuestionRecord>();
-            for (var i = 0; i < result.Qdcount; i++)
+            for (var i = 0; i < result.QuestionCount; i++)
             {
                 //questions.Add(ReadQuestionRecord(bytes, ref offset));
             }
@@ -106,14 +106,14 @@ namespace Ae.DnsResolver.Protocol
         private static DnsHeader ReadDnsMessage(byte[] bytes, DnsHeader result, ref int offset)
         {
             result.Id = bytes.ReadUInt16(ref offset);
-            result.Header = bytes.ReadUInt16(ref offset);
-            result.Qdcount = bytes.ReadInt16(ref offset);
-            result.Ancount = bytes.ReadInt16(ref offset);
-            result.Nscount = bytes.ReadInt16(ref offset);
-            result.Arcount = bytes.ReadInt16(ref offset);
+            result.Flags = bytes.ReadUInt16(ref offset);
+            result.QuestionCount = bytes.ReadInt16(ref offset);
+            result.AnswerRecordCount = bytes.ReadInt16(ref offset);
+            result.NameServerRecordCount = bytes.ReadInt16(ref offset);
+            result.AdditionalRecordCount = bytes.ReadInt16(ref offset);
             result.Labels = bytes.ReadString(ref offset).ToArray();
-            result.Qtype = (DnsQueryType)bytes.ReadInt16(ref offset);
-            result.Qclass = (DnsQueryClass)bytes.ReadInt16(ref offset);
+            result.QueryType = (DnsQueryType)bytes.ReadInt16(ref offset);
+            result.QueryClass = (DnsQueryClass)bytes.ReadInt16(ref offset);
             return result;
         }
     }

@@ -26,8 +26,8 @@ namespace Ae.DnsResolver.Client
             {
                 Id = message.Id,
                 Name = string.Join(".", message.Labels),
-                Type = message.Qtype,
-                Class = message.Qclass
+                Type = message.QueryType,
+                Class = message.QueryClass
             };
         }
 
@@ -95,10 +95,10 @@ namespace Ae.DnsResolver.Client
             var dnsMessage = new DnsRequestMessage
             {
                 Labels = name.Split("."),
-                Qtype = queryType,
-                Qclass = queryClass,
-                Qdcount = 1,
-                Header = 1
+                QueryType = queryType,
+                QueryClass = queryClass,
+                QuestionCount = 1,
+                Flags = 1
             };
 
             return null;

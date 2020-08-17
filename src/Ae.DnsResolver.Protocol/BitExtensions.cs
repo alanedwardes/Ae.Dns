@@ -4,7 +4,7 @@
     {
         private static ushort MakeShortMask(byte start, byte end)
         {
-            var mask1 = (ushort)(ushort.MaxValue << 16 - end);
+            var mask1 = (ushort)~((1 << 16 - end) - 1);
             var mask2 = (ushort)((1 << 16 - start) - 1);
             return (ushort)(mask1 & mask2);
         }
@@ -16,7 +16,7 @@
             return (ushort)(masked << start);
         }
 
-        public static ushort SetBits(this ushort value, byte start, byte end, ushort newValue)
+        public static ushort SetBits(this ushort value, byte start, byte end, int newValue)
         {
             ushort mask = MakeShortMask(start, end);
             var maskedNewValue = (ushort)(newValue >> start) & mask;

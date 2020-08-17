@@ -14,13 +14,13 @@ namespace Ae.DnsResolver.Tests.DnsMessage
             var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer1, ref offset);
             Assert.Equal(SampleDnsPackets.Answer1.Length, offset);
 
-            Assert.Equal(DnsQueryClass.IN, message.Qclass);
-            Assert.Equal(DnsQueryType.PTR, message.Qtype);
+            Assert.Equal(DnsQueryClass.IN, message.QueryClass);
+            Assert.Equal(DnsQueryType.PTR, message.QueryType);
             Assert.Equal(new[] { "1", "0", "0", "127", "in-addr", "arpa" }, message.Labels);
-            Assert.Equal(0, message.Ancount);
-            Assert.Equal(0, message.Arcount);
-            Assert.Equal(1, message.Qdcount);
-            Assert.Equal(1, message.Nscount);
+            Assert.Equal(0, message.AnswerRecordCount);
+            Assert.Equal(0, message.AdditionalRecordCount);
+            Assert.Equal(1, message.QuestionCount);
+            Assert.Equal(1, message.NameServerRecordCount);
 
             var record = message.Answers.Single();
             Assert.Equal(DnsQueryType.SOA, record.Type);
@@ -38,13 +38,13 @@ namespace Ae.DnsResolver.Tests.DnsMessage
             var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer2, ref offset);
             Assert.Equal(SampleDnsPackets.Answer2.Length, offset);
 
-            Assert.Equal(DnsQueryClass.IN, message.Qclass);
-            Assert.Equal(DnsQueryType.A, message.Qtype);
+            Assert.Equal(DnsQueryClass.IN, message.QueryClass);
+            Assert.Equal(DnsQueryType.A, message.QueryType);
             Assert.Equal(new[] { "alanedwardes-my", "sharepoint", "com" }, message.Labels);
-            Assert.Equal(7, message.Ancount);
-            Assert.Equal(0, message.Arcount);
-            Assert.Equal(1, message.Qdcount);
-            Assert.Equal(0, message.Nscount);
+            Assert.Equal(7, message.AnswerRecordCount);
+            Assert.Equal(0, message.AdditionalRecordCount);
+            Assert.Equal(1, message.QuestionCount);
+            Assert.Equal(0, message.NameServerRecordCount);
             Assert.Equal(7, message.Answers.Length);
 
             var record1 = message.Answers[0];
@@ -110,11 +110,11 @@ namespace Ae.DnsResolver.Tests.DnsMessage
             var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer3, ref offset);
             Assert.Equal(SampleDnsPackets.Answer3.Length, offset);
 
-            Assert.Equal(DnsQueryClass.IN, message.Qclass);
-            Assert.Equal(DnsQueryType.A, message.Qtype);
-            Assert.Equal(1, message.Ancount);
-            Assert.Equal(0, message.Arcount);
-            Assert.Equal(1, message.Qdcount);
+            Assert.Equal(DnsQueryClass.IN, message.QueryClass);
+            Assert.Equal(DnsQueryType.A, message.QueryType);
+            Assert.Equal(1, message.AnswerRecordCount);
+            Assert.Equal(0, message.AdditionalRecordCount);
+            Assert.Equal(1, message.QuestionCount);
 
             var record = Assert.Single(message.Answers);
             Assert.Equal(DnsQueryType.A, record.Type);
@@ -132,11 +132,11 @@ namespace Ae.DnsResolver.Tests.DnsMessage
             var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer4, ref offset);
             Assert.Equal(SampleDnsPackets.Answer4.Length, offset);
 
-            Assert.Equal(DnsQueryClass.IN, message.Qclass);
-            Assert.Equal(DnsQueryType.A, message.Qtype);
-            Assert.Equal(5, message.Ancount);
-            Assert.Equal(0, message.Arcount);
-            Assert.Equal(1, message.Qdcount);
+            Assert.Equal(DnsQueryClass.IN, message.QueryClass);
+            Assert.Equal(DnsQueryType.A, message.QueryType);
+            Assert.Equal(5, message.AnswerRecordCount);
+            Assert.Equal(0, message.AdditionalRecordCount);
+            Assert.Equal(1, message.QuestionCount);
             Assert.Equal(5, message.Answers.Length);
 
             var record1 = message.Answers[0];

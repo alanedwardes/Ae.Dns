@@ -23,16 +23,16 @@ namespace Ae.DnsResolver.Repository
             _dnsFilter = dnsFilter;
         }
 
-        private string GetCacheKey(DnsHeader header) => $"{string.Join(".", header.Labels)}~{header.Qtype}~{header.Qclass}";
+        private string GetCacheKey(DnsHeader header) => $"{string.Join(".", header.Labels)}~{header.QueryType}~{header.QueryClass}";
 
         private byte[] CreateNullResponse(DnsHeader request) => new DnsHeader
         {
             Id = request.Id,
-            Header = 33155,
+            Flags = 33155,
             Labels = request.Labels,
-            Qclass = request.Qclass,
-            Qdcount = request.Qdcount,
-            Qtype = request.Qtype
+            QueryClass = request.QueryClass,
+            QuestionCount = request.QuestionCount,
+            QueryType = request.QueryType
         }.WriteDnsHeader().ToArray();
 
         public async Task<byte[]> Resolve(byte[] query)

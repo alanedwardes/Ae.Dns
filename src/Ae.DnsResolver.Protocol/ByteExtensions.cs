@@ -6,19 +6,24 @@ namespace Ae.DnsResolver.Protocol
 {
     public static class ByteExtensions
     {
-        private static short SwapEndian(this short val)
+        public static short SwapEndian(this short val)
         {
             return BitConverter.IsLittleEndian ? (short)((val << 8) | (val >> 8)) : val;
         }
 
-        private static ushort SwapEndian(this ushort val)
+        public static ushort SwapEndian(this ushort val)
         {
             return BitConverter.IsLittleEndian ? (ushort)((val << 8) | (val >> 8)) : val;
         }
 
-        private static uint SwapEndian(this uint val)
+        public static uint SwapEndian(this uint val)
         {
             return BitConverter.IsLittleEndian ? (uint)((val << 16) | (val >> 16)) : val;
+        }
+
+        public static int SwapEndian(this int val)
+        {
+            return BitConverter.IsLittleEndian ? ((val << 16) | (val >> 16)) : val;
         }
 
         public static byte ReadByte(this byte[] bytes, ref int offset)
@@ -117,14 +122,14 @@ namespace Ae.DnsResolver.Protocol
         {
             var header = new DnsHeader();
             header.Id = bytes.ReadUInt16(ref offset);
-            header.Header = bytes.ReadUInt16(ref offset);
-            header.Qdcount = bytes.ReadInt16(ref offset);
-            header.Ancount = bytes.ReadInt16(ref offset);
-            header.Nscount = bytes.ReadInt16(ref offset);
-            header.Arcount = bytes.ReadInt16(ref offset);
+            header.Flags = bytes.ReadUInt16(ref offset);
+            header.QuestionCount = bytes.ReadInt16(ref offset);
+            header.AnswerRecordCount = bytes.ReadInt16(ref offset);
+            header.NameServerRecordCount = bytes.ReadInt16(ref offset);
+            header.AdditionalRecordCount = bytes.ReadInt16(ref offset);
             header.Labels = bytes.ReadString(ref offset);
-            header.Qtype = (DnsQueryType)bytes.ReadInt16(ref offset);
-            header.Qclass = (DnsQueryClass)bytes.ReadInt16(ref offset);
+            header.QueryType = (DnsQueryType)bytes.ReadInt16(ref offset);
+            header.QueryClass = (DnsQueryClass)bytes.ReadInt16(ref offset);
             return header;
         }
 
@@ -148,23 +153,23 @@ namespace Ae.DnsResolver.Protocol
             yield return (byte)id;
             yield return (byte)(id >> 8);
 
-            var headerSwapped = header.Header.SwapEndian();
+            var headerSwapped = header.Flags.SwapEndian();
             yield return (byte)headerSwapped;
             yield return (byte)(headerSwapped >> 8);
 
-            var qdcount = header.Qdcount.SwapEndian();
+            var qdcount = header.QuestionCount.SwapEndian();
             yield return (byte)qdcount;
             yield return (byte)(qdcount >> 8);
 
-            var ancount = header.Ancount.SwapEndian();
+            var ancount = header.AnswerRecordCount.SwapEndian();
             yield return (byte)ancount;
             yield return (byte)(ancount >> 8);
 
-            var nscount = header.Ancount.SwapEndian();
+            var nscount = header.AnswerRecordCount.SwapEndian();
             yield return (byte)nscount;
             yield return (byte)(nscount >> 8);
 
-            var arcount = header.Ancount.SwapEndian();
+            var arcount = header.AnswerRecordCount.SwapEndian();
             yield return (byte)arcount;
             yield return (byte)(arcount >> 8);
 
@@ -173,11 +178,11 @@ namespace Ae.DnsResolver.Protocol
                 yield return b;
             }
 
-            var type = ((ushort)header.Qtype).SwapEndian();
+            var type = ((ushort)header.QueryType).SwapEndian();
             yield return (byte)type;
             yield return (byte)(type >> 8);
 
-            var qclass = ((ushort)header.Qclass).SwapEndian();
+            var qclass = ((ushort)header.QueryClass).SwapEndian();
             yield return (byte)qclass;
             yield return (byte)(qclass >> 8);
         }
