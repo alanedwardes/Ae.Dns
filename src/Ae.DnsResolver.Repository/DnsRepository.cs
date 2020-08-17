@@ -42,7 +42,7 @@ namespace Ae.DnsResolver.Repository
 
             if (!_dnsFilter.IsPermitted(header))
             {
-                _logger.LogWarning("Blocked domain: {0}", header);
+                _logger.LogTrace("Blocked domain: {0}", header);
                 return CreateNullResponse(header);
             }
 
