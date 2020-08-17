@@ -50,25 +50,38 @@ namespace Ae.DnsResolver.Client
         {
             while (!_cancel.IsCancellationRequested)
             {
-                var result = await _client.ReceiveAsync();
-
-                var offset = 0;
-
-                DnsResponseMessage answer;
+                UdpReceiveResult result;
                 try
                 {
-                    answer = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
+                    result = await _client.ReceiveAsync();
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Recieved bad DNS response from {0}", _label);
+                    _logger.LogCritical(e, "Recieved bad network response from {0}", _label);
                     continue;
                 }
 
-                if (_pending.TryRemove(ToMessageId(answer), out TaskCompletionSource<byte[]> completionSource))
-                {
-                    completionSource.SetResult(result.Buffer);
-                }
+                _ = Task.Run(() => Receive(result));
+            }
+        }
+
+        public void Receive(UdpReceiveResult result)
+        {
+            DnsResponseMessage answer;
+            try
+            {
+                var offset = 0;
+                answer = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical(e, "Recieved bad DNS response from {0}", _label);
+                return;
+            }
+
+            if (_pending.TryRemove(ToMessageId(answer), out TaskCompletionSource<byte[]> completionSource))
+            {
+                completionSource.SetResult(result.Buffer);
             }
         }
 
