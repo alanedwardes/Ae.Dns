@@ -46,7 +46,7 @@ namespace Ae.DnsResolver.Client
             _task = Task.Run(RecieveTask);
         }
 
-        private async void RecieveTask()
+        private async Task RecieveTask()
         {
             while (!_cancel.IsCancellationRequested)
             {
@@ -61,23 +61,27 @@ namespace Ae.DnsResolver.Client
                     continue;
                 }
 
+                _ = Task.Run(() => Receive(result));
+            }
+        }
+
+        public void Receive(UdpReceiveResult result)
+        {
+            DnsResponseMessage answer;
+            try
+            {
                 var offset = 0;
+                answer = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical(e, "Recieved bad DNS response from {0}", _label);
+                return;
+            }
 
-                DnsResponseMessage answer;
-                try
-                {
-                    answer = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
-                }
-                catch (Exception e)
-                {
-                    _logger.LogCritical(e, "Recieved bad DNS response from {0}", _label);
-                    continue;
-                }
-
-                if (_pending.TryRemove(ToMessageId(answer), out TaskCompletionSource<byte[]> completionSource))
-                {
-                    completionSource.SetResult(result.Buffer);
-                }
+            if (_pending.TryRemove(ToMessageId(answer), out TaskCompletionSource<byte[]> completionSource))
+            {
+                completionSource.SetResult(result.Buffer);
             }
         }
 
