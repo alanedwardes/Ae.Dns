@@ -41,8 +41,17 @@ namespace Ae.DnsResolver.Server
 
         private async void Respond(UdpReceiveResult query)
         {
-            var offset = 0;
-            var message = query.Buffer.ReadDnsHeader(ref offset);
+            DnsHeader message;
+            try
+            {
+                var offset = 0;
+                message = query.Buffer.ReadDnsHeader(ref offset);
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical(e, "Unable to parse incoming packet");
+                return;
+            }
 
             _logger.LogTrace("Request: {0}", message);
 
@@ -53,11 +62,19 @@ namespace Ae.DnsResolver.Server
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Unable to resolve {0}", message);
+                _logger.LogCritical(e, "Unable to resolve {0}", message);
                 return;
             }
 
-            await _listener.SendAsync(answer, answer.Length, query.RemoteEndPoint);
+            try
+            {
+                await _listener.SendAsync(answer, answer.Length, query.RemoteEndPoint);
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical(e, "Unable to send back response to {0}", query.RemoteEndPoint);
+                return;
+            }
         }
     }
 }
