@@ -3,6 +3,8 @@ using Ae.DnsResolver.Repository;
 using Ae.DnsResolver.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Events;
 using System;
 using System.Net.Sockets;
 using System.Runtime.Caching;
@@ -13,15 +15,17 @@ namespace Ae.DnsResolver
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            DoWork().GetAwaiter().GetResult();
-        }
+        static void Main() => DoWork().GetAwaiter().GetResult();
 
         private static async Task DoWork()
         {
+            var logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .WriteTo.File("dns.log", LogEventLevel.Warning)
+                .CreateLogger();
+
             var services = new ServiceCollection();
-            services.AddLogging(x => x.AddConsole());
+            services.AddLogging(x => x.AddSerilog(logger));
             var provider = services.BuildServiceProvider();
 
             var cloudFlare1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("1.1.1.1", 53), "CloudFlare DNS Primary");
