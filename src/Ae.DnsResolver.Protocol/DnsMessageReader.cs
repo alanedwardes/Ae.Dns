@@ -4,17 +4,21 @@ using System.Linq;
 
 namespace Ae.DnsResolver.Protocol
 {
-    public class DnsRequestMessage : DnsHeader
+    public class DnsRequestMessage
     {
-        public override string ToString() => $"REQUEST: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {QueryType}, class: {QueryClass}";
+        public DnsHeader Header;
+
+        public override string ToString() => $"REQUEST: {Header}";
     }
 
-    public class DnsResponseMessage : DnsHeader
+    public class DnsResponseMessage
     {
+        public DnsHeader Header;
+
         public DnsResourceRecord[] Answers;
         public DnsQuestionRecord[] Questions;
 
-        public override string ToString() => $"RESPONSE: Id: {Id}, Domain: {string.Join(".", Labels)}, type: {QueryType}, class: {QueryClass}, records: {Answers.Length}";
+        public override string ToString() => $"RESPONSE: {Header}";
     }
 
     public class DnsResourceRecord
@@ -36,28 +40,20 @@ namespace Ae.DnsResolver.Protocol
 
     public static class DnsMessageReader
     {
-        public static DnsHeader ReadDnsMessage(byte[] bytes)
-        {
-            var result = new DnsRequestMessage();
-            var offset = 0;
-            ReadDnsMessage(bytes, result, ref offset);
-            return result;
-        }
-
         public static DnsResponseMessage ReadDnsResponse(byte[] bytes, ref int offset)
         {
             var result = new DnsResponseMessage();
-            ReadDnsMessage(bytes, result, ref offset);
+            result.Header = bytes.ReadDnsHeader(ref offset);
 
             var records = new List<DnsResourceRecord>();
-            for (var i = 0; i < result.AnswerRecordCount + result.NameServerRecordCount; i++)
+            for (var i = 0; i < result.Header.AnswerRecordCount + result.Header.NameServerRecordCount; i++)
             {
                 records.Add(ReadResourceRecord(bytes, ref offset));
             }
             result.Answers = records.ToArray();
 
             var questions = new List<DnsQuestionRecord>();
-            for (var i = 0; i < result.QuestionCount; i++)
+            for (var i = 0; i < result.Header.QuestionCount; i++)
             {
                 //questions.Add(ReadQuestionRecord(bytes, ref offset));
             }
@@ -101,20 +97,6 @@ namespace Ae.DnsResolver.Protocol
                 DataOffset = dataOffset,
                 DataLength = rdlength
             };
-        }
-
-        private static DnsHeader ReadDnsMessage(byte[] bytes, DnsHeader result, ref int offset)
-        {
-            result.Id = bytes.ReadUInt16(ref offset);
-            result.Flags = bytes.ReadUInt16(ref offset);
-            result.QuestionCount = bytes.ReadInt16(ref offset);
-            result.AnswerRecordCount = bytes.ReadInt16(ref offset);
-            result.NameServerRecordCount = bytes.ReadInt16(ref offset);
-            result.AdditionalRecordCount = bytes.ReadInt16(ref offset);
-            result.Labels = bytes.ReadString(ref offset).ToArray();
-            result.QueryType = (DnsQueryType)bytes.ReadInt16(ref offset);
-            result.QueryClass = (DnsQueryClass)bytes.ReadInt16(ref offset);
-            return result;
         }
     }
 }

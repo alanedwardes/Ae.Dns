@@ -79,7 +79,7 @@ namespace Ae.DnsResolver.Client
                 return;
             }
 
-            if (_pending.TryRemove(ToMessageId(answer), out TaskCompletionSource<byte[]> completionSource))
+            if (_pending.TryRemove(ToMessageId(answer.Header), out TaskCompletionSource<byte[]> completionSource))
             {
                 completionSource.SetResult(result.Buffer);
             }
@@ -105,21 +105,22 @@ namespace Ae.DnsResolver.Client
 
         public Task<DnsHeader> Lookup(string name, DnsQueryClass queryClass, DnsQueryType queryType)
         {
-            var dnsMessage = new DnsRequestMessage
-            {
-                Labels = name.Split("."),
-                QueryType = queryType,
-                QueryClass = queryClass,
-                QuestionCount = 1,
-                Flags = 1
-            };
+            //var dnsMessage = new DnsRequestMessage
+            //{
+            //    Labels = name.Split("."),
+            //    QueryType = queryType,
+            //    QueryClass = queryClass,
+            //    QuestionCount = 1,
+            //    Flags = 1
+            //};
 
             return null;
         }
 
         public async Task<byte[]> LookupRaw(byte[] raw)
         {
-            var query = DnsMessageReader.ReadDnsMessage(raw);
+            var offset = 0;
+            var query = raw.ReadDnsHeader(ref offset);
 
             var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, raw));
 
