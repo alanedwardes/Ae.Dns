@@ -42,7 +42,7 @@ namespace Ae.DnsResolver.Repository
 
             if (!_dnsFilter.IsPermitted(header))
             {
-                _logger.LogTrace("Blocked domain: {0}", header);
+                _logger.LogInformation("Blocked domain: {0}", header);
                 return CreateNullResponse(header);
             }
 
@@ -65,7 +65,7 @@ namespace Ae.DnsResolver.Repository
             answer = await _dnsClient.LookupRaw(query);
 
             offset = 0;
-            var answerMessage = DnsMessageReader.ReadDnsResponse(answer, ref offset);
+            var answerMessage = answer.ReadDnsAnswer(ref offset);
 
             if (answerMessage.Answers.Length > 0)
             {

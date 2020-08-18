@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Ae.DnsResolver.Protocol
@@ -141,6 +142,44 @@ namespace Ae.DnsResolver.Protocol
             header.QueryType = (DnsQueryType)bytes.ReadInt16(ref offset);
             header.QueryClass = (DnsQueryClass)bytes.ReadInt16(ref offset);
             return header;
+        }
+
+        public static DnsAnswer ReadDnsAnswer(this byte[] bytes, ref int offset)
+        {
+            var result = new DnsAnswer();
+            result.Header = bytes.ReadDnsHeader(ref offset);
+
+            var records = new List<DnsResourceRecord>();
+            for (var i = 0; i < result.Header.AnswerRecordCount + result.Header.NameServerRecordCount; i++)
+            {
+                records.Add(ReadDnsResourceRecord(bytes, ref offset));
+            }
+            result.Answers = records.ToArray();
+
+            return result;
+        }
+
+        private static DnsResourceRecord ReadDnsResourceRecord(byte[] bytes, ref int offset)
+        {
+            var resourceName = bytes.ReadString(ref offset);
+            var resourceType = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            var resourceClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
+            var ttl = bytes.ReadUInt32(ref offset);
+            var rdlength = bytes.ReadUInt16(ref offset);
+
+            var dataOffset = offset;
+
+            offset += rdlength;
+
+            return new DnsResourceRecord
+            {
+                Name = resourceName.ToArray(),
+                Type = resourceType,
+                Class = resourceClass,
+                Ttl = TimeSpan.FromSeconds(ttl),
+                DataOffset = dataOffset,
+                DataLength = rdlength
+            };
         }
 
         public static IEnumerable<byte> WriteStrings(string[] strings)

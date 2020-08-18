@@ -11,7 +11,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         public void ReadAnswer1()
         {
             int offset = 0;
-            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer1, ref offset);
+            var message = SampleDnsPackets.Answer1.ReadDnsAnswer(ref offset);
             Assert.Equal(SampleDnsPackets.Answer1.Length, offset);
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
@@ -35,7 +35,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         public void ReadAnswer2()
         {
             int offset = 0;
-            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer2, ref offset);
+            var message = SampleDnsPackets.Answer2.ReadDnsAnswer(ref offset);
             Assert.Equal(SampleDnsPackets.Answer2.Length, offset);
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
@@ -107,7 +107,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         public void ReadAnswer3()
         {
             int offset = 0;
-            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer3, ref offset);
+            var message = SampleDnsPackets.Answer3.ReadDnsAnswer(ref offset);
             Assert.Equal(SampleDnsPackets.Answer3.Length, offset);
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
@@ -129,7 +129,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         public void ReadAnswer4()
         {
             int offset = 0;
-            var message = DnsMessageReader.ReadDnsResponse(SampleDnsPackets.Answer4, ref offset);
+            var message = SampleDnsPackets.Answer4.ReadDnsAnswer(ref offset);
             Assert.Equal(SampleDnsPackets.Answer4.Length, offset);
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);

@@ -20,7 +20,8 @@ namespace Ae.DnsResolver
         private static async Task DoWork()
         {
             var logger = new LoggerConfiguration()
-                .WriteTo.Console()
+                .MinimumLevel.Verbose()
+                .WriteTo.Console(LogEventLevel.Verbose)
                 .WriteTo.File("dns.log", LogEventLevel.Warning)
                 .CreateLogger();
 

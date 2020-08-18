@@ -67,11 +67,11 @@ namespace Ae.DnsResolver.Client
 
         public void Receive(UdpReceiveResult result)
         {
-            DnsResponseMessage answer;
+            DnsAnswer answer;
             try
             {
                 var offset = 0;
-                answer = DnsMessageReader.ReadDnsResponse(result.Buffer, ref offset);
+                answer = result.Buffer.ReadDnsAnswer(ref offset);
             }
             catch (Exception e)
             {
