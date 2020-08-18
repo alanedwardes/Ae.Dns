@@ -6,17 +6,59 @@ namespace Ae.DnsResolver.Tests.DnsMessage
     public class DnsHeaderTests
     {
         [Fact]
-        public void TestDnsHeader()
+        public void TestDnsHeaderIsQueryResponse()
+        {
+            foreach (var answer in SampleDnsPackets.Answers)
+            {
+                var offset = 0;
+                var header = answer.ReadDnsHeader(ref offset);
+                Assert.True(header.IsQueryResponse);
+            }
+
+            foreach (var query in SampleDnsPackets.Queries)
+            {
+                var offset = 0;
+                var header = query.ReadDnsHeader(ref offset);
+                Assert.False(header.IsQueryResponse);
+            }
+        }
+
+        [Fact]
+        public void TestDnsHeaderGetSetFlags()
         {
             var header = new DnsHeader();
 
-            header.OperationCode = DnsOperationCode.STATUS;
+            header.OperationCode = DnsOperationCode.IQUERY;
+            Assert.Equal(DnsOperationCode.IQUERY, header.OperationCode);
+            Assert.Equal(2048, header.Flags);
 
+            header.ResponseCode = DnsResponseCode.NOTIMP;
+            Assert.Equal(DnsResponseCode.NOTIMP, header.ResponseCode);
+            Assert.Equal(2052, header.Flags);
 
+            header.IsQueryResponse = true;
+            Assert.True(header.IsQueryResponse);
+            Assert.Equal(34820, header.Flags);
 
+            header.AuthoritativeAnswer = true;
+            Assert.True(header.AuthoritativeAnswer);
+            Assert.Equal(35844, header.Flags);
 
+            header.RecursionAvailable = true;
+            Assert.True(header.RecursionAvailable);
+            Assert.Equal(35972, header.Flags);
 
-            Assert.Equal(DnsOperationCode.STATUS, header.OperationCode);
+            header.RecusionDesired = true;
+            Assert.True(header.RecusionDesired);
+            Assert.Equal(36228, header.Flags);
+        }
+
+        [Fact]
+        public void TestDnsHeaderIsNxDomainResponse()
+        {
+            var offset = 0;
+            var header = SampleDnsPackets.Answer1.ReadDnsHeader(ref offset);
+            Assert.Equal(DnsResponseCode.NXDOMAIN, header.ResponseCode);
         }
     }
 }

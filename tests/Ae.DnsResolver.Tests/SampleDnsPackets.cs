@@ -2,7 +2,7 @@
 {
     public static class SampleDnsPackets
     {
-        public static byte[][] Queries => new[] { new byte[0], Query1, Query2, Query3, Query4 };
+        public static byte[][] Queries => new[] { Query1, Query2, Query3, Query4, Query5 };
 
         public static readonly byte[] Query1 = new byte[]
         {
@@ -34,7 +34,7 @@
             175, 213, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7, 114, 111, 97, 109, 105, 110, 103, 10, 111, 102, 102, 105, 99, 101, 97, 112, 112, 115, 4, 108, 105, 118, 101, 3, 99, 111, 109, 0, 0, 1, 0, 1
         };
 
-        public static byte[][] Answers => new[] { new byte[0], Answer1, Answer2, Answer3, Answer4 };
+        public static byte[][] Answers => new[] { Answer1, Answer2, Answer3, Answer4, Answer5, Answer6 };
 
         public static readonly byte[] Answer1 = new byte[]
         {

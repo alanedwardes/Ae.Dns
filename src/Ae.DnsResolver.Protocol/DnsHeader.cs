@@ -13,52 +13,46 @@
         public DnsQueryType QueryType { get; set; }
         public DnsQueryClass QueryClass { get; set; }
 
-        public bool IsQuery
+        public bool IsQueryResponse
         {
-            get => (Flags.GetBits(0, 1) >> 15) == 1;
-            set => Flags.SetBits(0, 1, (ushort)(value ? 1 : 0));
+            get => (Flags & 0x8000) == 0x8000;
+            set => Flags = value ? (ushort)(Flags | 0x8000) : (ushort)(Flags & (~0x8000));
         }
 
         public DnsOperationCode OperationCode
         {
-            get => (DnsOperationCode)(Flags.GetBits(1, 5) >> 8).SwapEndian();
-            set => Flags.SetBits(1, 5, (ushort)value);
+            get => (DnsOperationCode)((Flags & 0x7800) >> 11);
+            set => Flags = (ushort)((Flags & ~0x7800) | ((int)value << 11));
         }
 
         public bool AuthoritativeAnswer
         {
-            get => (Flags.GetBits(5, 6) >> 15) == 1;
-            set => Flags.SetBits(5, 6, (ushort)(value ? 1 : 0));
+            get => (Flags & 0x0400) == 0x0400;
+            set => Flags = value ? (ushort)(Flags | 0x0400) : (ushort)(Flags & (~0x0400));
         }
 
         public bool Truncation
         {
-            get => (Flags.GetBits(6, 7) >> 15) == 1;
-            set => Flags.SetBits(6, 7, (ushort)(value ? 1 : 0));
+            get => (Flags & 0x0200) == 0x0200;
+            set => Flags = value ? (ushort)(Flags | 0x0200) : (ushort)(Flags & (~0x0200));
         }
 
         public bool RecusionDesired
         {
-            get => (Flags.GetBits(7, 8) >> 15) == 1;
-            set => Flags.SetBits(7, 8, (ushort)(value ? 1 : 0));
+            get => (Flags & 0x0100) == 0x0100;
+            set => Flags = value ? (ushort)(Flags | 0x0100) : (ushort)(Flags & (~0x0100));
         }
 
         public bool RecursionAvailable
         {
-            get => (Flags.GetBits(8, 9) >> 15) == 1;
-            set => Flags.SetBits(8, 9, (ushort)(value ? 1 : 0));
-        }
-
-        public byte Reserved
-        {
-            get => (byte)(Flags.GetBits(9, 12) >> 8);
-            set => Flags.SetBits(9, 12, value);
+            get => (Flags & 0x0080) == 0x0080;
+            set => Flags = value ? (ushort)(Flags | 0x0080) : (ushort)(Flags & (~0x0080));
         }
 
         public DnsResponseCode ResponseCode
         {
-            get => (DnsResponseCode)(Flags.GetBits(12, 16) >> 8).SwapEndian();
-            set => Flags.SetBits(12, 16, ((ushort)value).SwapEndian());
+            get => (DnsResponseCode)(Flags & 0x000F);
+            set => Flags = (ushort)((Flags & ~0x000F) | (byte)value);
         }
 
         public override string ToString() => $"Id: {Id}, Domain: {string.Join(".", Labels)}, type: {QueryType}, class: {QueryClass}";
