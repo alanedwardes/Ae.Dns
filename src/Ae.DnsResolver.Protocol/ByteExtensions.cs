@@ -43,6 +43,16 @@ namespace Ae.DnsResolver.Protocol
             return BitConverter.GetBytes(value.SwapEndian());
         }
 
+        public static string ToDebugString(this byte[] bytes)
+        {
+            if (bytes == null)
+            {
+                return "<null>";
+            }
+
+            return $"new [] {{{string.Join(", ", bytes)}}}";
+        }
+
         public static uint ReadUInt32(this byte[] bytes, ref int offset)
         {
             offset += sizeof(uint);

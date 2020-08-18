@@ -49,7 +49,7 @@ namespace Ae.DnsResolver.Server
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Unable to parse incoming packet");
+                _logger.LogCritical(e, "Unable to parse incoming packet: {0}", query.Buffer.ToDebugString());
                 return;
             }
 

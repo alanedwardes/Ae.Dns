@@ -57,7 +57,7 @@ namespace Ae.DnsResolver.Client
                 }
                 catch (Exception e)
                 {
-                    _logger.LogCritical(e, "Recieved bad network response from {0}", _label);
+                    _logger.LogCritical(e, "Recieved bad network response from {0}: {1}", _label, result.Buffer.ToDebugString());
                     continue;
                 }
 
@@ -75,7 +75,7 @@ namespace Ae.DnsResolver.Client
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Recieved bad DNS response from {0}", _label);
+                _logger.LogCritical(e, "Recieved bad DNS response from {0}: {1}", _label, result.Buffer);
                 return;
             }
 
