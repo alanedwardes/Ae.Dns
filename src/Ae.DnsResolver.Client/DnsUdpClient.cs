@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,7 @@ namespace Ae.DnsResolver.Client
 
         private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
+        private readonly Random _random = new Random();
         private readonly UdpClient _client;
         private readonly string _label;
         private readonly Task _task;
@@ -103,18 +105,29 @@ namespace Ae.DnsResolver.Client
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
-        public Task<DnsHeader> Lookup(string name, DnsQueryClass queryClass, DnsQueryType queryType)
+        public async Task<byte[]> LookupRaw(string name, DnsQueryType queryType)
         {
-            //var dnsMessage = new DnsRequestMessage
-            //{
-            //    Labels = name.Split("."),
-            //    QueryType = queryType,
-            //    QueryClass = queryClass,
-            //    QuestionCount = 1,
-            //    Flags = 1
-            //};
+            var query = new DnsHeader
+            {
+                Id = (ushort)_random.Next(0, ushort.MaxValue),
+                QueryClass = DnsQueryClass.IN,
+                QueryType = queryType,
+                RecusionDesired = true,
+                Labels = name.Split('.'),
+                QuestionCount = 1,
+            };
 
-            return null;
+            var queryBytes = query.WriteDnsHeader().ToArray();
+
+            var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, queryBytes));
+
+            var result = await completionSource.Task;
+
+            // Copy the same ID from the request
+            result[0] = queryBytes[0];
+            result[1] = queryBytes[1];
+
+            return result;
         }
 
         public async Task<byte[]> LookupRaw(byte[] raw)

@@ -1,5 +1,6 @@
 ﻿using Ae.DnsResolver.Client;
 using Ae.DnsResolver.Protocol;
+using System.Linq;
 using Xunit;
 
 namespace Ae.DnsResolver.Tests.DnsMessage
@@ -20,6 +21,25 @@ namespace Ae.DnsResolver.Tests.DnsMessage
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
             Assert.Equal(0, header.NameServerRecordCount);
+            Assert.False(header.IsQueryResponse);
+            Assert.False(header.Truncation);
+            Assert.False(header.RecursionAvailable);
+            Assert.True(header.RecusionDesired);
+            Assert.Equal(DnsResponseCode.NOERROR, header.ResponseCode);
+
+            var header2 = new DnsHeader
+            {
+                Id = header.Id,
+                QueryClass = DnsQueryClass.IN,
+                QueryType = DnsQueryType.A,
+                RecusionDesired = true,
+                Labels = header.Labels,
+                QuestionCount = 1,
+            };
+
+            var bytes = header2.WriteDnsHeader().ToArray();
+
+            Assert.Equal(SampleDnsPackets.Query1, bytes);
         }
 
         [Fact]

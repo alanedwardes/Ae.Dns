@@ -10,5 +10,7 @@ namespace Ae.DnsResolver.Protocol
         public TimeSpan Ttl;
         public int DataOffset;
         public int DataLength;
+
+        public override string ToString() => $"Name: {string.Join(", ", Name)} Type: {Type} Class: {Class} TTL: {Ttl}";
     }
 }

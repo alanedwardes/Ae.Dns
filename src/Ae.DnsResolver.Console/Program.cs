@@ -40,7 +40,7 @@ namespace Ae.DnsResolver
             _ = filter.AddRemoteBlockList(new Uri("https://mirror1.malwaredomains.com/files/justdomains"));
             _ = filter.AddRemoteBlockList(new Uri("https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt"));
 
-            var combinedDnsClient = new DnsCompositeClient(cloudFlare1, cloudFlare2, google1, google2);
+            var combinedDnsClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
 
             var repository = new DnsRepository(provider.GetRequiredService<ILogger<DnsRepository>>(), combinedDnsClient, new MemoryCache("dns"), filter);
 
