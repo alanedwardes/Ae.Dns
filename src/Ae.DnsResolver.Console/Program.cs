@@ -29,10 +29,17 @@ namespace Ae.DnsResolver
             services.AddLogging(x => x.AddSerilog(logger));
             var provider = services.BuildServiceProvider();
 
-            var cloudFlare1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("1.1.1.1", 53), "CloudFlare DNS Primary");
-            var cloudFlare2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("1.0.0.1", 53), "CloudFlare DNS Secondary");
-            var google1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("8.8.8.8", 53), "Google DNS Primary");
-            var google2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), new UdpClient("8.8.4.4", 53), "Google DNS Secondary");
+            static Socket CreateDnsSocket(string host)
+            {
+                var socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
+                socket.Connect("1.1.1.1", 53);
+                return socket;
+            }
+
+            var cloudFlare1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), CreateDnsSocket("1.1.1.1"), "CloudFlare DNS Primary");
+            var cloudFlare2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), CreateDnsSocket("1.0.0.1"), "CloudFlare DNS Secondary");
+            var google1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), CreateDnsSocket("8.8.8.8"), "Google DNS Primary");
+            var google2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), CreateDnsSocket("8.8.4.4"), "Google DNS Secondary");
 
             var filter = new DnsRemoteSetFilter(provider.GetRequiredService<ILogger<DnsRemoteSetFilter>>());
 

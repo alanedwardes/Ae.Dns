@@ -49,7 +49,7 @@ namespace Ae.DnsResolver.Protocol
             return BitConverter.GetBytes(value.SwapEndian());
         }
 
-        public static string ToDebugString(this byte[] bytes)
+        public static string ToDebugString(this IEnumerable<byte> bytes)
         {
             if (bytes == null)
             {

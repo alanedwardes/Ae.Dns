@@ -1,4 +1,5 @@
 ﻿using Ae.DnsResolver.Client;
+using Ae.DnsResolver.Client.Exceptions;
 using Ae.DnsResolver.Protocol;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Net.Sockets;
@@ -14,16 +15,35 @@ namespace Ae.DnsResolver.Tests.Client
         {
             byte[] result;
 
-            using (var udpClient = new UdpClient("1.1.1.1", 53))
-            using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
+            using (var udpClient = new Socket(SocketType.Dgram, ProtocolType.Udp))
             {
-                result = await client.LookupRaw("alanedwardes.com", DnsQueryType.A);
+                udpClient.Connect("1.1.1.1", 53);
+
+                using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
+                {
+                    result = await client.LookupRaw("alanedwardes.com", DnsQueryType.A);
+                }
             }
 
             var offset = 0;
             var answer = result.ReadDnsAnswer(ref offset);
 
             Assert.Equal(4, answer.Answers.Length);
+        }
+
+        [Fact]
+        public async Task TestLookupTimeout()
+        {
+            using (var udpClient = new Socket(SocketType.Dgram, ProtocolType.Udp))
+            {
+                // Reserved - see https://en.wikipedia.org/wiki/Reserved_IP_addresses
+                udpClient.Connect("192.88.99.0", 53);
+
+                using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
+                {
+                    await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.LookupRaw("alanedwardes.com", DnsQueryType.A));
+                }
+            }
         }
     }
 }
