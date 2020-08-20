@@ -11,7 +11,7 @@ using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Ae.DnsResolver
+namespace Ae.DnsResolver.Console
 {
     class Program
     {

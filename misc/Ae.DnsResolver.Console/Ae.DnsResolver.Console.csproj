@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>flase</IsPackable>
+    <WarningsAsErrors>true</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,8 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ae.DnsResolver.Client\Ae.DnsResolver.Client.csproj" />
-    <ProjectReference Include="..\Ae.DnsResolver.Server\Ae.DnsResolver.Server.csproj" />
+    <ProjectReference Include="..\..\src\Ae.DnsResolver.Client\Ae.DnsResolver.Client.csproj" />
+    <ProjectReference Include="..\..\src\Ae.DnsResolver.Server\Ae.DnsResolver.Server.csproj" />
   </ItemGroup>
 
 </Project>
