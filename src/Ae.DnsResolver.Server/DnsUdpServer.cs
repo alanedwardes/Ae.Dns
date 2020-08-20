@@ -2,6 +2,7 @@
 using Ae.DnsResolver.Repository;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,6 +42,8 @@ namespace Ae.DnsResolver.Server
 
         private async void Respond(UdpReceiveResult query)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             DnsHeader message;
             try
             {
@@ -52,8 +55,6 @@ namespace Ae.DnsResolver.Server
                 _logger.LogCritical(e, "Unable to parse incoming packet: {0}", query.Buffer.ToDebugString());
                 return;
             }
-
-            _logger.LogTrace("Request: {0}", message);
 
             byte[] answer;
             try
@@ -75,6 +76,8 @@ namespace Ae.DnsResolver.Server
                 _logger.LogCritical(e, "Unable to send back response to {0}", query.RemoteEndPoint);
                 return;
             }
+
+            _logger.LogTrace("Responded to DNS request for {Domain} in {ResponseTime}", message.GetDomain(), stopwatch.Elapsed.TotalSeconds);
         }
     }
 }

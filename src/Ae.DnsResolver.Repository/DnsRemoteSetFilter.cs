@@ -25,7 +25,7 @@ namespace Ae.DnsResolver.Repository
 
             using var httpClient = new HttpClient();
 
-            _logger.LogTrace("Downloading {0}", fileUri);
+            _logger.LogTrace("Downloading {FilterUri}", fileUri);
 
             var response = await httpClient.GetStreamAsync(fileUri);
             using var sr = new StreamReader(response);
@@ -53,14 +53,14 @@ namespace Ae.DnsResolver.Repository
                 }
             }
 
-            _logger.LogTrace("Found {0} domains in {1}", set.Count, fileUri);
+            _logger.LogTrace("Found {Count} domains in {FilterUri}", set.Count, fileUri);
 
             foreach (var domain in set)
             {
                 _domains[domain] = allow;
             }
 
-            _logger.LogInformation("Filter list now contains {0} domains", _domains.Count);
+            _logger.LogInformation("Filter list now contains {Count} domains", _domains.Count);
         }
 
         public Task AddRemoteBlockList(Uri hostsFileUri) => AddRemoteList(hostsFileUri, false);

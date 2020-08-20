@@ -1,1 +1,1 @@
-dotnet publish -c Release -r linux-x64 src/Ae.DnsResolver.Console -o deploy
+dotnet publish -c Release -r linux-x64 misc/Ae.DnsResolver.Console -o deploy

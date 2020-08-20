@@ -42,7 +42,7 @@ namespace Ae.DnsResolver.Repository
 
             if (!_dnsFilter.IsPermitted(header))
             {
-                _logger.LogInformation("Blocked domain: {0}", header);
+                _logger.LogTrace("DNS query blocked for {Domain}", header.GetDomain());
                 return CreateNullResponse(header);
             }
 
@@ -53,6 +53,8 @@ namespace Ae.DnsResolver.Repository
             var cached = _objectCache.Get(cacheKey);
             if (cached != null)
             {
+                _logger.LogTrace("Returned cached DNS result for {Domain}", header.GetDomain());
+
                 answer = (byte[])cached;
 
                 // Replace the ID
@@ -66,6 +68,8 @@ namespace Ae.DnsResolver.Repository
 
             offset = 0;
             var answerMessage = answer.ReadDnsAnswer(ref offset);
+
+            _logger.LogTrace("Returned fresh DNS result for {Domain}", header.GetDomain());
 
             if (answerMessage.Answers.Length > 0)
             {

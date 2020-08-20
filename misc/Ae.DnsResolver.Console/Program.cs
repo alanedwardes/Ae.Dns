@@ -1,10 +1,13 @@
 ﻿using Ae.DnsResolver.Client;
 using Ae.DnsResolver.Repository;
 using Ae.DnsResolver.Server;
+using AWS.Logger;
+using AWS.Logger.SeriLog;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting.Json;
 using System;
 using System.Net.Sockets;
 using System.Runtime.Caching;
@@ -23,6 +26,7 @@ namespace Ae.DnsResolver.Console
                 .MinimumLevel.Verbose()
                 .WriteTo.Console(LogEventLevel.Verbose)
                 .WriteTo.File("dns.log", LogEventLevel.Warning)
+                .WriteTo.AWSSeriLog(new AWSLoggerConfig{LogGroup = "DnsResolverConsole"}, null, new JsonFormatter())
                 .CreateLogger();
 
             var services = new ServiceCollection();
@@ -32,7 +36,7 @@ namespace Ae.DnsResolver.Console
             static Socket CreateDnsSocket(string host)
             {
                 var socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
-                socket.Connect("1.1.1.1", 53);
+                socket.Connect(host, 53);
                 return socket;
             }
 

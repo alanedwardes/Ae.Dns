@@ -55,6 +55,8 @@
             set => Flags = (ushort)((Flags & ~0x000F) | (byte)value);
         }
 
-        public override string ToString() => $"Id: {Id}, Domain: {string.Join(".", Labels)}, type: {QueryType}, class: {QueryClass}";
+        public override string ToString() => $"Id: {Id}, Domain: {GetDomain()}, type: {QueryType}, class: {QueryClass}";
+
+        public string GetDomain() => string.Join(".", Labels);
     }
 }
