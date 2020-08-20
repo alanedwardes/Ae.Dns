@@ -51,10 +51,11 @@ namespace Ae.DnsResolver.Client
 
         private async Task RecieveTask()
         {
+            var buffer = new byte[1024];
+            var read = 0;
+
             while (!_cancel.IsCancellationRequested)
             {
-                var buffer = new byte[1024];
-                var read = 0;
                 try
                 {
                     read = await _client.ReceiveAsync(buffer, SocketFlags.None, _cancel.Token);
