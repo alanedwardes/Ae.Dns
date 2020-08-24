@@ -1,68 +1,291 @@
 ﻿namespace Ae.DnsResolver.Protocol
 {
+    /// <summary>
+    /// DNS resource record type. See https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
+    /// </summary>
     public enum DnsQueryType : ushort
     {
-        A = 0x0001,
-        NS = 0x0002,
-        MD = 0x0003,
-        MF = 0x0004,
-        CNAME = 0x0005,
-        SOA = 0x0006,
-        MB = 0x0007,
-        MG = 0x0008,
-        MR = 0x0009,
-        NULL = 0x000a,
-        WKS = 0x000b,
-        PTR = 0x000c,
-        HINFO = 0x000d,
-        MINFO = 0x000e,
-        MX = 0x000f,
-        TEXT = 0x0010,
-        RP = 0x0011,
-        AFSDB = 0x0012,
-        X25 = 0x0013,
-        ISDN = 0x0014,
-        RT = 0x0015,
-        NSAP = 0x0016,
-        NSAPPTR = 0x0017,
-        SIG = 0x0018,
-        KEY = 0x0019,
-        PX = 0x001a,
-        GPOS = 0x001b,
-        AAAA = 0x001c,
-        LOC = 0x001d,
-        NXT = 0x001e,
-        EID = 0x001f,
-        NIMLOC = 0x0020,
-        SRV = 0x0021,
-        ATMA = 0x0022,
-        NAPTR = 0x0023,
-        KX = 0x0024,
-        CERT = 0x0025,
-        A6 = 0x0026,
-        DNAME = 0x0027,
-        SINK = 0x0028,
-        OPT = 0x0029,
-        DS = 0x002B,
-        RRSIG = 0x002E,
-        NSEC = 0x002F,
-        DNSKEY = 0x0030,
-        DHCID = 0x0031,
-        UINFO = 0x0064,
-        UID = 0x0065,
-        GID = 0x0066,
-        UNSPEC = 0x0067,
-        ADDRS = 0x00f8,
-        TKEY = 0x00f9,
-        TSIG = 0x00fa,
-        IXFR = 0x00fb,
-        AXFR = 0x00fc,
-        MAILB = 0x00fd,
-        MAILA = 0x00fe,
-        ALL = 0x00ff,
-        ANY = 0x00ff,
-        WINS = 0xff01,
-        WINSR = 0xff02,
-        NBSTAT = WINSR
+        /// <summary>
+        /// A host address
+        /// </summary>
+        A = 1,
+        /// <summary>
+        /// An authoritative name server
+        /// </summary>
+        NS = 2,
+        /// <summary>
+        /// A mail destination (OBSOLETE - use MX)
+        /// </summary>
+        MD = 3,
+        /// <summary>
+        /// A mail forwarder (OBSOLETE - use MX)
+        /// </summary>
+        MF = 4,
+        /// <summary>
+        /// The canonical name for an alias
+        /// </summary>
+        CNAME = 5,
+        /// <summary>
+        /// Marks the start of a zone of authority
+        /// </summary>
+        SOA = 6,
+        /// <summary>
+        /// A mailbox domain name (EXPERIMENTAL)
+        /// </summary>
+        MB = 7,
+        /// <summary>
+        /// A mail group member (EXPERIMENTAL)
+        /// </summary>
+        MG = 8,
+        /// <summary>
+        /// A mail rename domain name (EXPERIMENTAL)
+        /// </summary>
+        MR = 9,
+        /// <summary>
+        /// A null RR (EXPERIMENTAL)
+        /// </summary>
+        NULL = 10,
+        /// <summary>
+        /// A well known service description
+        /// </summary>
+        WKS = 11,
+        /// <summary>
+        /// A domain name pointer
+        /// </summary>
+        PTR = 12,
+        /// <summary>
+        /// Host information
+        /// </summary>
+        HINFO = 13,
+        /// <summary>
+        /// Mailbox or mail list information
+        /// </summary>
+        MINFO = 14,
+        /// <summary>
+        /// Mail exchange
+        /// </summary>
+        MX = 15,
+        /// <summary>
+        /// Text strings
+        /// </summary>
+        TEXT = 16,
+        /// <summary>
+        /// For Responsible Person
+        /// </summary>
+        RP = 17,
+        /// <summary>
+        /// For AFS Data Base location
+        /// </summary>
+        AFSDB = 18,
+        /// <summary>
+        /// For X.25 PSDN address
+        /// </summary>
+        X25 = 19,
+        /// <summary>
+        /// For ISDN address
+        /// </summary>
+        ISDN = 20,
+        /// <summary>
+        /// For Route Through
+        /// </summary>
+        RT = 21,
+        /// <summary>
+        /// For NSAP address, NSAP style A record
+        /// </summary>
+        NSAP = 22,
+        /// <summary>
+        /// For domain name pointer, NSAP style
+        /// </summary>
+        NSAPPTR = 23,
+        /// <summary>
+        /// For security signature
+        /// </summary>
+        SIG = 24,
+        /// <summary>
+        /// For security key
+        /// </summary>
+        KEY = 25,
+        /// <summary>
+        /// X.400 mail mapping information
+        /// </summary>
+        PX = 26,
+        /// <summary>
+        /// Geographical Position
+        /// </summary>
+        GPOS = 27,
+        /// <summary>
+        /// IP6 Address
+        /// </summary>
+        AAAA = 28,
+        /// <summary>
+        /// Location Information
+        /// </summary>
+        LOC = 29,
+        /// <summary>
+        /// Next Domain (OBSOLETE)
+        /// </summary>
+        NXT = 30,
+        /// <summary>
+        /// Endpoint Identifier
+        /// </summary>
+        EID = 31,
+        /// <summary>
+        /// Nimrod Locator
+        /// </summary>
+        NIMLOC = 32,
+        /// <summary>
+        /// Server Selection
+        /// </summary>
+        SRV = 33,
+        /// <summary>
+        /// ATM Address
+        /// </summary>
+        ATMA = 34,
+        /// <summary>
+        /// Naming Authority Pointer
+        /// </summary>
+        NAPTR = 35,
+        /// <summary>
+        /// Key Exchanger
+        /// </summary>
+        KX = 36,
+        CERT = 37,
+        /// <summary>
+        /// A6 (OBSOLETE - use AAAA)
+        /// </summary>
+        A6 = 38,
+        DNAME = 39,
+        SINK = 40,
+        OPT = 41,
+        APL = 42,
+        /// <summary>
+        /// Delegation Signer
+        /// </summary>
+        DS = 43,
+        /// <summary>
+        /// SSH Key Fingerprint
+        /// </summary>
+        SSHFP = 44,
+        IPSECKEY = 45,
+        RRSIG = 46,
+        NSEC = 47,
+        DNSKEY = 48,
+        DHCID = 49,
+        NSEC3 = 50,
+        NSEC3PARAM = 51,
+        TLSA = 52,
+        /// <summary>
+        /// S/MIME cert association
+        /// </summary>
+        SMIMEA = 53,
+        /// <summary>
+        /// Host Identity Protocol
+        /// </summary>
+        HIP = 55,
+        NINFO = 56,
+        RKEY = 57,
+        /// <summary>
+        /// Trust Anchor LINK
+        /// </summary>
+        TALINK = 58,
+        /// <summary>
+        /// Child DS
+        /// </summary>
+        CDS = 59,
+        /// <summary>
+        /// DNSKEY(s) the Child wants reflected in DS
+        /// </summary>
+        CDNSKEY = 60,
+        /// <summary>
+        /// OpenPGP Key
+        /// </summary>
+        OPENPGPKEY = 61,
+        /// <summary>
+        /// Child-To-Parent Synchronization
+        /// </summary>
+        CSYNC = 62,
+        /// <summary>
+        /// Message digest for DNS zone
+        /// </summary>
+        ZONEMD = 63,
+        /// <summary>
+        /// Service Binding
+        /// </summary>
+        SVCB = 64,
+        /// <summary>
+        /// HTTPS Binding
+        /// </summary>
+        HTTPS = 65,
+        SPF = 99,
+        UINFO = 100,
+        UID = 101,
+        GID = 102,
+        UNSPEC = 103,
+        NID = 104,
+        L32 = 105,
+        L64 = 106,
+        LP = 107,
+        /// <summary>
+        /// An EUI-48 address
+        /// </summary>
+        EUI48 = 108,
+        /// <summary>
+        /// An EUI-64 address
+        /// </summary>
+        EUI64 = 109,
+        /// <summary>
+        /// Transaction Key
+        /// </summary>
+        TKEY = 249,
+        /// <summary>
+        /// Transaction Signature
+        /// </summary>
+        TSIG = 250,
+        /// <summary>
+        /// Incremental transfer
+        /// </summary>
+        IXFR = 251,
+        /// <summary>
+        /// Transfer of an entire zone
+        /// </summary>
+        AXFR = 252,
+        /// <summary>
+        /// Mailbox-related RRs (MB, MG or MR)
+        /// </summary>
+        MAILB = 253,
+        /// <summary>
+        /// Mail agent RRs (OBSOLETE - see MX)
+        /// </summary>
+        MAILA = 254,
+        /// <summary>
+        /// A request for some or all records the server has available
+        /// </summary>
+        Wildcard = 255,
+        URI = 256,
+        /// <summary>
+        /// Certification Authority Restriction
+        /// </summary>
+        CAA = 257,
+        /// <summary>
+        /// Application Visibility and Control
+        /// </summary>
+        AVC = 258,
+        /// <summary>
+        /// Digital Object Architecture
+        /// </summary>
+        DOA = 259,
+        /// <summary>
+        /// Automatic Multicast Tunneling Relay
+        /// </summary>
+        AMTRELAY = 260,
+        /// <summary>
+        /// DNSSEC Trust Authorities
+        /// </summary>
+        TA = 32768,
+        /// <summary>
+        /// DNSSEC Lookaside Validation (OBSOLETE)
+        /// </summary>
+        DLV = 32769,
+
     }
 }

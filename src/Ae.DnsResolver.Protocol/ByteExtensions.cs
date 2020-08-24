@@ -162,8 +162,8 @@ namespace Ae.DnsResolver.Protocol
         private static DnsResourceRecord ReadDnsResourceRecord(byte[] bytes, ref int offset)
         {
             var resourceName = bytes.ReadString(ref offset);
-            var resourceType = (DnsQueryType)bytes.ReadUInt16(ref offset);
-            var resourceClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
+            var resourceType = (DnsQueryType)bytes.ReadInt16(ref offset);
+            var resourceClass = (DnsQueryClass)bytes.ReadInt16(ref offset);
             var ttl = bytes.ReadUInt32(ref offset);
             var rdlength = bytes.ReadUInt16(ref offset);
 
