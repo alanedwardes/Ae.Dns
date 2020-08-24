@@ -22,7 +22,7 @@ namespace Ae.DnsResolver.Tests.Client
 
                 using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
                 {
-                    result = await client.LookupRaw("alanedwardes.com", DnsQueryType.A);
+                    result = await client.LookupRaw(DnsHeader.CreateQuery("alanedwardes.com"));
                 }
             }
 
@@ -43,7 +43,7 @@ namespace Ae.DnsResolver.Tests.Client
 
                 using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
                 {
-                    result = await client.LookupRaw("cpsc.gov", DnsQueryType.ANY);
+                    result = await client.LookupRaw(DnsHeader.CreateQuery("cpsc.gov", DnsQueryType.ANY));
                 }
             }
 
@@ -63,7 +63,7 @@ namespace Ae.DnsResolver.Tests.Client
 
                 using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
                 {
-                    await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.LookupRaw("alanedwardes.com", DnsQueryType.A));
+                    await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.LookupRaw(DnsHeader.CreateQuery("alanedwardes.com")));
                 }
             }
         }

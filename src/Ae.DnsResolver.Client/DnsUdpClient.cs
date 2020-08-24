@@ -36,7 +36,6 @@ namespace Ae.DnsResolver.Client
 
         private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
-        private readonly Random _random = new Random();
         private readonly Socket _client;
         private readonly string _label;
         private readonly Task _task;
@@ -108,42 +107,16 @@ namespace Ae.DnsResolver.Client
             }
         }
 
-        private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] bytes)
+        private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] raw)
         {
             _ = RemoveFailedRequest(messageId);
-            _ = _client.SendAsync(bytes, SocketFlags.None);
+            _ = _client.SendAsync(raw, SocketFlags.None);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
-        public async Task<byte[]> LookupRaw(string name, DnsQueryType queryType)
+        public async Task<byte[]> LookupRaw(DnsHeader query)
         {
-            var query = new DnsHeader
-            {
-                Id = (ushort)_random.Next(0, ushort.MaxValue),
-                QueryClass = DnsQueryClass.IN,
-                QueryType = queryType,
-                RecusionDesired = true,
-                Host = name,
-                QuestionCount = 1,
-            };
-
-            var queryBytes = query.WriteDnsHeader().ToArray();
-
-            var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, queryBytes));
-
-            var result = await completionSource.Task;
-
-            // Copy the same ID from the request
-            result[0] = queryBytes[0];
-            result[1] = queryBytes[1];
-
-            return result;
-        }
-
-        public async Task<byte[]> LookupRaw(byte[] raw)
-        {
-            var offset = 0;
-            var query = raw.ReadDnsHeader(ref offset);
+            var raw = query.WriteDnsHeader().ToArray();
 
             var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, raw));
 

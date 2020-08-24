@@ -1,4 +1,5 @@
-﻿using Ae.DnsResolver.Protocol.Enums;
+﻿using Ae.DnsResolver.Protocol;
+using Ae.DnsResolver.Protocol.Enums;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,8 +14,6 @@ namespace Ae.DnsResolver.Client
 
         private IDnsClient GetRandomClient() => _dnsClients.OrderBy(x => Guid.NewGuid()).First();
 
-        public Task<byte[]> LookupRaw(byte[] raw) => GetRandomClient().LookupRaw(raw);
-
-        public Task<byte[]> LookupRaw(string name, DnsQueryType queryType) => GetRandomClient().LookupRaw(name, queryType);
+        public Task<byte[]> LookupRaw(DnsHeader query) => GetRandomClient().LookupRaw(query);
     }
 }

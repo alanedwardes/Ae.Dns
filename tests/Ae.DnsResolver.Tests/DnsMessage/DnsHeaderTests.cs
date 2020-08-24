@@ -28,6 +28,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         public void TestDnsHeaderGetSetFlags()
         {
             var header = new DnsHeader();
+            header.Flags = 0;
 
             header.OperationCode = DnsOperationCode.IQUERY;
             Assert.Equal(DnsOperationCode.IQUERY, header.OperationCode);

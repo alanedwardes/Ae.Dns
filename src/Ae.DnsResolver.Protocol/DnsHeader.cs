@@ -1,9 +1,26 @@
 ﻿using Ae.DnsResolver.Protocol.Enums;
+using System;
 
 namespace Ae.DnsResolver.Protocol
 {
     public sealed class DnsHeader
     {
+        public static ushort GenerateId() => BitConverter.ToUInt16(Guid.NewGuid().ToByteArray(), 0);
+
+        public static DnsHeader CreateQuery(string host, DnsQueryType type = DnsQueryType.A)
+        {
+            return new DnsHeader
+            {
+                Id = GenerateId(),
+                Host = host,
+                QueryType = type,
+                QueryClass = DnsQueryClass.IN,
+                OperationCode = DnsOperationCode.QUERY,
+                QuestionCount = 1,
+                RecusionDesired = true
+            };
+        }
+
         public ushort Id { get; set; }
         internal ushort Flags { get; set; }
         public short QuestionCount { get; set; }

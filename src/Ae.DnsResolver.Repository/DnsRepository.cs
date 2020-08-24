@@ -73,7 +73,16 @@ namespace Ae.DnsResolver.Repository
                 return answer;
             }
 
-            answer = await _dnsClient.LookupRaw(query);
+            answer = await _dnsClient.LookupRaw(new DnsHeader
+            {
+                Id = header.Id,
+                Host = header.Host,
+                IsQueryResponse = false,
+                RecusionDesired = header.RecusionDesired,
+                QueryClass = header.QueryClass,
+                QueryType = header.QueryType,
+                QuestionCount = header.QuestionCount
+            });
 
             offset = 0;
             var answerMessage = answer.ReadDnsAnswer(ref offset);
