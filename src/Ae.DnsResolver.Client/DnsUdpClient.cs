@@ -127,11 +127,6 @@ namespace Ae.DnsResolver.Client
                 QuestionCount = 1,
             };
 
-            var testBytes = new byte[] { 0, 2, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4, 99, 112, 115, 99, 3, 103, 111, 118, 0, 0, 255, 0, 1 };
-
-            var t = 0;
-            var wc = testBytes.ReadDnsHeader(ref t);
-
             var queryBytes = query.WriteDnsHeader().ToArray();
 
             var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, queryBytes));
