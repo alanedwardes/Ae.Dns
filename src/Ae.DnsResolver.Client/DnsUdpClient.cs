@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,15 +37,15 @@ namespace Ae.DnsResolver.Client
 
         private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
-        private readonly Socket _client;
+        private readonly Socket _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
         private readonly string _label;
         private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
-        public DnsUdpClient(ILogger<DnsUdpClient> logger, Socket client, string label)
+        public DnsUdpClient(ILogger<DnsUdpClient> logger, IPAddress address, string label)
         {
             _logger = logger;
-            _client = client;
+            _socket.Connect(address, 53);
             _label = label;
             _task = Task.Run(RecieveTask);
         }
@@ -58,7 +59,7 @@ namespace Ae.DnsResolver.Client
             {
                 try
                 {
-                    read = await _client.ReceiveAsync(buffer, SocketFlags.None, _cancel.Token);
+                    read = await _socket.ReceiveAsync(buffer, SocketFlags.None, _cancel.Token);
                 }
                 catch (Exception e)
                 {
@@ -110,7 +111,7 @@ namespace Ae.DnsResolver.Client
         private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] raw)
         {
             _ = RemoveFailedRequest(messageId);
-            _ = _client.SendAsync(raw, SocketFlags.None);
+            _ = _socket.SendAsync(raw, SocketFlags.None);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
@@ -133,6 +134,14 @@ namespace Ae.DnsResolver.Client
         {
             _cancel.Cancel();
             _task.GetAwaiter().GetResult();
+
+            try
+            {
+                _socket.Disconnect(false);
+            }
+            catch (Exception)
+            {
+            }
         }
     }
 }

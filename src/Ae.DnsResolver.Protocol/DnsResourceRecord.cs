@@ -12,6 +12,12 @@ namespace Ae.DnsResolver.Protocol
         public int DataOffset;
         public int DataLength;
 
-        public override string ToString() => $"Name: {string.Join(", ", Name)} Type: {Type} Class: {Class} TTL: {Ttl}";
+        public string Host
+        {
+            get => string.Join(".", Name);
+            set => Name = value.Split(".");
+        }
+
+        public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {Ttl}";
     }
 }

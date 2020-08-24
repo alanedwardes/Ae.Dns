@@ -156,12 +156,6 @@ namespace Ae.DnsResolver.Protocol
                 records.Add(ReadDnsResourceRecord(bytes, ref offset));
             }
             result.Answers = records.ToArray();
-
-            if (offset != bytes.Length)
-            {
-                throw new InvalidOperationException();
-            }
-
             return result;
         }
 
@@ -202,44 +196,36 @@ namespace Ae.DnsResolver.Protocol
             yield return 0;
         }
 
+        public static IEnumerable<byte> ToBytes(this ushort value)
+        {
+            var valueSwapped = value.SwapEndian();
+            yield return (byte)valueSwapped;
+            yield return (byte)(valueSwapped >> 8);
+        }
+
+        public static IEnumerable<byte> ToBytes(this short value)
+        {
+            var valueSwapped = value.SwapEndian();
+            yield return (byte)valueSwapped;
+            yield return (byte)(valueSwapped >> 8);
+        }
+
         public static IEnumerable<byte> WriteDnsHeader(this DnsHeader header)
         {
-            var id = header.Id.SwapEndian();
-            yield return (byte)id;
-            yield return (byte)(id >> 8);
-
-            var headerSwapped = header.Flags.SwapEndian();
-            yield return (byte)headerSwapped;
-            yield return (byte)(headerSwapped >> 8);
-
-            var qdcount = header.QuestionCount.SwapEndian();
-            yield return (byte)qdcount;
-            yield return (byte)(qdcount >> 8);
-
-            var ancount = header.AnswerRecordCount.SwapEndian();
-            yield return (byte)ancount;
-            yield return (byte)(ancount >> 8);
-
-            var nscount = header.AnswerRecordCount.SwapEndian();
-            yield return (byte)nscount;
-            yield return (byte)(nscount >> 8);
-
-            var arcount = header.AnswerRecordCount.SwapEndian();
-            yield return (byte)arcount;
-            yield return (byte)(arcount >> 8);
-
-            foreach (var b in WriteStrings(header.Labels))
+            IEnumerable<IEnumerable<byte>> Write()
             {
-                yield return b;
+                yield return header.Id.ToBytes();
+                yield return header.Flags.ToBytes();
+                yield return header.QuestionCount.ToBytes();
+                yield return header.AnswerRecordCount.ToBytes();
+                yield return header.NameServerRecordCount.ToBytes();
+                yield return header.AdditionalRecordCount.ToBytes();
+                yield return WriteStrings(header.Labels);
+                yield return ((ushort)header.QueryType).ToBytes();
+                yield return ((ushort)header.QueryClass).ToBytes();
             }
 
-            var type = ((ushort)header.QueryType).SwapEndian();
-            yield return (byte)type;
-            yield return (byte)(type >> 8);
-
-            var qclass = ((ushort)header.QueryClass).SwapEndian();
-            yield return (byte)qclass;
-            yield return (byte)(qclass >> 8);
+            return Write().SelectMany(x => x);
         }
     }
 }

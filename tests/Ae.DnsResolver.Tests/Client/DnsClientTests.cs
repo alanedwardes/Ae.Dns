@@ -3,7 +3,7 @@ using Ae.DnsResolver.Client.Exceptions;
 using Ae.DnsResolver.Protocol;
 using Ae.DnsResolver.Protocol.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Net.Sockets;
+using System.Net;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -15,15 +15,9 @@ namespace Ae.DnsResolver.Tests.Client
         public async Task TestLookupAlanEdwardesCom()
         {
             byte[] result;
-
-            using (var udpClient = new Socket(SocketType.Dgram, ProtocolType.Udp))
+            using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("1.1.1.1"), "test"))
             {
-                udpClient.Connect("1.1.1.1", 53);
-
-                using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
-                {
-                    result = await client.LookupRaw(DnsHeader.CreateQuery("alanedwardes.com"));
-                }
+                result = await client.LookupRaw(DnsHeader.CreateQuery("alanedwardes.com"));
             }
 
             var offset = 0;
@@ -36,15 +30,9 @@ namespace Ae.DnsResolver.Tests.Client
         public async Task TestLookupCpscCom()
         {
             byte[] result;
-
-            using (var udpClient = new Socket(SocketType.Dgram, ProtocolType.Udp))
+            using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("8.8.8.8"), "test"))
             {
-                udpClient.Connect("8.8.8.8", 53);
-
-                using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
-                {
-                    result = await client.LookupRaw(DnsHeader.CreateQuery("cpsc.gov", DnsQueryType.ANY));
-                }
+                result = await client.LookupRaw(DnsHeader.CreateQuery("cpsc.gov", DnsQueryType.ANY));
             }
 
             var offset = 0;
@@ -56,15 +44,10 @@ namespace Ae.DnsResolver.Tests.Client
         [Fact]
         public async Task TestLookupTimeout()
         {
-            using (var udpClient = new Socket(SocketType.Dgram, ProtocolType.Udp))
+            // Reserved - see https://en.wikipedia.org/wiki/Reserved_IP_addresses
+            using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("192.88.99.0"), "test"))
             {
-                // Reserved - see https://en.wikipedia.org/wiki/Reserved_IP_addresses
-                udpClient.Connect("192.88.99.0", 53);
-
-                using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), udpClient, "test"))
-                {
-                    await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.LookupRaw(DnsHeader.CreateQuery("alanedwardes.com")));
-                }
+                await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.LookupRaw(DnsHeader.CreateQuery("alanedwardes.com")));
             }
         }
     }
