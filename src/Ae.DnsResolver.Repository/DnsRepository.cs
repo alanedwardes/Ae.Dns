@@ -1,5 +1,6 @@
 ﻿using Ae.DnsResolver.Client;
 using Ae.DnsResolver.Protocol;
+using Ae.DnsResolver.Protocol.Enums;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -23,17 +24,25 @@ namespace Ae.DnsResolver.Repository
             _dnsFilter = dnsFilter;
         }
 
-        private string GetCacheKey(DnsHeader header) => $"{string.Join(".", header.Labels)}~{header.QueryType}~{header.QueryClass}";
+        private string GetCacheKey(DnsHeader header) => $"{header.Host}~{header.QueryType}~{header.QueryClass}";
 
-        private byte[] CreateNullResponse(DnsHeader request) => new DnsHeader
+        private DnsHeader CreateNullHeader(DnsHeader request)
         {
-            Id = request.Id,
-            Flags = 33155,
-            Labels = request.Labels,
-            QueryClass = request.QueryClass,
-            QuestionCount = request.QuestionCount,
-            QueryType = request.QueryType
-        }.WriteDnsHeader().ToArray();
+            return new DnsHeader
+            {
+                Id = request.Id,
+                ResponseCode = DnsResponseCode.NXDomain,
+                IsQueryResponse = true,
+                RecursionAvailable = true,
+                RecusionDesired = request.RecusionDesired,
+                Host = request.Host,
+                QueryClass = request.QueryClass,
+                QuestionCount = request.QuestionCount,
+                QueryType = request.QueryType
+            };
+        }
+
+        private byte[] CreateNullResponse(DnsHeader request) => CreateNullHeader(request).WriteDnsHeader().ToArray();
 
         public async Task<byte[]> Resolve(byte[] query)
         {
@@ -42,7 +51,7 @@ namespace Ae.DnsResolver.Repository
 
             if (!_dnsFilter.IsPermitted(header))
             {
-                _logger.LogTrace("DNS query blocked for {Domain}", header.GetDomain());
+                _logger.LogTrace("DNS query blocked for {Domain}", header.Host);
                 return CreateNullResponse(header);
             }
 
@@ -53,7 +62,7 @@ namespace Ae.DnsResolver.Repository
             var cached = _objectCache.Get(cacheKey);
             if (cached != null)
             {
-                _logger.LogTrace("Returned cached DNS result for {Domain}", header.GetDomain());
+                _logger.LogTrace("Returned cached DNS result for {Domain}", header.Host);
 
                 answer = (byte[])cached;
 
@@ -69,7 +78,7 @@ namespace Ae.DnsResolver.Repository
             offset = 0;
             var answerMessage = answer.ReadDnsAnswer(ref offset);
 
-            _logger.LogTrace("Returned fresh DNS result for {Domain}", header.GetDomain());
+            _logger.LogTrace("Returned fresh DNS result for {Domain}", header.Host);
 
             if (answerMessage.Answers.Length > 0)
             {

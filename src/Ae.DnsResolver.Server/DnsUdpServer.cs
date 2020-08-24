@@ -77,7 +77,7 @@ namespace Ae.DnsResolver.Server
                 return;
             }
 
-            _logger.LogTrace("Responded to DNS request for {Domain} in {ResponseTime}", message.GetDomain(), stopwatch.Elapsed.TotalSeconds);
+            _logger.LogTrace("Responded to DNS request for {Domain} in {ResponseTime}", message.Host, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }

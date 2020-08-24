@@ -69,8 +69,7 @@ namespace Ae.DnsResolver.Repository
 
         public bool IsPermitted(DnsHeader query)
         {
-            var domain = string.Join(".", query.Labels);
-            if (_domains.TryGetValue(domain, out bool allowed))
+            if (_domains.TryGetValue(query.Host, out bool allowed))
             {
                 return allowed;
             }

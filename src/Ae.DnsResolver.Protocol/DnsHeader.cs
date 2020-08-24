@@ -2,16 +2,15 @@
 
 namespace Ae.DnsResolver.Protocol
 {
-
-    public class DnsHeader
+    public sealed class DnsHeader
     {
         public ushort Id { get; set; }
-        public ushort Flags { get; set; }
+        internal ushort Flags { get; set; }
         public short QuestionCount { get; set; }
         public short AnswerRecordCount { get; set; }
         public short NameServerRecordCount { get; set; }
         public short AdditionalRecordCount { get; set; }
-        public string[] Labels { get; set; }
+        internal string[] Labels { get; set; }
         public DnsQueryType QueryType { get; set; }
         public DnsQueryClass QueryClass { get; set; }
 
@@ -57,8 +56,12 @@ namespace Ae.DnsResolver.Protocol
             set => Flags = (ushort)((Flags & ~0x000F) | (byte)value);
         }
 
-        public override string ToString() => $"Id: {Id}, Domain: {GetDomain()}, type: {QueryType}, class: {QueryClass}";
+        public string Host
+        {
+            get => string.Join(".", Labels);
+            set => Labels = value.Split(".");
+        }
 
-        public string GetDomain() => string.Join(".", Labels);
+        public override string ToString() => $"Id: {Id}, Domain: {Host}, type: {QueryType}, class: {QueryClass}";
     }
 }

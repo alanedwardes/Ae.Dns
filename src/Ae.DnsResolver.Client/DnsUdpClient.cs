@@ -28,7 +28,7 @@ namespace Ae.DnsResolver.Client
             return new MessageId
             {
                 Id = message.Id,
-                Name = string.Join(".", message.Labels),
+                Name = message.Host,
                 Type = message.QueryType,
                 Class = message.QueryClass
             };
@@ -123,7 +123,7 @@ namespace Ae.DnsResolver.Client
                 QueryClass = DnsQueryClass.IN,
                 QueryType = queryType,
                 RecusionDesired = true,
-                Labels = name.Split('.'),
+                Host = name,
                 QuestionCount = 1,
             };
 
