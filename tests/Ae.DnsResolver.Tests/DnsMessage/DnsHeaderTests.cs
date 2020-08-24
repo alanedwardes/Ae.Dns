@@ -32,8 +32,8 @@ namespace Ae.DnsResolver.Tests.DnsMessage
             Assert.Equal(DnsOperationCode.IQUERY, header.OperationCode);
             Assert.Equal(2048, header.Flags);
 
-            header.ResponseCode = DnsResponseCode.NOTIMP;
-            Assert.Equal(DnsResponseCode.NOTIMP, header.ResponseCode);
+            header.ResponseCode = DnsResponseCode.NotImp;
+            Assert.Equal(DnsResponseCode.NotImp, header.ResponseCode);
             Assert.Equal(2052, header.Flags);
 
             header.IsQueryResponse = true;
@@ -58,7 +58,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
         {
             var offset = 0;
             var header = SampleDnsPackets.Answer1.ReadDnsHeader(ref offset);
-            Assert.Equal(DnsResponseCode.NXDOMAIN, header.ResponseCode);
+            Assert.Equal(DnsResponseCode.NXDomain, header.ResponseCode);
         }
     }
 }

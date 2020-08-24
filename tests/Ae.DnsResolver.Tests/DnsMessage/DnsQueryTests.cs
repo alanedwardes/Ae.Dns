@@ -25,7 +25,7 @@ namespace Ae.DnsResolver.Tests.DnsMessage
             Assert.False(header.Truncation);
             Assert.False(header.RecursionAvailable);
             Assert.True(header.RecusionDesired);
-            Assert.Equal(DnsResponseCode.NOERROR, header.ResponseCode);
+            Assert.Equal(DnsResponseCode.NoError, header.ResponseCode);
 
             var header2 = new DnsHeader
             {

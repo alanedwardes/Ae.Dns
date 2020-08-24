@@ -1,7 +1,7 @@
 ﻿namespace Ae.DnsResolver.Protocol
 {
     /// <summary>
-    /// DNS class. See https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
+    /// DNS class. See https://www.iana.org/assignments/dns-parameters/dns-parameters.xml#dns-parameters-2
     /// </summary>
     public enum DnsQueryClass : ushort
     {

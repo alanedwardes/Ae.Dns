@@ -1,7 +1,7 @@
 ﻿namespace Ae.DnsResolver.Protocol
 {
     /// <summary>
-    /// DNS resource record type. See https://www.iana.org/assignments/dns-parameters/dns-parameters.xml
+    /// DNS resource record type. See https://www.iana.org/assignments/dns-parameters/dns-parameters.xml#dns-parameters-4
     /// </summary>
     public enum DnsQueryType : ushort
     {
