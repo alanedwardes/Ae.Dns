@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ae.DnsResolver.Protocol.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -77,17 +78,17 @@ namespace Ae.DnsResolver.Protocol
         {
             var parts = new List<string>();
 
-            int compressionOffset = -1;
+            int? compressionOffset = null;
             while (true)
             {
                 // get segment length or detect termination of segments
                 int segmentLength = bytes[offset];
 
                 // compressed name
-                if ((segmentLength & 0xC0) == 0xC0)
+                if (((DnsLabelType)segmentLength).HasFlag(DnsLabelType.Compressed))
                 {
                     offset++;
-                    if (compressionOffset == -1)
+                    if (!compressionOffset.HasValue)
                     {
                         // only record origin, and follow all pointers thereafter
                         compressionOffset = offset;
@@ -96,7 +97,7 @@ namespace Ae.DnsResolver.Protocol
                     var mask = (1 << 14) - 1;
                     var pointer = ((ushort)(segmentLength + (bytes[offset] << 8))).SwapEndian() & mask;
 
-                    if (segmentLength != 192)
+                    if (segmentLength > (byte)DnsLabelType.Compressed)
                     {
                         offset = pointer;
                         segmentLength = bytes[offset];
@@ -109,11 +110,11 @@ namespace Ae.DnsResolver.Protocol
                     }
                 }
 
-                if (segmentLength == 0x00)
+                if (segmentLength == (byte)DnsLabelType.Normal)
                 {
-                    if (compressionOffset != -1)
+                    if (compressionOffset.HasValue)
                     {
-                        offset = compressionOffset;
+                        offset = compressionOffset.Value;
                     }
                     // move past end of name \0
                     offset++;
@@ -139,8 +140,8 @@ namespace Ae.DnsResolver.Protocol
             header.NameServerRecordCount = bytes.ReadInt16(ref offset);
             header.AdditionalRecordCount = bytes.ReadInt16(ref offset);
             header.Labels = bytes.ReadString(ref offset);
-            header.QueryType = (DnsQueryType)bytes.ReadInt16(ref offset);
-            header.QueryClass = (DnsQueryClass)bytes.ReadInt16(ref offset);
+            header.QueryType = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            header.QueryClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
             return header;
         }
 
@@ -156,14 +157,19 @@ namespace Ae.DnsResolver.Protocol
             }
             result.Answers = records.ToArray();
 
+            if (offset != bytes.Length)
+            {
+                throw new InvalidOperationException();
+            }
+
             return result;
         }
 
         private static DnsResourceRecord ReadDnsResourceRecord(byte[] bytes, ref int offset)
         {
             var resourceName = bytes.ReadString(ref offset);
-            var resourceType = (DnsQueryType)bytes.ReadInt16(ref offset);
-            var resourceClass = (DnsQueryClass)bytes.ReadInt16(ref offset);
+            var resourceType = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            var resourceClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
             var ttl = bytes.ReadUInt32(ref offset);
             var rdlength = bytes.ReadUInt16(ref offset);
 

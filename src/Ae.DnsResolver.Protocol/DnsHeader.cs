@@ -1,4 +1,6 @@
-﻿namespace Ae.DnsResolver.Protocol
+﻿using Ae.DnsResolver.Protocol.Enums;
+
+namespace Ae.DnsResolver.Protocol
 {
 
     public class DnsHeader

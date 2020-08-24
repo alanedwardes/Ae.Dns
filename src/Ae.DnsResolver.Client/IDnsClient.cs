@@ -1,4 +1,4 @@
-﻿using Ae.DnsResolver.Protocol;
+﻿using Ae.DnsResolver.Protocol.Enums;
 using System.Threading.Tasks;
 
 namespace Ae.DnsResolver.Client

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ae.DnsResolver.Protocol.Enums;
+using System;
 
 namespace Ae.DnsResolver.Protocol
 {

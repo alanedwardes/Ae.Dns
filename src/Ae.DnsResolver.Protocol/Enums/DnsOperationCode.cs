@@ -1,4 +1,4 @@
-﻿namespace Ae.DnsResolver.Protocol
+﻿namespace Ae.DnsResolver.Protocol.Enums
 {
     /// <summary>
     /// DNS operation codes. See https://www.iana.org/assignments/dns-parameters/dns-parameters.xml#dns-parameters-5

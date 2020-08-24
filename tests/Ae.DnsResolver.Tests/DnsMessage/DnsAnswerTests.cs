@@ -1,4 +1,5 @@
 using Ae.DnsResolver.Protocol;
+using Ae.DnsResolver.Protocol.Enums;
 using System;
 using System.Linq;
 using Xunit;

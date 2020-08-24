@@ -1,4 +1,4 @@
-﻿namespace Ae.DnsResolver.Protocol
+﻿namespace Ae.DnsResolver.Protocol.Enums
 {
     /// <summary>
     /// DNS resource record type. See https://www.iana.org/assignments/dns-parameters/dns-parameters.xml#dns-parameters-4
@@ -260,7 +260,7 @@
         /// <summary>
         /// A request for some or all records the server has available
         /// </summary>
-        Wildcard = 255,
+        ANY = 255,
         URI = 256,
         /// <summary>
         /// Certification Authority Restriction
@@ -285,7 +285,6 @@
         /// <summary>
         /// DNSSEC Lookaside Validation (OBSOLETE)
         /// </summary>
-        DLV = 32769,
-
+        DLV = 32769
     }
 }
