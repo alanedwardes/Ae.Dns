@@ -23,7 +23,7 @@ namespace Ae.DnsResolver.Tests.Client
             var offset = 0;
             var answer = result.ReadDnsAnswer(ref offset);
 
-            Assert.Equal(4, answer.Answers.Length);
+            Assert.Equal(4, answer.Answers.Count);
         }
 
         [Fact]

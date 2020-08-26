@@ -20,7 +20,7 @@ namespace Ae.DnsResolver.Tests.Client
             var offset = 0;
             var answer = result.ReadDnsAnswer(ref offset);
 
-            Assert.Equal(4, answer.Answers.Length);
+            Assert.Equal(4, answer.Answers.Count);
         }
 
         [Fact]
@@ -33,7 +33,7 @@ namespace Ae.DnsResolver.Tests.Client
             var offset = 0;
             var answer = result.ReadDnsAnswer(ref offset);
 
-            Assert.Equal(4, answer.Answers.Length);
+            Assert.Equal(4, answer.Answers.Count);
         }
 
         [Fact]
@@ -46,7 +46,20 @@ namespace Ae.DnsResolver.Tests.Client
             var offset = 0;
             var answer = result.ReadDnsAnswer(ref offset);
 
-            Assert.Equal(29, answer.Answers.Length);
+            Assert.Equal(29, answer.Answers.Count);
+        }
+
+        [Fact]
+        public async Task TestLookupAlanEdwardesComWithGoogleAny()
+        {
+            var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
+
+            var result = await client.LookupRaw(DnsHeader.CreateQuery("alanedwardes.com", DnsQueryType.ANY));
+
+            var offset = 0;
+            var answer = result.ReadDnsAnswer(ref offset);
+
+            Assert.Equal(12, answer.Answers.Count);
         }
     }
 }

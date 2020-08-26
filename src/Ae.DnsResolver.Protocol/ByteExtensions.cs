@@ -176,13 +176,13 @@ namespace Ae.DnsResolver.Protocol
                 Name = resourceName.ToArray(),
                 Type = resourceType,
                 Class = resourceClass,
-                Ttl = TimeSpan.FromSeconds(ttl),
+                Ttl = ttl,
                 DataOffset = dataOffset,
                 DataLength = rdlength
             };
         }
 
-        public static IEnumerable<byte> WriteStrings(string[] strings)
+        public static IEnumerable<byte> ToBytes(this string[] strings)
         {
             foreach (var str in strings)
             {
@@ -210,6 +210,13 @@ namespace Ae.DnsResolver.Protocol
             yield return (byte)(valueSwapped >> 8);
         }
 
+        public static IEnumerable<byte> ToBytes(this uint value)
+        {
+            var valueSwapped = value.SwapEndian();
+            yield return (byte)valueSwapped;
+            yield return (byte)(valueSwapped >> 16);
+        }
+
         public static IEnumerable<byte> WriteDnsHeader(this DnsHeader header)
         {
             IEnumerable<IEnumerable<byte>> Write()
@@ -220,12 +227,27 @@ namespace Ae.DnsResolver.Protocol
                 yield return header.AnswerRecordCount.ToBytes();
                 yield return header.NameServerRecordCount.ToBytes();
                 yield return header.AdditionalRecordCount.ToBytes();
-                yield return WriteStrings(header.Labels);
+                yield return header.Labels.ToBytes();
                 yield return ((ushort)header.QueryType).ToBytes();
                 yield return ((ushort)header.QueryClass).ToBytes();
             }
 
             return Write().SelectMany(x => x);
+        }
+
+        public static IEnumerable<byte> WriteDnsAnswer(this DnsAnswer answer)
+        {
+            IEnumerable<IEnumerable<byte>> Write(DnsResourceRecord resourceRecord)
+            {
+                yield return resourceRecord.Name.ToBytes();
+                yield return ((ushort)resourceRecord.Type).ToBytes();
+                yield return ((ushort)resourceRecord.Class).ToBytes();
+                yield return resourceRecord.Ttl.ToBytes();
+            }
+
+            var header = answer.Header.WriteDnsHeader();
+            var answers = answer.Answers.Select(Write).SelectMany(x => x).SelectMany(x => x);
+            return header.Concat(answers);
         }
     }
 }

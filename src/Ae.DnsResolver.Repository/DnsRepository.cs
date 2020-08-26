@@ -89,9 +89,9 @@ namespace Ae.DnsResolver.Repository
 
             _logger.LogTrace("Returned fresh DNS result for {Domain}", header.Host);
 
-            if (answerMessage.Answers.Length > 0)
+            if (answerMessage.Answers.Count > 0)
             {
-                var lowestTtl = answerMessage.Answers.Min(x => x.Ttl);
+                var lowestTtl = answerMessage.Answers.Min(x => x.TimeToLive);
 
                 var cachePolicy = new CacheItemPolicy
                 {

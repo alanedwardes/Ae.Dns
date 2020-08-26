@@ -5,12 +5,18 @@ namespace Ae.DnsResolver.Protocol
 {
     public class DnsResourceRecord
     {
-        public string[] Name;
-        public DnsQueryType Type;
-        public DnsQueryClass Class;
-        public TimeSpan Ttl;
-        public int DataOffset;
-        public int DataLength;
+        internal string[] Name { get; set; }
+        public DnsQueryType Type { get; set; }
+        public DnsQueryClass Class { get; set; }
+        internal uint Ttl { get; set; }
+        internal int DataOffset { get; set; }
+        internal int DataLength { get; set; }
+
+        public TimeSpan TimeToLive
+        {
+            get => TimeSpan.FromSeconds(Ttl);
+            set => Ttl = (uint)value.TotalSeconds;
+        }
 
         public string Host
         {

@@ -1,10 +1,12 @@
-﻿namespace Ae.DnsResolver.Protocol
+﻿using System.Collections.Generic;
+
+namespace Ae.DnsResolver.Protocol
 {
     public sealed class DnsAnswer
     {
-        public DnsHeader Header;
+        public DnsHeader Header { get; set; }
 
-        public DnsResourceRecord[] Answers;
+        public IList<DnsResourceRecord> Answers { get; set; } = new List<DnsResourceRecord>();
 
         public override string ToString() => $"RESPONSE: {Header}";
     }
