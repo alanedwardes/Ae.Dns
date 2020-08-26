@@ -46,12 +46,6 @@ namespace Ae.DnsResolver.Tests.Client
             var offset = 0;
             var answer = result.ReadDnsAnswer(ref offset);
 
-            foreach (var test in answer.Answers)
-            {
-                var test1 = test.DataOffset;
-                var test2 = result.ReadString(ref test1);
-            }
-
             Assert.Equal(29, answer.Answers.Length);
         }
     }
