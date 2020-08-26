@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Ae.DnsResolver.Tests.Client
 {
-    public class DnsClientTests
+    public class DnsUdpClientTests
     {
         [Fact]
         public async Task TestLookupAlanEdwardesCom()
