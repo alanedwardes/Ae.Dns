@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 
 namespace Ae.DnsResolver.Protocol
@@ -17,10 +18,7 @@ namespace Ae.DnsResolver.Protocol
             return (short)value;
         }
 
-        public static ushort ReadUInt16(this byte[] bytes, ref int offset)
-        {
-            return (ushort)bytes.ReadInt16(ref offset);
-        }
+        public static ushort ReadUInt16(this byte[] bytes, ref int offset) => (ushort)bytes.ReadInt16(ref offset);
 
         public static int ReadInt32(this byte[] bytes, ref int offset)
         {
@@ -32,10 +30,7 @@ namespace Ae.DnsResolver.Protocol
             return value;
         }
 
-        public static uint ReadUInt32(this byte[] bytes, ref int offset)
-        {
-            return (uint)bytes.ReadInt32(ref offset);
-        }
+        public static uint ReadUInt32(this byte[] bytes, ref int offset) => (uint)bytes.ReadInt32(ref offset);
 
         public static string ToDebugString(this IEnumerable<byte> bytes)
         {
@@ -144,45 +139,64 @@ namespace Ae.DnsResolver.Protocol
 
         private static DnsResourceRecord ReadDnsResourceRecord(byte[] bytes, ref int offset)
         {
-            var record = new DnsResourceRecord();
-            record.Name = bytes.ReadString(ref offset);
-            record.Type = (DnsQueryType)bytes.ReadUInt16(ref offset);
-            record.Class = (DnsQueryClass)bytes.ReadUInt16(ref offset);
-            record.Ttl = bytes.ReadUInt32(ref offset);
-            record.DataLength = bytes.ReadUInt16(ref offset);
-            record.DataOffset = offset;
+            var recordName = bytes.ReadString(ref offset);
+            var recordType = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            var recordClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
+            var recordTtl = bytes.ReadUInt32(ref offset);
+            var recordDataLength = bytes.ReadUInt16(ref offset);
+            var recordDataOffset = offset;
 
             var dataOffset = offset;
 
-            if (record.Type == DnsQueryType.A || record.Type == DnsQueryType.AAAA)
+            DnsResourceRecord record;
+            switch (recordType)
             {
-                record.IPAddress = new IPAddress(bytes.ReadBytes(record.DataLength, ref dataOffset));
+                case DnsQueryType.A:
+                case DnsQueryType.AAAA:
+                    record = new DnsIpAddressRecord
+                    {
+                        IPAddress = new IPAddress(bytes.ReadBytes(recordDataLength, ref dataOffset))
+                    };
+                    break;
+                case DnsQueryType.TEXT:
+                case DnsQueryType.CNAME:
+                case DnsQueryType.NS:
+                case DnsQueryType.PTR:
+                    record = new DnsTextRecord
+                    {
+                        Text = string.Join(".", bytes.ReadString(ref dataOffset))
+                    };
+                    break;
+                case DnsQueryType.SOA:
+                    record = new DnsSoaRecord
+                    {
+                        MName = string.Join(".", bytes.ReadString(ref dataOffset)),
+                        RName = string.Join(".", bytes.ReadString(ref dataOffset)),
+                        Serial = bytes.ReadUInt32(ref dataOffset),
+                        Refresh = bytes.ReadInt32(ref dataOffset),
+                        Retry = bytes.ReadInt32(ref dataOffset),
+                        Expire = bytes.ReadInt32(ref dataOffset),
+                        Minimum = bytes.ReadUInt32(ref dataOffset)
+                    };
+                    break;
+                case DnsQueryType.MX:
+                    record = new DnsMxRecord
+                    {
+                        Preference = bytes.ReadUInt16(ref dataOffset),
+                        Exchange = string.Join(".", bytes.ReadString(ref dataOffset))
+                    };
+                    break;
+                default:
+                    record = new UnimplementedDnsResourceRecord();
+                    break;
             }
-            else if (record.Type == DnsQueryType.CNAME || record.Type == DnsQueryType.TEXT)
-            {
-                record.Text = string.Join(".", bytes.ReadString(ref dataOffset));
-            }
-            else if (record.Type == DnsQueryType.MX)
-            {
-                record.MxRecord = new DnsMxRecord
-                {
-                    Preference = bytes.ReadUInt16(ref dataOffset),
-                    Exchange = string.Join(".", bytes.ReadString(ref dataOffset))
-                };
-            }
-            else if (record.Type == DnsQueryType.SOA)
-            {
-                record.SoaRecord = new DnsSoaRecord
-                {
-                    MName = string.Join(".", bytes.ReadString(ref dataOffset)),
-                    RName = string.Join(".", bytes.ReadString(ref dataOffset)),
-                    Serial = bytes.ReadUInt32(ref dataOffset),
-                    Refresh = bytes.ReadInt32(ref dataOffset),
-                    Retry = bytes.ReadInt32(ref dataOffset),
-                    Expire = bytes.ReadInt32(ref dataOffset),
-                    Minimum = bytes.ReadUInt32(ref dataOffset)
-                };
-            }
+
+            record.Name = recordName;
+            record.Type = recordType;
+            record.Class = recordClass;
+            record.Ttl = recordTtl;
+            record.DataLength = recordDataLength;
+            record.DataOffset = recordDataOffset;
 
             offset += record.DataLength;
 
@@ -203,24 +217,38 @@ namespace Ae.DnsResolver.Protocol
             yield return 0;
         }
 
-        public static IEnumerable<byte> ToBytes(this ushort value)
+        public static IEnumerable<byte> ToBytes(this object value)
         {
-            yield return (byte)(value >> 8);
-            yield return (byte)(value >> 0);
-        }
-
-        public static IEnumerable<byte> ToBytes(this short value)
-        {
-            yield return (byte)(value >> 8);
-            yield return (byte)(value >> 0);
-        }
-
-        public static IEnumerable<byte> ToBytes(this uint value)
-        {
-            yield return (byte)(value >> 24);
-            yield return (byte)(value >> 16);
-            yield return (byte)(value >> 8);
-            yield return (byte)(value >> 0);
+            var typeCode = Type.GetTypeCode(value.GetType());
+            switch (typeCode)
+            {
+                case TypeCode.Int32:
+                    var int32 = (int)value;
+                    yield return (byte) (int32 >> 24);
+                    yield return (byte) (int32 >> 16);
+                    yield return (byte) (int32 >> 8);
+                    yield return (byte) (int32 >> 0);
+                    break;
+                case TypeCode.UInt32:
+                    var uint32 = (uint)value;
+                    yield return (byte)(uint32 >> 24);
+                    yield return (byte)(uint32 >> 16);
+                    yield return (byte)(uint32 >> 8);
+                    yield return (byte)(uint32 >> 0);
+                    break;
+                case TypeCode.Int16:
+                    var uint16 = (short)value;
+                    yield return (byte)(uint16 >> 8);
+                    yield return (byte)(uint16 >> 0);
+                    break;
+                case TypeCode.UInt16:
+                    var int16 = (ushort)value;
+                    yield return (byte)(int16 >> 8);
+                    yield return (byte)(int16 >> 0);
+                    break;
+                default:
+                    throw new NotImplementedException($"Unable to process type {typeCode} ({value})");
+            }
         }
 
         public static IEnumerable<byte> WriteDnsHeader(this DnsHeader header)
@@ -234,8 +262,8 @@ namespace Ae.DnsResolver.Protocol
                 yield return header.NameServerRecordCount.ToBytes();
                 yield return header.AdditionalRecordCount.ToBytes();
                 yield return header.Labels.ToBytes();
-                yield return ((ushort)header.QueryType).ToBytes();
-                yield return ((ushort)header.QueryClass).ToBytes();
+                yield return header.QueryType.ToBytes();
+                yield return header.QueryClass.ToBytes();
             }
 
             return Write().SelectMany(x => x);
@@ -246,8 +274,8 @@ namespace Ae.DnsResolver.Protocol
             IEnumerable<IEnumerable<byte>> Write(DnsResourceRecord resourceRecord)
             {
                 yield return resourceRecord.Name.ToBytes();
-                yield return ((ushort)resourceRecord.Type).ToBytes();
-                yield return ((ushort)resourceRecord.Class).ToBytes();
+                yield return resourceRecord.Type.ToBytes();
+                yield return resourceRecord.Class.ToBytes();
                 yield return resourceRecord.Ttl.ToBytes();
             }
 
