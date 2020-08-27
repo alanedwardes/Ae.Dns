@@ -5,7 +5,11 @@ namespace Ae.DnsResolver.Protocol
 {
     public sealed class DnsHeader
     {
-        public static ushort GenerateId() => BitConverter.ToUInt16(Guid.NewGuid().ToByteArray(), 0);
+        public static ushort GenerateId()
+        {
+            var offset = 0;
+            return Guid.NewGuid().ToByteArray().ReadUInt16(ref offset);
+        }
 
         public static DnsHeader CreateQuery(string host, DnsQueryType type = DnsQueryType.A)
         {

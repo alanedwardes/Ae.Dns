@@ -2,52 +2,39 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 
 namespace Ae.DnsResolver.Protocol
 {
     public static class ByteExtensions
     {
-        public static short SwapEndian(this short val)
-        {
-            return BitConverter.IsLittleEndian ? (short)((val << 8) | (val >> 8)) : val;
-        }
-
-        public static ushort SwapEndian(this ushort val)
-        {
-            return BitConverter.IsLittleEndian ? (ushort)((val << 8) | (val >> 8)) : val;
-        }
-
-        public static uint SwapEndian(this uint val)
-        {
-            return BitConverter.IsLittleEndian ? (uint)((val << 16) | (val >> 16)) : val;
-        }
-
-        public static int SwapEndian(this int val)
-        {
-            return BitConverter.IsLittleEndian ? ((val << 16) | (val >> 16)) : val;
-        }
-
-        public static byte ReadByte(this byte[] bytes, ref int offset)
-        {
-            return bytes[offset++];
-        }
-
         public static short ReadInt16(this byte[] bytes, ref int offset)
         {
+            var value = bytes[offset + 1] << 0 |
+                        bytes[offset + 0] << 8;
             offset += sizeof(short);
-            return BitConverter.ToInt16(bytes, offset - sizeof(short)).SwapEndian();
+            return (short)value;
         }
 
         public static ushort ReadUInt16(this byte[] bytes, ref int offset)
         {
-            offset += sizeof(ushort);
-            return BitConverter.ToUInt16(bytes, offset - sizeof(ushort)).SwapEndian();
+            return (ushort)bytes.ReadInt16(ref offset);
         }
 
-        public static byte[] WriteUInt16(this ushort value)
+        public static int ReadInt32(this byte[] bytes, ref int offset)
         {
-            return BitConverter.GetBytes(value.SwapEndian());
+            var value = bytes[offset + 3] << 0 |
+                        bytes[offset + 2] << 8 |
+                        bytes[offset + 1] << 16 |
+                        bytes[offset + 0] << 24;
+            offset += sizeof(int);
+            return value;
+        }
+
+        public static uint ReadUInt32(this byte[] bytes, ref int offset)
+        {
+            return (uint)bytes.ReadInt32(ref offset);
         }
 
         public static string ToDebugString(this IEnumerable<byte> bytes)
@@ -58,12 +45,6 @@ namespace Ae.DnsResolver.Protocol
             }
 
             return $"new [] {{{string.Join(", ", bytes)}}}";
-        }
-
-        public static uint ReadUInt32(this byte[] bytes, ref int offset)
-        {
-            offset += sizeof(uint);
-            return BitConverter.ToUInt32(bytes, offset - sizeof(uint)).SwapEndian();
         }
 
         public static byte[] ReadBytes(this byte[] bytes, int length, ref int offset)
@@ -79,7 +60,7 @@ namespace Ae.DnsResolver.Protocol
             var parts = new List<string>();
 
             int? compressionOffset = null;
-            while (true)
+            while (offset < bytes.Length)
             {
                 // get segment length or detect termination of segments
                 int segmentLength = bytes[offset];
@@ -95,7 +76,9 @@ namespace Ae.DnsResolver.Protocol
                     }
 
                     var mask = (1 << 14) - 1;
-                    var pointer = ((ushort)(segmentLength + (bytes[offset] << 8))).SwapEndian() & mask;
+                    var pointerBytes = new byte[] { (byte)segmentLength, bytes[offset] };
+                    var pointerOffset = 0;
+                    var pointer = pointerBytes.ReadUInt16(ref pointerOffset) & mask;
 
                     if (segmentLength > (byte)DnsLabelType.Compressed)
                     {
@@ -161,25 +144,49 @@ namespace Ae.DnsResolver.Protocol
 
         private static DnsResourceRecord ReadDnsResourceRecord(byte[] bytes, ref int offset)
         {
-            var resourceName = bytes.ReadString(ref offset);
-            var resourceType = (DnsQueryType)bytes.ReadUInt16(ref offset);
-            var resourceClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
-            var ttl = bytes.ReadUInt32(ref offset);
-            var rdlength = bytes.ReadUInt16(ref offset);
+            var record = new DnsResourceRecord();
+            record.Name = bytes.ReadString(ref offset);
+            record.Type = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            record.Class = (DnsQueryClass)bytes.ReadUInt16(ref offset);
+            record.Ttl = bytes.ReadUInt32(ref offset);
+            record.DataLength = bytes.ReadUInt16(ref offset);
+            record.DataOffset = offset;
 
             var dataOffset = offset;
 
-            offset += rdlength;
-
-            return new DnsResourceRecord
+            if (record.Type == DnsQueryType.A || record.Type == DnsQueryType.AAAA)
             {
-                Name = resourceName.ToArray(),
-                Type = resourceType,
-                Class = resourceClass,
-                Ttl = ttl,
-                DataOffset = dataOffset,
-                DataLength = rdlength
-            };
+                record.IPAddress = new IPAddress(bytes.ReadBytes(record.DataLength, ref dataOffset));
+            }
+            else if (record.Type == DnsQueryType.CNAME || record.Type == DnsQueryType.TEXT)
+            {
+                record.Text = string.Join(".", bytes.ReadString(ref dataOffset));
+            }
+            else if (record.Type == DnsQueryType.MX)
+            {
+                record.MxRecord = new DnsMxRecord
+                {
+                    Preference = bytes.ReadUInt16(ref dataOffset),
+                    Exchange = string.Join(".", bytes.ReadString(ref dataOffset))
+                };
+            }
+            else if (record.Type == DnsQueryType.SOA)
+            {
+                record.SoaRecord = new DnsSoaRecord
+                {
+                    MName = string.Join(".", bytes.ReadString(ref dataOffset)),
+                    RName = string.Join(".", bytes.ReadString(ref dataOffset)),
+                    Serial = bytes.ReadUInt32(ref dataOffset),
+                    Refresh = bytes.ReadInt32(ref dataOffset),
+                    Retry = bytes.ReadInt32(ref dataOffset),
+                    Expire = bytes.ReadInt32(ref dataOffset),
+                    Minimum = bytes.ReadUInt32(ref dataOffset)
+                };
+            }
+
+            offset += record.DataLength;
+
+            return record;
         }
 
         public static IEnumerable<byte> ToBytes(this string[] strings)
@@ -198,23 +205,22 @@ namespace Ae.DnsResolver.Protocol
 
         public static IEnumerable<byte> ToBytes(this ushort value)
         {
-            var valueSwapped = value.SwapEndian();
-            yield return (byte)valueSwapped;
-            yield return (byte)(valueSwapped >> 8);
+            yield return (byte)(value >> 8);
+            yield return (byte)(value >> 0);
         }
 
         public static IEnumerable<byte> ToBytes(this short value)
         {
-            var valueSwapped = value.SwapEndian();
-            yield return (byte)valueSwapped;
-            yield return (byte)(valueSwapped >> 8);
+            yield return (byte)(value >> 8);
+            yield return (byte)(value >> 0);
         }
 
         public static IEnumerable<byte> ToBytes(this uint value)
         {
-            var valueSwapped = value.SwapEndian();
-            yield return (byte)valueSwapped;
-            yield return (byte)(valueSwapped >> 16);
+            yield return (byte)(value >> 24);
+            yield return (byte)(value >> 16);
+            yield return (byte)(value >> 8);
+            yield return (byte)(value >> 0);
         }
 
         public static IEnumerable<byte> WriteDnsHeader(this DnsHeader header)
