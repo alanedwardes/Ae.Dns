@@ -42,56 +42,50 @@ namespace Ae.DnsResolver.Repository
             };
         }
 
-        private byte[] CreateNullResponse(DnsHeader request) => CreateNullHeader(request).WriteDnsHeader().ToArray();
-
-        public async Task<byte[]> Resolve(byte[] query)
+        public async Task<DnsAnswer> Resolve(DnsHeader query)
         {
-            int offset = 0;
-            var header = query.ReadDnsHeader(ref offset);
-
-            if (!_dnsFilter.IsPermitted(header))
+            if (!_dnsFilter.IsPermitted(query))
             {
-                _logger.LogTrace("DNS query blocked for {Domain}", header.Host);
-                return CreateNullResponse(header);
+                _logger.LogTrace("DNS query blocked for {Domain}", query.Host);
+                return new DnsAnswer
+                {
+                    Header = CreateNullHeader(query)
+                };
             }
 
-            byte[] answer;
+            DnsAnswer answer;
 
-            string cacheKey = GetCacheKey(header);
+            string cacheKey = GetCacheKey(query);
 
             var cached = _objectCache.Get(cacheKey);
             if (cached != null)
             {
-                _logger.LogTrace("Returned cached DNS result for {Domain}", header.Host);
+                _logger.LogTrace("Returned cached DNS result for {Domain}", query.Host);
 
-                answer = (byte[])cached;
+                answer = (DnsAnswer)cached;
 
                 // Replace the ID
-                answer[0] = query[0];
-                answer[1] = query[1];
+                answer.Header.Id = query.Id;
 
                 return answer;
             }
 
-            answer = await _dnsClient.LookupRaw(new DnsHeader
+            answer = await _dnsClient.Query(new DnsHeader
             {
-                Id = header.Id,
-                Host = header.Host,
+                Id = query.Id,
+                Host = query.Host,
                 IsQueryResponse = false,
-                RecusionDesired = header.RecusionDesired,
-                QueryClass = header.QueryClass,
-                QueryType = header.QueryType,
-                QuestionCount = header.QuestionCount
+                RecusionDesired = query.RecusionDesired,
+                QueryClass = query.QueryClass,
+                QueryType = query.QueryType,
+                QuestionCount = query.QuestionCount
             });
 
-            offset = 0;
-            var answerMessage = answer.ReadDnsAnswer(ref offset);
+            _logger.LogTrace("Returned fresh DNS result for {Domain}", query.Host);
 
-            _logger.LogTrace("Returned fresh DNS result for {Domain}", header.Host);
-
-            if (answerMessage.Answers.Count > 0)
+            if (answer.Answers.Count > 0)
             {
-                var lowestTtl = answerMessage.Answers.Min(x => x.TimeToLive);
+                var lowestTtl = answer.Answers.Min(x => x.TimeToLive);
 
                 var cachePolicy = new CacheItemPolicy
                 {

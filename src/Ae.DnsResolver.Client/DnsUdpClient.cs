@@ -115,7 +115,7 @@ namespace Ae.DnsResolver.Client
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
-        public async Task<byte[]> LookupRaw(DnsHeader query)
+        public async Task<DnsAnswer> Query(DnsHeader query)
         {
             var raw = query.WriteDnsHeader().ToArray();
 
@@ -123,11 +123,13 @@ namespace Ae.DnsResolver.Client
 
             var result = await completionSource.Task;
 
-            // Copy the same ID from the request
-            result[0] = raw[0];
-            result[1] = raw[1];
+            var offset = 0;
+            var answer = result.ReadDnsAnswer(ref offset);
 
-            return result;
+            // Copy the same ID from the request
+            answer.Header.Id = query.Id;
+
+            return answer;
         }
 
         public void Dispose()

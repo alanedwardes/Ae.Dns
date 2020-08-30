@@ -32,7 +32,7 @@ namespace Ae.DnsResolver.Client
             }
         }
 
-        public async Task<byte[]> LookupRaw(DnsHeader query)
+        public async Task<DnsAnswer> Query(DnsHeader query)
         {
             var raw = query.WriteDnsHeader().ToArray();
 
@@ -52,7 +52,8 @@ namespace Ae.DnsResolver.Client
                 throw new InvalidOperationException();
             }
 
-            return response;
+            offset = 0;
+            return response.ReadDnsAnswer(ref offset);
         }
     }
 }

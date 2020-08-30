@@ -13,7 +13,7 @@ namespace Ae.DnsResolver.Client
 
         public DnsHttpClient(HttpClient httpClient) => _httpClient = httpClient;
 
-        public async Task<byte[]> LookupRaw(DnsHeader query)
+        public async Task<DnsAnswer> Query(DnsHeader query)
         {
             var raw = query.WriteDnsHeader().ToArray();
 
@@ -29,7 +29,8 @@ namespace Ae.DnsResolver.Client
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadAsByteArrayAsync();
+            var offset = 0;
+            return (await response.Content.ReadAsByteArrayAsync()).ReadDnsAnswer(ref offset);
         }
     }
 }

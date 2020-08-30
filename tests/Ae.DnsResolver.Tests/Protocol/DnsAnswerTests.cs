@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using Xunit;
 
-namespace Ae.DnsResolver.Tests.DnsMessage
+namespace Ae.DnsResolver.Tests.Protocol
 {
     public class DnsAnswerTests
     {

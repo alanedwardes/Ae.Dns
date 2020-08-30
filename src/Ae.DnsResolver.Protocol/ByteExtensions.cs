@@ -228,8 +228,9 @@ namespace Ae.DnsResolver.Protocol
                 yield return resourceRecord.Type.ToBytes();
                 yield return resourceRecord.Class.ToBytes();
                 yield return resourceRecord.Ttl.ToBytes();
-                yield return resourceRecord.DataLength.ToBytes();
-                yield return resourceRecord.WriteData();
+                var data = resourceRecord.WriteData().ToArray();
+                yield return ((ushort)data.Length).ToBytes();
+                yield return data;
             }
 
             var header = answer.Header.WriteDnsHeader();

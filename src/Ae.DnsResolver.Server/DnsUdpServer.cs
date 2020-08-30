@@ -3,6 +3,7 @@ using Ae.DnsResolver.Repository;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,10 +57,12 @@ namespace Ae.DnsResolver.Server
                 return;
             }
 
-            byte[] answer;
+            DnsAnswer answer;
             try
             {
-                answer = await _dnsRepository.Resolve(query.Buffer);
+                var offset = 0;
+                var header = query.Buffer.ReadDnsHeader(ref offset);
+                answer = await _dnsRepository.Resolve(header);
             }
             catch (Exception e)
             {
@@ -67,9 +70,11 @@ namespace Ae.DnsResolver.Server
                 return;
             }
 
+            var answerBytes = answer.WriteDnsAnswer().ToArray();
+
             try
             {
-                await _listener.SendAsync(answer, answer.Length, query.RemoteEndPoint);
+                await _listener.SendAsync(answerBytes, answerBytes.Length, query.RemoteEndPoint);
             }
             catch (Exception e)
             {

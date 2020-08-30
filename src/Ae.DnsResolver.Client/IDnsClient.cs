@@ -5,6 +5,6 @@ namespace Ae.DnsResolver.Client
 {
     public interface IDnsClient
     {
-        Task<byte[]> LookupRaw(DnsHeader query);
+        Task<DnsAnswer> Query(DnsHeader query);
     }
 }

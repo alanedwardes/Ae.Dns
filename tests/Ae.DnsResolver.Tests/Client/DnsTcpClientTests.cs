@@ -12,14 +12,11 @@ namespace Ae.DnsResolver.Tests.Client
         [Fact]
         public async Task TestLookupAlanEdwardesCom()
         {
-            byte[] result;
+            DnsAnswer answer;
             using (var client = new DnsTcpClient(new NullLogger<DnsTcpClient>(), IPAddress.Parse("1.1.1.1"), "test"))
             {
-                result = await client.LookupRaw(DnsHeader.CreateQuery("alanedwardes.com"));
+                answer = await client.Query(DnsHeader.CreateQuery("alanedwardes.com"));
             }
-
-            var offset = 0;
-            var answer = result.ReadDnsAnswer(ref offset);
 
             Assert.Equal(4, answer.Answers.Count);
         }

@@ -11,7 +11,7 @@ namespace Ae.DnsResolver.Protocol.Records
         public DnsQueryType Type { get; set; }
         public DnsQueryClass Class { get; set; }
         internal uint Ttl { get; set; }
-        internal int DataLength { get; set; }
+        internal ushort DataLength { get; set; }
 
         public TimeSpan TimeToLive
         {

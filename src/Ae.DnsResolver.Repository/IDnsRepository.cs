@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using Ae.DnsResolver.Protocol;
+using System.Threading.Tasks;
 
 namespace Ae.DnsResolver.Repository
 {
     public interface IDnsRepository
     {
-        Task<byte[]> Resolve(byte[] query);
+        Task<DnsAnswer> Resolve(DnsHeader query);
     }
 }

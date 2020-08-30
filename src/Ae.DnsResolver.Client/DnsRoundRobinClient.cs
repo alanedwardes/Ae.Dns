@@ -14,6 +14,6 @@ namespace Ae.DnsResolver.Client
 
         private IDnsClient GetRandomClient() => _dnsClients.OrderBy(x => Guid.NewGuid()).First();
 
-        public Task<byte[]> LookupRaw(DnsHeader query) => GetRandomClient().LookupRaw(query);
+        public Task<DnsAnswer> Query(DnsHeader query) => GetRandomClient().Query(query);
     }
 }

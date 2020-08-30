@@ -1,7 +1,7 @@
 ﻿using Ae.DnsResolver.Protocol;
 using Xunit;
 
-namespace Ae.DnsResolver.Tests.DnsMessage
+namespace Ae.DnsResolver.Tests.Protocol
 {
     public class DnsStringTests
     {
