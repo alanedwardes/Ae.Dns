@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace Ae.DnsResolver.Protocol.Records
 {
@@ -11,7 +10,7 @@ namespace Ae.DnsResolver.Protocol.Records
 
         protected override IEnumerable<IEnumerable<byte>> WriteBytes()
         {
-            yield return Enumerable.Empty<byte>();
+            yield return Raw;
         }
     }
 }
