@@ -6,11 +6,11 @@
     public enum DnsLabelType : byte
     {
         /// <summary>
-        /// Normal label lower 6 bits is the length of the label
+        /// Normal label - lower 6 bits is the length of the label
         /// </summary>
         Normal = 0,
         /// <summary>
-        /// Compressed label the lower 6 bits and the 8 bits from next octet form a pointer to the compression target.
+        /// Compressed label - the lower 6 bits and the 8 bits from next octet form a pointer to the compression target.
         /// </summary>
         Compressed = 192
     }

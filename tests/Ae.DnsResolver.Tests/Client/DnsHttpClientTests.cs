@@ -50,6 +50,19 @@ namespace Ae.DnsResolver.Tests.Client
         }
 
         [Fact]
+        public async Task TestLookupGovUkWithGoogle()
+        {
+            var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
+
+            var result = await client.LookupRaw(DnsHeader.CreateQuery("gov.uk", DnsQueryType.ANY));
+
+            var offset = 0;
+            var answer = result.ReadDnsAnswer(ref offset);
+
+            Assert.Equal(33, answer.Answers.Count);
+        }
+
+        [Fact]
         public async Task TestLookupAlanEdwardesComWithGoogleAny()
         {
             var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });

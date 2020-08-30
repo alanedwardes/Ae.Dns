@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Ae.DnsResolver.Protocol.Records;
+using System.Collections.Generic;
 
 namespace Ae.DnsResolver.Protocol
 {

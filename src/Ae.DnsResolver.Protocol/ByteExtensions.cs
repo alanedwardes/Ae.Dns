@@ -1,9 +1,8 @@
 ﻿using Ae.DnsResolver.Protocol.Enums;
+using Ae.DnsResolver.Protocol.Records;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Reflection;
 using System.Text;
 
 namespace Ae.DnsResolver.Protocol
@@ -58,10 +57,10 @@ namespace Ae.DnsResolver.Protocol
             while (offset < bytes.Length)
             {
                 // get segment length or detect termination of segments
-                int segmentLength = bytes[offset];
+                int currentByte = bytes[offset];
 
                 // compressed name
-                if (((DnsLabelType)segmentLength).HasFlag(DnsLabelType.Compressed))
+                if (((DnsLabelType)currentByte).HasFlag(DnsLabelType.Compressed))
                 {
                     offset++;
                     if (!compressionOffset.HasValue)
@@ -70,25 +69,14 @@ namespace Ae.DnsResolver.Protocol
                         compressionOffset = offset;
                     }
 
-                    var mask = (1 << 14) - 1;
-                    var pointerBytes = new byte[] { (byte)segmentLength, bytes[offset] };
                     var pointerOffset = 0;
-                    var pointer = pointerBytes.ReadUInt16(ref pointerOffset) & mask;
+                    var pointer = new byte[]{(byte)(currentByte & (1 << 6) - 1), bytes[offset]}.ReadUInt16(ref pointerOffset);
 
-                    if (segmentLength > (byte)DnsLabelType.Compressed)
-                    {
-                        offset = pointer;
-                        segmentLength = bytes[offset];
-                    }
-                    else
-                    {
-                        // move pointer to compression segment
-                        offset = bytes[offset];
-                        segmentLength = bytes[offset];
-                    }
+                    offset = pointer;
+                    currentByte = bytes[offset];
                 }
 
-                if (segmentLength == (byte)DnsLabelType.Normal)
+                if (currentByte == (byte)DnsLabelType.Normal)
                 {
                     if (compressionOffset.HasValue)
                     {
@@ -101,8 +89,8 @@ namespace Ae.DnsResolver.Protocol
 
                 // move pass length and get segment text
                 offset++;
-                parts.Add(Encoding.ASCII.GetString(bytes, offset, segmentLength));
-                offset += segmentLength;
+                parts.Add(Encoding.ASCII.GetString(bytes, offset, currentByte));
+                offset += currentByte;
             }
 
             return parts.ToArray();
@@ -141,64 +129,27 @@ namespace Ae.DnsResolver.Protocol
         {
             var recordName = bytes.ReadString(ref offset);
             var recordType = (DnsQueryType)bytes.ReadUInt16(ref offset);
-            var recordClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
-            var recordTtl = bytes.ReadUInt32(ref offset);
-            var recordDataLength = bytes.ReadUInt16(ref offset);
-            var recordDataOffset = offset;
 
-            var dataOffset = offset;
-
-            DnsResourceRecord record;
-            switch (recordType)
+            var mapping = new Dictionary<DnsQueryType, Func<DnsResourceRecord>>
             {
-                case DnsQueryType.A:
-                case DnsQueryType.AAAA:
-                    record = new DnsIpAddressRecord
-                    {
-                        IPAddress = new IPAddress(bytes.ReadBytes(recordDataLength, ref dataOffset))
-                    };
-                    break;
-                case DnsQueryType.TEXT:
-                case DnsQueryType.CNAME:
-                case DnsQueryType.NS:
-                case DnsQueryType.PTR:
-                    record = new DnsTextRecord
-                    {
-                        Text = string.Join(".", bytes.ReadString(ref dataOffset))
-                    };
-                    break;
-                case DnsQueryType.SOA:
-                    record = new DnsSoaRecord
-                    {
-                        MName = string.Join(".", bytes.ReadString(ref dataOffset)),
-                        RName = string.Join(".", bytes.ReadString(ref dataOffset)),
-                        Serial = bytes.ReadUInt32(ref dataOffset),
-                        Refresh = bytes.ReadInt32(ref dataOffset),
-                        Retry = bytes.ReadInt32(ref dataOffset),
-                        Expire = bytes.ReadInt32(ref dataOffset),
-                        Minimum = bytes.ReadUInt32(ref dataOffset)
-                    };
-                    break;
-                case DnsQueryType.MX:
-                    record = new DnsMxRecord
-                    {
-                        Preference = bytes.ReadUInt16(ref dataOffset),
-                        Exchange = string.Join(".", bytes.ReadString(ref dataOffset))
-                    };
-                    break;
-                default:
-                    record = new UnimplementedDnsResourceRecord();
-                    break;
-            }
+                { DnsQueryType.A, () => new DnsIpAddressRecord() },
+                { DnsQueryType.AAAA, () => new DnsIpAddressRecord() },
+                { DnsQueryType.TEXT, () => new DnsTextRecord() },
+                { DnsQueryType.CNAME, () => new DnsTextRecord() },
+                { DnsQueryType.NS, () => new DnsTextRecord() },
+                { DnsQueryType.PTR, () => new DnsTextRecord() },
+                { DnsQueryType.SPF, () => new DnsTextRecord() },
+                { DnsQueryType.SOA, () => new DnsSoaRecord() },
+                { DnsQueryType.MX, () => new DnsMxRecord() }
+            };
 
+            var record = mapping.TryGetValue(recordType, out var factory) ? factory() : new UnimplementedDnsResourceRecord();
             record.Name = recordName;
             record.Type = recordType;
-            record.Class = recordClass;
-            record.Ttl = recordTtl;
-            record.DataLength = recordDataLength;
-            record.DataOffset = recordDataOffset;
-
-            offset += record.DataLength;
+            record.Class = (DnsQueryClass)bytes.ReadUInt16(ref offset);
+            record.Ttl = bytes.ReadUInt32(ref offset);
+            record.DataLength = bytes.ReadUInt16(ref offset);
+            record.ReadData(bytes, ref offset);
 
             return record;
         }
@@ -224,10 +175,10 @@ namespace Ae.DnsResolver.Protocol
             {
                 case TypeCode.Int32:
                     var int32 = (int)value;
-                    yield return (byte) (int32 >> 24);
-                    yield return (byte) (int32 >> 16);
-                    yield return (byte) (int32 >> 8);
-                    yield return (byte) (int32 >> 0);
+                    yield return (byte)(int32 >> 24);
+                    yield return (byte)(int32 >> 16);
+                    yield return (byte)(int32 >> 8);
+                    yield return (byte)(int32 >> 0);
                     break;
                 case TypeCode.UInt32:
                     var uint32 = (uint)value;
@@ -277,6 +228,8 @@ namespace Ae.DnsResolver.Protocol
                 yield return resourceRecord.Type.ToBytes();
                 yield return resourceRecord.Class.ToBytes();
                 yield return resourceRecord.Ttl.ToBytes();
+                yield return resourceRecord.DataLength.ToBytes();
+                yield return resourceRecord.WriteData();
             }
 
             var header = answer.Header.WriteDnsHeader();
