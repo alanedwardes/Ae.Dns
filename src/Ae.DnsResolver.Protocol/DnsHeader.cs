@@ -3,7 +3,7 @@ using System;
 
 namespace Ae.DnsResolver.Protocol
 {
-    public sealed class DnsHeader
+    public sealed class DnsHeader : IEquatable<DnsHeader>
     {
         public static ushort GenerateId() => ByteExtensions.ReadUInt16(Guid.NewGuid().ToByteArray());
 
@@ -80,5 +80,33 @@ namespace Ae.DnsResolver.Protocol
         }
 
         public override string ToString() => $"Id: {Id}, Domain: {Host}, type: {QueryType}, class: {QueryClass}";
+
+        public bool Equals(DnsHeader other)
+        {
+            return Id == other.Id &&
+                   Flags == other.Flags &&
+                   QuestionCount == other.QuestionCount &&
+                   AnswerRecordCount == other.AnswerRecordCount &&
+                   NameServerRecordCount == other.NameServerRecordCount &&
+                   AdditionalRecordCount == other.AdditionalRecordCount &&
+                   Host == other.Host &&
+                   QueryType == other.QueryType &&
+                   QueryClass == other.QueryClass;
+        }
+
+        public override int GetHashCode()
+        {
+            HashCode hash = new HashCode();
+            hash.Add(Id);
+            hash.Add(Flags);
+            hash.Add(QuestionCount);
+            hash.Add(AnswerRecordCount);
+            hash.Add(NameServerRecordCount);
+            hash.Add(AdditionalRecordCount);
+            hash.Add(QueryType);
+            hash.Add(QueryClass);
+            hash.Add(Host);
+            return hash.ToHashCode();
+        }
     }
 }

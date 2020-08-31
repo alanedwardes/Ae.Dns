@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ae.DnsResolver.Protocol.Records
 {
-    public sealed class DnsSoaRecord : DnsResourceRecord
+    public sealed class DnsSoaRecord : DnsResourceRecord, IEquatable<DnsSoaRecord>
     {
         public string MName { get; set; }
         public string RName { get; set; }
@@ -12,6 +12,19 @@ namespace Ae.DnsResolver.Protocol.Records
         public TimeSpan Retry { get; set; }
         public TimeSpan Expire { get; set; }
         public TimeSpan Minimum { get; set; }
+
+        public bool Equals(DnsSoaRecord other)
+        {
+            return MName == other.MName &&
+                   RName == other.RName &&
+                   Serial == other.Serial &&
+                   Refresh == other.Refresh &&
+                   Retry == other.Retry &&
+                   Expire == other.Expire &&
+                   Minimum == other.Minimum;
+        }
+
+        public override bool Equals(object obj) => obj is DnsSoaRecord record ? Equals(record) : base.Equals(obj);
 
         protected override void ReadBytes(byte[] bytes, ref int offset)
         {

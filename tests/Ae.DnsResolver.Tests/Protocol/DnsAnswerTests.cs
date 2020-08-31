@@ -10,6 +10,10 @@ namespace Ae.DnsResolver.Tests.Protocol
 {
     public class DnsAnswerTests
     {
+        [Theory]
+        [ClassData(typeof(AnswerTheoryData))]
+        public void TestReadAnswers(byte[] answerBytes) => answerBytes.ReadDnsAnswer();
+
         [Fact]
         public void ReadAnswer1()
         {
@@ -173,34 +177,6 @@ namespace Ae.DnsResolver.Tests.Protocol
             Assert.Equal("alanedwardes.com", record5.Host);
             Assert.Equal(IPAddress.Parse("143.204.191.110"), record5.IPAddress);
             Assert.Equal(TimeSpan.Parse("00:01:00"), record5.TimeToLive);
-        }
-
-        [Fact]
-        public void ReadAnswer6()
-        {
-            var message = SampleDnsPackets.Answer6.ReadDnsAnswer();
-
-            var bytes = message.ToBytes().ToArray();
-
-            Assert.Equal(SampleDnsPackets.Answer6, bytes);
-        }
-
-        [Fact]
-        public void ReadAnswer7()
-        {
-            var message = SampleDnsPackets.Answer7.ReadDnsAnswer();
-        }
-
-        [Fact]
-        public void ReadAnswer8()
-        {
-            var message = SampleDnsPackets.Answer8.ReadDnsAnswer();
-        }
-
-        [Fact]
-        public void ReadAnswer9()
-        {
-            var message = SampleDnsPackets.Answer9.ReadDnsAnswer();
         }
     }
 }

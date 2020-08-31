@@ -7,6 +7,10 @@ namespace Ae.DnsResolver.Tests.Protocol
 {
     public class DnsQueryTests
     {
+        [Theory]
+        [ClassData(typeof(QueryTheoryData))]
+        public void TestReadQueries(byte[] queryBytes) => queryBytes.ReadDnsHeader();
+
         [Fact]
         public void ReadQuery1Packet()
         {

@@ -1,5 +1,21 @@
-﻿namespace Ae.DnsResolver.Tests
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Ae.DnsResolver.Tests
 {
+    public sealed class AnswerTheoryData : IEnumerable<object[]>
+    {
+        public IEnumerator<object[]> GetEnumerator() => SampleDnsPackets.Answers.Select(x => new[] { x }).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    public sealed class QueryTheoryData : IEnumerable<object[]>
+    {
+        public IEnumerator<object[]> GetEnumerator() => SampleDnsPackets.Queries.Select(x => new[] { x }).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
     public static class SampleDnsPackets
     {
         public static byte[][] Queries => new[] { Query1,Query2,Query3,Query4,Query5 };
@@ -34,7 +50,7 @@
             175,213,1,0,0,1,0,0,0,0,0,0,7,114,111,97,109,105,110,103,10,111,102,102,105,99,101,97,112,112,115,4,108,105,118,101,3,99,111,109,0,0,1,0,1
         };
 
-        public static byte[][] Answers => new[] { Answer1,Answer2,Answer3,Answer4,Answer5,Answer6,Answer7 };
+        public static byte[][] Answers => new[] { Answer1,Answer2,Answer3,Answer4,Answer5,Answer6,Answer7,Answer8,Answer9 };
 
         public static readonly byte[] Answer1 = new byte[]
         {
