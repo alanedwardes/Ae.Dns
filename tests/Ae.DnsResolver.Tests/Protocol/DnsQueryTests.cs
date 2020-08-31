@@ -14,7 +14,7 @@ namespace Ae.DnsResolver.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
-            Assert.Equal(new[] { "cognito-identity", "us-east-1", "amazonaws", "com" }, header.Labels);
+            Assert.Equal("cognito-identity.us-east-1.amazonaws.com", header.Host);
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
@@ -47,7 +47,7 @@ namespace Ae.DnsResolver.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
-            Assert.Equal(new[] { "polling", "bbc", "co", "uk" }, header.Labels);
+            Assert.Equal("polling.bbc.co.uk", header.Host);
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
@@ -61,7 +61,7 @@ namespace Ae.DnsResolver.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
-            Assert.Equal(new[] { "outlook", "office365", "com" }, header.Labels);
+            Assert.Equal("outlook.office365.com", header.Host);
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
@@ -75,7 +75,7 @@ namespace Ae.DnsResolver.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.AAAA, header.QueryType);
-            Assert.Equal(new[] { "h3", "shared", "global", "fastly", "net" }, header.Labels);
+            Assert.Equal("h3.shared.global.fastly.net", header.Host);
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
@@ -89,7 +89,7 @@ namespace Ae.DnsResolver.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
-            Assert.Equal(new[] { "roaming", "officeapps", "live", "com" }, header.Labels);
+            Assert.Equal("roaming.officeapps.live.com", header.Host);
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
