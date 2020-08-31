@@ -48,8 +48,7 @@ namespace Ae.DnsResolver.Server
             DnsHeader message;
             try
             {
-                var offset = 0;
-                message = query.Buffer.ReadDnsHeader(ref offset);
+                message = query.Buffer.ReadDnsHeader();
             }
             catch (Exception e)
             {
@@ -60,8 +59,7 @@ namespace Ae.DnsResolver.Server
             DnsAnswer answer;
             try
             {
-                var offset = 0;
-                var header = query.Buffer.ReadDnsHeader(ref offset);
+                var header = query.Buffer.ReadDnsHeader();
                 answer = await _dnsRepository.Resolve(header);
             }
             catch (Exception e)

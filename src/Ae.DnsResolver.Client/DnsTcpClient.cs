@@ -52,8 +52,7 @@ namespace Ae.DnsResolver.Client
                 throw new InvalidOperationException();
             }
 
-            offset = 0;
-            return response.ReadDnsAnswer(ref offset);
+            return response.ReadDnsAnswer();
         }
     }
 }

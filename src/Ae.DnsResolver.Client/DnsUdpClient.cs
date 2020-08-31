@@ -69,8 +69,7 @@ namespace Ae.DnsResolver.Client
 
                 if (read > 0)
                 {
-                    var offset = 0;
-                    _ = Task.Run(() => Receive(buffer.ReadBytes(read, ref offset)));
+                    _ = Task.Run(() => Receive(buffer.ReadBytes(read)));
                 }
             }
         }
@@ -80,8 +79,7 @@ namespace Ae.DnsResolver.Client
             DnsAnswer answer;
             try
             {
-                var offset = 0;
-                answer = buffer.ReadDnsAnswer(ref offset);
+                answer = buffer.ReadDnsAnswer();
             }
             catch (Exception e)
             {
@@ -123,8 +121,7 @@ namespace Ae.DnsResolver.Client
 
             var result = await completionSource.Task;
 
-            var offset = 0;
-            var answer = result.ReadDnsAnswer(ref offset);
+            var answer = result.ReadDnsAnswer();
 
             // Copy the same ID from the request
             answer.Header.Id = query.Id;

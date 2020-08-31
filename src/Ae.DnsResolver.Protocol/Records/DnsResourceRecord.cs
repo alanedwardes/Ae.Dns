@@ -42,6 +42,24 @@ namespace Ae.DnsResolver.Protocol.Records
         protected abstract IEnumerable<IEnumerable<byte>> WriteBytes();
         internal IEnumerable<byte> WriteData() => WriteBytes().SelectMany(x => x);
 
+        private static IReadOnlyDictionary<DnsQueryType, Func<DnsResourceRecord>> _recordTypeFactories = new Dictionary<DnsQueryType, Func<DnsResourceRecord>>
+        {
+            { DnsQueryType.A, () => new DnsIpAddressRecord() },
+            { DnsQueryType.AAAA, () => new DnsIpAddressRecord() },
+            { DnsQueryType.TEXT, () => new DnsTextRecord() },
+            { DnsQueryType.CNAME, () => new DnsTextRecord() },
+            { DnsQueryType.NS, () => new DnsTextRecord() },
+            { DnsQueryType.PTR, () => new DnsTextRecord() },
+            { DnsQueryType.SPF, () => new DnsTextRecord() },
+            { DnsQueryType.SOA, () => new DnsSoaRecord() },
+            { DnsQueryType.MX, () => new DnsMxRecord() }
+        };
+
+        internal static DnsResourceRecord CreateResourceRecord(DnsQueryType recordType)
+        {
+            return _recordTypeFactories.TryGetValue(recordType, out var factory) ? factory() : new UnimplementedDnsResourceRecord();
+        }
+
         public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {Ttl}";
     }
 }

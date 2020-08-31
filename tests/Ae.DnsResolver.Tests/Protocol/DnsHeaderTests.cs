@@ -11,15 +11,13 @@ namespace Ae.DnsResolver.Tests.Protocol
         {
             foreach (var answer in SampleDnsPackets.Answers)
             {
-                var offset = 0;
-                var header = answer.ReadDnsHeader(ref offset);
+                var header = answer.ReadDnsHeader();
                 Assert.True(header.IsQueryResponse);
             }
 
             foreach (var query in SampleDnsPackets.Queries)
             {
-                var offset = 0;
-                var header = query.ReadDnsHeader(ref offset);
+                var header = query.ReadDnsHeader();
                 Assert.False(header.IsQueryResponse);
             }
         }
@@ -58,8 +56,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void TestDnsHeaderIsNxDomainResponse()
         {
-            var offset = 0;
-            var header = SampleDnsPackets.Answer1.ReadDnsHeader(ref offset);
+            var header = SampleDnsPackets.Answer1.ReadDnsHeader();
             Assert.Equal(DnsResponseCode.NXDomain, header.ResponseCode);
         }
     }

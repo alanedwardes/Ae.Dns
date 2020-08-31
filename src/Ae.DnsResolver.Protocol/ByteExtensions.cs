@@ -1,6 +1,7 @@
 ﻿using Ae.DnsResolver.Protocol.Enums;
 using Ae.DnsResolver.Protocol.Records;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,12 +10,19 @@ namespace Ae.DnsResolver.Protocol
 {
     public static class ByteExtensions
     {
+        public static short ReadInt16(params byte[] bytes)
+        {
+            return (short)(bytes[0] << 0 |
+                           bytes[1] << 8);
+        }
+
+        public static ushort ReadUInt16(params byte[] bytes) => (ushort)ReadInt16(bytes);
+
         public static short ReadInt16(this byte[] bytes, ref int offset)
         {
-            var value = bytes[offset + 1] << 0 |
-                        bytes[offset + 0] << 8;
+            var value = ReadInt16(bytes[offset + 1], bytes[offset + 0]);
             offset += sizeof(short);
-            return (short)value;
+            return value;
         }
 
         public static ushort ReadUInt16(this byte[] bytes, ref int offset) => (ushort)bytes.ReadInt16(ref offset);
@@ -41,6 +49,12 @@ namespace Ae.DnsResolver.Protocol
             return $"new [] {{{string.Join(", ", bytes)}}}";
         }
 
+        public static byte[] ReadBytes(this byte[] bytes, int length)
+        {
+            var offset = 0;
+            return ReadBytes(bytes, length, ref offset);
+        }
+
         public static byte[] ReadBytes(this byte[] bytes, int length, ref int offset)
         {
             var data = new byte[length];
@@ -49,18 +63,19 @@ namespace Ae.DnsResolver.Protocol
             return data;
         }
 
-        public static string[] ReadString(this byte[] bytes, ref int offset)
+        public static string[] ReadString(this byte[] bytes, ref int offset, int? maxOffset = int.MaxValue)
         {
             var parts = new List<string>();
 
             int? compressionOffset = null;
-            while (offset < bytes.Length)
+            while (offset < bytes.Length && offset < maxOffset)
             {
-                // get segment length or detect termination of segments
-                int currentByte = bytes[offset];
+                byte currentByte = bytes[offset];
+
+                var bits = new BitArray(new[] { bytes[offset] });
 
                 // compressed name
-                if (((DnsLabelType)currentByte).HasFlag(DnsLabelType.Compressed))
+                if (bits[7] && bits[6] && !bits[5] && !bits[4])
                 {
                     offset++;
                     if (!compressionOffset.HasValue)
@@ -69,31 +84,33 @@ namespace Ae.DnsResolver.Protocol
                         compressionOffset = offset;
                     }
 
-                    var pointerOffset = 0;
-                    var pointer = new byte[]{(byte)(currentByte & (1 << 6) - 1), bytes[offset]}.ReadUInt16(ref pointerOffset);
-
-                    offset = pointer;
-                    currentByte = bytes[offset];
+                    offset = (ushort)ReadInt16(bytes[offset], (byte)(currentByte & (1 << 6) - 1));
                 }
-
-                if (currentByte == (byte)DnsLabelType.Normal)
+                else if (currentByte == 0)
                 {
                     if (compressionOffset.HasValue)
                     {
                         offset = compressionOffset.Value;
                     }
-                    // move past end of name \0
                     offset++;
                     break;
                 }
-
-                // move pass length and get segment text
-                offset++;
-                parts.Add(Encoding.ASCII.GetString(bytes, offset, currentByte));
-                offset += currentByte;
+                else
+                {
+                    offset++;
+                    var str = Encoding.ASCII.GetString(bytes, offset, currentByte);
+                    parts.Add(str);
+                    offset += currentByte;
+                }
             }
 
             return parts.ToArray();
+        }
+
+        public static DnsHeader ReadDnsHeader(this byte[] bytes)
+        {
+            var offset = 0;
+            return ReadDnsHeader(bytes, ref offset);
         }
 
         public static DnsHeader ReadDnsHeader(this byte[] bytes, ref int offset)
@@ -109,6 +126,12 @@ namespace Ae.DnsResolver.Protocol
             header.QueryType = (DnsQueryType)bytes.ReadUInt16(ref offset);
             header.QueryClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
             return header;
+        }
+
+        public static DnsAnswer ReadDnsAnswer(this byte[] bytes)
+        {
+            var offset = 0;
+            return ReadDnsAnswer(bytes, ref offset);
         }
 
         public static DnsAnswer ReadDnsAnswer(this byte[] bytes, ref int offset)
@@ -130,20 +153,7 @@ namespace Ae.DnsResolver.Protocol
             var recordName = bytes.ReadString(ref offset);
             var recordType = (DnsQueryType)bytes.ReadUInt16(ref offset);
 
-            var mapping = new Dictionary<DnsQueryType, Func<DnsResourceRecord>>
-            {
-                { DnsQueryType.A, () => new DnsIpAddressRecord() },
-                { DnsQueryType.AAAA, () => new DnsIpAddressRecord() },
-                { DnsQueryType.TEXT, () => new DnsTextRecord() },
-                { DnsQueryType.CNAME, () => new DnsTextRecord() },
-                { DnsQueryType.NS, () => new DnsTextRecord() },
-                { DnsQueryType.PTR, () => new DnsTextRecord() },
-                { DnsQueryType.SPF, () => new DnsTextRecord() },
-                { DnsQueryType.SOA, () => new DnsSoaRecord() },
-                { DnsQueryType.MX, () => new DnsMxRecord() }
-            };
-
-            var record = mapping.TryGetValue(recordType, out var factory) ? factory() : new UnimplementedDnsResourceRecord();
+            var record = DnsResourceRecord.CreateResourceRecord(recordType);
             record.Name = recordName;
             record.Type = recordType;
             record.Class = (DnsQueryClass)bytes.ReadUInt16(ref offset);

@@ -9,13 +9,11 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void TestDnsTextRecord()
         {
-            int offset = 0;
-            var answer1 = SampleDnsPackets.Answer2.ReadDnsAnswer(ref offset);
+            var answer1 = SampleDnsPackets.Answer2.ReadDnsAnswer();
 
             var bytes = answer1.WriteDnsAnswer().ToArray();
 
-            offset = 0;
-            var answer2 = bytes.ReadDnsAnswer(ref offset);
+            var answer2 = bytes.ReadDnsAnswer();
         }
     }
 }

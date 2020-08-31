@@ -10,9 +10,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadQuery1Packet()
         {
-            int offset = 0;
-            var header = SampleDnsPackets.Query1.ReadDnsHeader(ref offset);
-            Assert.Equal(SampleDnsPackets.Query1.Length, offset);
+            var header = SampleDnsPackets.Query1.ReadDnsHeader();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
@@ -45,9 +43,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadQuery2Packet()
         {
-            int offset = 0;
-            var header = SampleDnsPackets.Query2.ReadDnsHeader(ref offset);
-            Assert.Equal(SampleDnsPackets.Query2.Length, offset);
+            var header = SampleDnsPackets.Query2.ReadDnsHeader();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
@@ -61,9 +57,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadQuery3Packet()
         {
-            int offset = 0;
-            var header = SampleDnsPackets.Query3.ReadDnsHeader(ref offset);
-            Assert.Equal(SampleDnsPackets.Query3.Length, offset);
+            var header = SampleDnsPackets.Query3.ReadDnsHeader();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
@@ -77,9 +71,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadQuery4Packet()
         {
-            int offset = 0;
-            var header = SampleDnsPackets.Query4.ReadDnsHeader(ref offset);
-            Assert.Equal(SampleDnsPackets.Query4.Length, offset);
+            var header = SampleDnsPackets.Query4.ReadDnsHeader();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.AAAA, header.QueryType);
@@ -93,9 +85,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadQuery5Packet()
         {
-            int offset = 0;
-            var header = SampleDnsPackets.Query5.ReadDnsHeader(ref offset);
-            Assert.Equal(SampleDnsPackets.Query5.Length, offset);
+            var header = SampleDnsPackets.Query5.ReadDnsHeader();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);

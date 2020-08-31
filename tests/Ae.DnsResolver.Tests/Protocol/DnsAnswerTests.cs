@@ -12,9 +12,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadAnswer1()
         {
-            int offset = 0;
-            var message = SampleDnsPackets.Answer1.ReadDnsAnswer(ref offset);
-            Assert.Equal(SampleDnsPackets.Answer1.Length, offset);
+            var message = SampleDnsPackets.Answer1.ReadDnsAnswer();
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
             Assert.Equal(DnsQueryType.PTR, message.Header.QueryType);
@@ -35,9 +33,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadAnswer2()
         {
-            int offset = 0;
-            var message = SampleDnsPackets.Answer2.ReadDnsAnswer(ref offset);
-            Assert.Equal(SampleDnsPackets.Answer2.Length, offset);
+            var message = SampleDnsPackets.Answer2.ReadDnsAnswer();
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
             Assert.Equal(DnsQueryType.A, message.Header.QueryType);
@@ -54,12 +50,15 @@ namespace Ae.DnsResolver.Tests.Protocol
             Assert.Equal(15, record1.DataLength);
             Assert.Equal(new[] { "alanedwardes-my", "sharepoint", "com" }, record1.Name);
             Assert.Equal(TimeSpan.Parse("01:00:00"), record1.TimeToLive);
+            Assert.Equal("alanedwardes.sharepoint.com", record1.Text);
 
             var record2 = (DnsTextRecord)message.Answers[1];
             Assert.Equal(DnsQueryType.CNAME, record2.Type);
             Assert.Equal(DnsQueryClass.IN, record2.Class);
             Assert.Equal(36, record2.DataLength);
+            Assert.Equal(new[] { "alanedwardes", "sharepoint", "com" }, record2.Name);
             Assert.Equal(TimeSpan.Parse("01:00:00"), record2.TimeToLive);
+            Assert.Equal("302-ipv4e.clump.dprodmgd104.aa-rt.sharepoint.com", record2.Text);
 
             var record3 = (DnsTextRecord)message.Answers[2];
             Assert.Equal(DnsQueryType.CNAME, record3.Type);
@@ -67,6 +66,7 @@ namespace Ae.DnsResolver.Tests.Protocol
             Assert.Equal(20, record3.DataLength);
             Assert.Equal(new[] { "302-ipv4e", "clump", "dprodmgd104", "aa-rt", "sharepoint", "com" }, record3.Name);
             Assert.Equal(TimeSpan.Parse("00:00:30"), record3.TimeToLive);
+            Assert.Equal("187170-ipv4e.farm.dprodmgd104.aa-rt.sharepoint.com", record3.Text);
 
             var record4 = (DnsTextRecord)message.Answers[3];
             Assert.Equal(DnsQueryType.CNAME, record4.Type);
@@ -74,6 +74,7 @@ namespace Ae.DnsResolver.Tests.Protocol
             Assert.Equal(63, record4.DataLength);
             Assert.Equal(new[] { "187170-ipv4e", "farm", "dprodmgd104", "aa-rt", "sharepoint", "com" }, record4.Name);
             Assert.Equal(TimeSpan.Parse("00:01:00"), record4.TimeToLive);
+            Assert.Equal("187170-ipv4e.farm.dprodmgd104.sharepointonline.com.akadns.net", record4.Text);
 
             var record5 = (DnsTextRecord)message.Answers[4];
             Assert.Equal(DnsQueryType.CNAME, record5.Type);
@@ -81,6 +82,7 @@ namespace Ae.DnsResolver.Tests.Protocol
             Assert.Equal(72, record5.DataLength);
             Assert.Equal(new[] { "187170-ipv4e", "farm", "dprodmgd104", "sharepointonline", "com", "akadns", "net" }, record5.Name);
             Assert.Equal(TimeSpan.Parse("00:05:00"), record5.TimeToLive);
+            Assert.Equal("187170-ipv4.farm.dprodmgd104.aa-rt.sharepoint.com.spo-0004.spo-msedge.net", record5.Text);
 
             var record6 = (DnsTextRecord)message.Answers[5];
             Assert.Equal(DnsQueryType.CNAME, record6.Type);
@@ -100,9 +102,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadAnswer3()
         {
-            int offset = 0;
-            var message = SampleDnsPackets.Answer3.ReadDnsAnswer(ref offset);
-            Assert.Equal(SampleDnsPackets.Answer3.Length, offset);
+            var message = SampleDnsPackets.Answer3.ReadDnsAnswer();
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
             Assert.Equal(DnsQueryType.A, message.Header.QueryType);
@@ -121,9 +121,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadAnswer4()
         {
-            int offset = 0;
-            var message = SampleDnsPackets.Answer4.ReadDnsAnswer(ref offset);
-            Assert.Equal(SampleDnsPackets.Answer4.Length, offset);
+            var message = SampleDnsPackets.Answer4.ReadDnsAnswer();
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
             Assert.Equal(DnsQueryType.A, message.Header.QueryType);
@@ -170,9 +168,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadAnswer6()
         {
-            int offset = 0;
-            var message = SampleDnsPackets.Answer6.ReadDnsHeader(ref offset);
-            Assert.Equal(SampleDnsPackets.Answer6.Length, offset);
+            var message = SampleDnsPackets.Answer6.ReadDnsHeader();
 
             var bytes = message.WriteDnsHeader().ToArray();
 
@@ -182,9 +178,7 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact(Skip = "String parsing bug - needs fixing")]
         public void ReadAnswer7()
         {
-            int offset = 0;
-            var message = SampleDnsPackets.Answer7.ReadDnsAnswer(ref offset);
-            Assert.Equal(SampleDnsPackets.Answer7.Length, offset);
+            var message = SampleDnsPackets.Answer7.ReadDnsAnswer();
         }
     }
 }

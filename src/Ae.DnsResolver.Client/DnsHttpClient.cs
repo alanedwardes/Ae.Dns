@@ -29,8 +29,7 @@ namespace Ae.DnsResolver.Client
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
-            var offset = 0;
-            return (await response.Content.ReadAsByteArrayAsync()).ReadDnsAnswer(ref offset);
+            return (await response.Content.ReadAsByteArrayAsync()).ReadDnsAnswer();
         }
     }
 }
