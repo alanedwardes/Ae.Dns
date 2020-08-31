@@ -16,7 +16,7 @@ namespace Ae.DnsResolver.Client
 
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
-            var raw = query.WriteDnsHeader().ToArray();
+            var raw = query.ToBytes().ToArray();
 
             var content = new ByteArrayContent(raw);
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);

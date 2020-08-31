@@ -68,7 +68,7 @@ namespace Ae.DnsResolver.Server
                 return;
             }
 
-            var answerBytes = answer.WriteDnsAnswer().ToArray();
+            var answerBytes = answer.ToBytes().ToArray();
 
             try
             {

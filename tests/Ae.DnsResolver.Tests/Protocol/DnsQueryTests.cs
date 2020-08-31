@@ -35,7 +35,7 @@ namespace Ae.DnsResolver.Tests.Protocol
                 QuestionCount = 1,
             };
 
-            var bytes = header2.WriteDnsHeader().ToArray();
+            var bytes = header2.ToBytes().ToArray();
 
             Assert.Equal(SampleDnsPackets.Query1, bytes);
         }

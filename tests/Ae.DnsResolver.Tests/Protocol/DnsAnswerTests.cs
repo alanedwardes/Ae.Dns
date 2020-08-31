@@ -178,9 +178,9 @@ namespace Ae.DnsResolver.Tests.Protocol
         [Fact]
         public void ReadAnswer6()
         {
-            var message = SampleDnsPackets.Answer6.ReadDnsHeader();
+            var message = SampleDnsPackets.Answer6.ReadDnsAnswer();
 
-            var bytes = message.WriteDnsHeader().ToArray();
+            var bytes = message.ToBytes().ToArray();
 
             Assert.Equal(SampleDnsPackets.Answer6, bytes);
         }

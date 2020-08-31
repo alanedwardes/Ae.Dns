@@ -115,7 +115,7 @@ namespace Ae.DnsResolver.Client
 
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
-            var raw = query.WriteDnsHeader().ToArray();
+            var raw = query.ToBytes().ToArray();
 
             var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, raw, token));
 

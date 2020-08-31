@@ -35,7 +35,7 @@ namespace Ae.DnsResolver.Client
 
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
-            var raw = query.WriteDnsHeader().ToArray();
+            var raw = query.ToBytes().ToArray();
 
             var payload = ((ushort)raw.Length).ToBytes().Concat(raw).ToArray();
             await _socket.SendAsync(payload, SocketFlags.None, token);

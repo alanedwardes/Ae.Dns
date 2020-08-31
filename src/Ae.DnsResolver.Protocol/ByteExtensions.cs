@@ -213,7 +213,7 @@ namespace Ae.DnsResolver.Protocol
             }
         }
 
-        public static IEnumerable<byte> WriteDnsHeader(this DnsHeader header)
+        public static IEnumerable<byte> ToBytes(this DnsHeader header)
         {
             IEnumerable<IEnumerable<byte>> Write()
             {
@@ -231,7 +231,7 @@ namespace Ae.DnsResolver.Protocol
             return Write().SelectMany(x => x);
         }
 
-        public static IEnumerable<byte> WriteDnsAnswer(this DnsAnswer answer)
+        public static IEnumerable<byte> ToBytes(this DnsAnswer answer)
         {
             IEnumerable<IEnumerable<byte>> Write(DnsResourceRecord resourceRecord)
             {
@@ -244,7 +244,7 @@ namespace Ae.DnsResolver.Protocol
                 yield return data;
             }
 
-            var header = answer.Header.WriteDnsHeader();
+            var header = answer.Header.ToBytes();
             var answers = answer.Answers.Select(Write).SelectMany(x => x).SelectMany(x => x);
             return header.Concat(answers);
         }
