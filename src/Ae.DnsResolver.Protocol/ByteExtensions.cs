@@ -67,30 +67,31 @@ namespace Ae.DnsResolver.Protocol
         {
             var parts = new List<string>();
 
-            int? compressionOffset = null;
+            int? originalOffset = null;
             while (offset < bytes.Length && offset < maxOffset)
             {
                 byte currentByte = bytes[offset];
 
-                var bits = new BitArray(new[] { bytes[offset] });
+                var bits = new BitArray(new[] { currentByte });
 
-                // compressed name
-                if (bits[7] && bits[6] && !bits[5] && !bits[4])
+                bool isCompressed = bits[7] && bits[6] && !bits[5] && !bits[4];
+                bool isEnd = currentByte == 0;
+
+                if (isCompressed)
                 {
                     offset++;
-                    if (!compressionOffset.HasValue)
+                    if (!originalOffset.HasValue)
                     {
-                        // only record origin, and follow all pointers thereafter
-                        compressionOffset = offset;
+                        originalOffset = offset;
                     }
 
                     offset = (ushort)ReadInt16(bytes[offset], (byte)(currentByte & (1 << 6) - 1));
                 }
-                else if (currentByte == 0)
+                else if (isEnd)
                 {
-                    if (compressionOffset.HasValue)
+                    if (originalOffset.HasValue)
                     {
-                        offset = compressionOffset.Value;
+                        offset = originalOffset.Value;
                     }
                     offset++;
                     break;
