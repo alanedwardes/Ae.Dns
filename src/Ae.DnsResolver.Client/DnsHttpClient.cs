@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ae.DnsResolver.Client
@@ -13,7 +14,7 @@ namespace Ae.DnsResolver.Client
 
         public DnsHttpClient(HttpClient httpClient) => _httpClient = httpClient;
 
-        public async Task<DnsAnswer> Query(DnsHeader query)
+        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
             var raw = query.WriteDnsHeader().ToArray();
 
@@ -26,7 +27,7 @@ namespace Ae.DnsResolver.Client
             };
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(DnsMessageType));
 
-            var response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.SendAsync(request, token);
             response.EnsureSuccessStatusCode();
 
             return (await response.Content.ReadAsByteArrayAsync()).ReadDnsAnswer();

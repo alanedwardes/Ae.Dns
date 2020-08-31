@@ -13,7 +13,7 @@ namespace Ae.DnsResolver.Tests.Client
         [Fact]
         public async Task TestLookupAlanEdwardesComWithCloudFlare()
         {
-            var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://cloudflare-dns.com/") });
+            IDnsClient client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://cloudflare-dns.com/") });
 
             var answer = await client.Query(DnsHeader.CreateQuery("alanedwardes.com"));
 
@@ -23,7 +23,7 @@ namespace Ae.DnsResolver.Tests.Client
         [Fact]
         public async Task TestLookupAlanEdwardesComWithGoogle()
         {
-            var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
+            IDnsClient client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
 
             var answer = await client.Query(DnsHeader.CreateQuery("alanedwardes.com"));
 
@@ -33,7 +33,7 @@ namespace Ae.DnsResolver.Tests.Client
         [Fact]
         public async Task TestLookupCpscGovWithGoogle()
         {
-            var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
+            IDnsClient client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
 
             var answer = await client.Query(DnsHeader.CreateQuery("cpsc.gov", DnsQueryType.ANY));
 
@@ -43,7 +43,7 @@ namespace Ae.DnsResolver.Tests.Client
         [Fact]
         public async Task TestLookupGovUkWithGoogle()
         {
-            var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
+            IDnsClient client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
 
             var answer = await client.Query(DnsHeader.CreateQuery("gov.uk", DnsQueryType.ANY));
 
@@ -53,7 +53,7 @@ namespace Ae.DnsResolver.Tests.Client
         [Fact]
         public async Task TestLookupAlanEdwardesComWithGoogleAny()
         {
-            var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
+            IDnsClient client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
 
             var answer = await client.Query(DnsHeader.CreateQuery("alanedwardes.com", DnsQueryType.ANY));
 

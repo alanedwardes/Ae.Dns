@@ -4,6 +4,7 @@ using Ae.DnsResolver.Protocol;
 using Ae.DnsResolver.Protocol.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -17,7 +18,7 @@ namespace Ae.DnsResolver.Tests.Client
             DnsAnswer answer;
             using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("1.1.1.1"), "test"))
             {
-                answer = await client.Query(DnsHeader.CreateQuery("alanedwardes.com"));
+                answer = await client.Query(DnsHeader.CreateQuery("alanedwardes.com"), CancellationToken.None);
             }
 
             Assert.Equal(4, answer.Answers.Count);
@@ -29,7 +30,7 @@ namespace Ae.DnsResolver.Tests.Client
             DnsAnswer answer;
             using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("8.8.8.8"), "test"))
             {
-                answer = await client.Query(DnsHeader.CreateQuery("cpsc.gov", DnsQueryType.ANY));
+                answer = await client.Query(DnsHeader.CreateQuery("cpsc.gov", DnsQueryType.ANY), CancellationToken.None);
             }
 
             Assert.Empty(answer.Answers);
@@ -42,7 +43,7 @@ namespace Ae.DnsResolver.Tests.Client
             // Reserved - see https://en.wikipedia.org/wiki/Reserved_IP_addresses
             using (var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("192.88.99.0"), "test"))
             {
-                await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.Query(DnsHeader.CreateQuery("alanedwardes.com")));
+                await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.Query(DnsHeader.CreateQuery("alanedwardes.com"), CancellationToken.None));
             }
         }
     }

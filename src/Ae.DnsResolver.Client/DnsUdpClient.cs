@@ -93,11 +93,11 @@ namespace Ae.DnsResolver.Client
             }
         }
 
-        private async Task RemoveFailedRequest(MessageId messageId)
+        private async Task RemoveFailedRequest(MessageId messageId, CancellationToken token)
         {
             var timeout = TimeSpan.FromSeconds(2);
 
-            await Task.Delay(timeout);
+            await Task.Delay(timeout, token);
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
@@ -106,18 +106,18 @@ namespace Ae.DnsResolver.Client
             }
         }
 
-        private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] raw)
+        private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] raw, CancellationToken token)
         {
-            _ = RemoveFailedRequest(messageId);
-            _ = _socket.SendAsync(raw, SocketFlags.None);
+            _ = RemoveFailedRequest(messageId, token);
+            _ = _socket.SendAsync(raw, SocketFlags.None, token);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
-        public async Task<DnsAnswer> Query(DnsHeader query)
+        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
             var raw = query.WriteDnsHeader().ToArray();
 
-            var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, raw));
+            var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, raw, token));
 
             var result = await completionSource.Task;
 

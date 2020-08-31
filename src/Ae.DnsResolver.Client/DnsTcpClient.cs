@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ae.DnsResolver.Client
@@ -32,15 +33,15 @@ namespace Ae.DnsResolver.Client
             }
         }
 
-        public async Task<DnsAnswer> Query(DnsHeader query)
+        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
             var raw = query.WriteDnsHeader().ToArray();
 
             var payload = ((ushort)raw.Length).ToBytes().Concat(raw).ToArray();
-            await _socket.SendAsync(payload, SocketFlags.None);
+            await _socket.SendAsync(payload, SocketFlags.None, token);
 
             var buffer = new byte[4096];
-            var recieve = await _socket.ReceiveAsync(buffer, SocketFlags.None);
+            var recieve = await _socket.ReceiveAsync(buffer, SocketFlags.None, token);
 
             var offset = 0;
             var responseLength = buffer.ReadUInt16(ref offset);

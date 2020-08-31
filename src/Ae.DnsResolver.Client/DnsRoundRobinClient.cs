@@ -1,6 +1,7 @@
 ﻿using Ae.DnsResolver.Protocol;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ae.DnsResolver.Client
@@ -13,6 +14,6 @@ namespace Ae.DnsResolver.Client
 
         private IDnsClient GetRandomClient() => _dnsClients.OrderBy(x => Guid.NewGuid()).First();
 
-        public Task<DnsAnswer> Query(DnsHeader query) => GetRandomClient().Query(query);
+        public Task<DnsAnswer> Query(DnsHeader query, CancellationToken token) => GetRandomClient().Query(query, token);
     }
 }
