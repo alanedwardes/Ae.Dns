@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Ae.DnsResolver.Client
 {
+    [Obsolete("This class is experimental.")]
     public sealed class DnsTcpClient : IDnsClient, IDisposable
     {
         private readonly ILogger<DnsTcpClient> _logger;

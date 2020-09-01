@@ -12,7 +12,7 @@ namespace Ae.DnsResolver.Protocol.Records
 
         public override bool Equals(object obj) => obj is DnsIpAddressRecord record ? Equals(record) : base.Equals(obj);
 
-        protected override void ReadBytes(byte[] bytes, ref int offset) => IPAddress = new IPAddress(bytes.ReadBytes(DataLength, ref offset));
+        protected override void ReadBytes(byte[] bytes, ref int offset, int expectedLength) => IPAddress = new IPAddress(bytes.ReadBytes(expectedLength, ref offset));
 
         protected override IEnumerable<IEnumerable<byte>> WriteBytes()
         {

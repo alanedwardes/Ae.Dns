@@ -11,12 +11,13 @@ namespace Ae.DnsResolver.Protocol.Records
         public bool Equals(DnsMxRecord other)
         {
             return Preference == other.Preference &&
-                   Exchange == other.Exchange;
+                   Exchange == other.Exchange &&
+                   base.Equals(other);
         }
 
         public override bool Equals(object obj) => obj is DnsMxRecord record ? Equals(record) : base.Equals(obj);
 
-        protected override void ReadBytes(byte[] bytes, ref int offset)
+        protected override void ReadBytes(byte[] bytes, ref int offset, int expectedLength)
         {
             Preference = bytes.ReadUInt16(ref offset);
             Exchange = string.Join('.', bytes.ReadString(ref offset));

@@ -5,13 +5,12 @@ using System.Linq;
 
 namespace Ae.DnsResolver.Protocol.Records
 {
-    public abstract class DnsResourceRecord
+    public abstract class DnsResourceRecord : IEquatable<DnsResourceRecord>
     {
         internal string[] Name { get; set; }
         public DnsQueryType Type { get; set; }
         public DnsQueryClass Class { get; set; }
         internal uint Ttl { get; set; }
-        internal ushort DataLength { get; set; }
 
         public TimeSpan TimeToLive
         {
@@ -25,14 +24,14 @@ namespace Ae.DnsResolver.Protocol.Records
             set => Name = value.Split('.');
         }
 
-        protected abstract void ReadBytes(byte[] bytes, ref int offset);
-        internal void ReadData(byte[] bytes, ref int offset)
+        protected abstract void ReadBytes(byte[] bytes, ref int offset, int expectedLength);
+        internal void ReadData(byte[] bytes, ref int offset, int expectedLength)
         {
             var dataOffset = offset;
 
-            ReadBytes(bytes, ref offset);
+            ReadBytes(bytes, ref offset, expectedLength);
 
-            var expectedOffset = dataOffset + DataLength;
+            var expectedOffset = dataOffset + expectedLength;
             if (offset != expectedOffset)
             {
                 var reader = GetType();
@@ -61,5 +60,15 @@ namespace Ae.DnsResolver.Protocol.Records
         }
 
         public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {Ttl}";
+
+        public bool Equals(DnsResourceRecord other)
+        {
+            return Host == other.Host &&
+                   Type == other.Type &&
+                   Class == other.Class &&
+                   TimeToLive == other.TimeToLive;
+        }
+
+        public override bool Equals(object obj) => obj is DnsResourceRecord record ? Equals(record) : base.Equals(obj);
     }
 }

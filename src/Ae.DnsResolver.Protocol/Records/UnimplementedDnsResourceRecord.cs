@@ -8,11 +8,11 @@ namespace Ae.DnsResolver.Protocol.Records
     {
         public byte[] Raw { get; set; }
 
-        public bool Equals(UnimplementedDnsResourceRecord other) => Raw.SequenceEqual(other.Raw);
+        public bool Equals(UnimplementedDnsResourceRecord other) => Raw.SequenceEqual(other.Raw) && base.Equals(other);
 
         public override bool Equals(object obj) => obj is UnimplementedDnsResourceRecord record ? Equals(record) : base.Equals(obj);
 
-        protected override void ReadBytes(byte[] bytes, ref int offset) => Raw = bytes.ReadBytes(DataLength, ref offset);
+        protected override void ReadBytes(byte[] bytes, ref int offset, int expectedLength) => Raw = bytes.ReadBytes(expectedLength, ref offset);
 
         protected override IEnumerable<IEnumerable<byte>> WriteBytes()
         {

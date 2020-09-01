@@ -159,8 +159,8 @@ namespace Ae.DnsResolver.Protocol
             record.Type = recordType;
             record.Class = (DnsQueryClass)bytes.ReadUInt16(ref offset);
             record.Ttl = bytes.ReadUInt32(ref offset);
-            record.DataLength = bytes.ReadUInt16(ref offset);
-            record.ReadData(bytes, ref offset);
+            var recordDataLength = bytes.ReadUInt16(ref offset);
+            record.ReadData(bytes, ref offset, recordDataLength);
 
             return record;
         }

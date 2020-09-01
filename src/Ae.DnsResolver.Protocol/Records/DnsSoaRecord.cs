@@ -21,12 +21,13 @@ namespace Ae.DnsResolver.Protocol.Records
                    Refresh == other.Refresh &&
                    Retry == other.Retry &&
                    Expire == other.Expire &&
-                   Minimum == other.Minimum;
+                   Minimum == other.Minimum &&
+                   base.Equals(other);
         }
 
         public override bool Equals(object obj) => obj is DnsSoaRecord record ? Equals(record) : base.Equals(obj);
 
-        protected override void ReadBytes(byte[] bytes, ref int offset)
+        protected override void ReadBytes(byte[] bytes, ref int offset, int expectedLength)
         {
             MName = string.Join('.', bytes.ReadString(ref offset));
             RName = string.Join('.', bytes.ReadString(ref offset));
