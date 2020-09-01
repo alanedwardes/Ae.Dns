@@ -79,7 +79,7 @@ namespace Ae.Dns.Client
             DnsAnswer answer;
             try
             {
-                answer = buffer.ReadDnsAnswer();
+                answer = buffer.FromBytes<DnsAnswer>();
             }
             catch (Exception e)
             {
@@ -121,7 +121,7 @@ namespace Ae.Dns.Client
 
             var result = await completionSource.Task;
 
-            var answer = result.ReadDnsAnswer();
+            var answer = result.FromBytes<DnsAnswer>();
 
             // Copy the same ID from the request
             answer.Header.Id = query.Id;

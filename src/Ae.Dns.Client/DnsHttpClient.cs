@@ -30,7 +30,7 @@ namespace Ae.Dns.Client
             var response = await _httpClient.SendAsync(request, token);
             response.EnsureSuccessStatusCode();
 
-            return (await response.Content.ReadAsByteArrayAsync()).ReadDnsAnswer();
+            return (await response.Content.ReadAsByteArrayAsync()).FromBytes<DnsAnswer>();
         }
     }
 }

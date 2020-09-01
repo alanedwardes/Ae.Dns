@@ -1,9 +1,10 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace Ae.Dns.Protocol
 {
-    public sealed class DnsHeader : IEquatable<DnsHeader>
+    public sealed class DnsHeader : IEquatable<DnsHeader>, IByteArrayReader
     {
         public static ushort GenerateId() => ByteExtensions.ReadUInt16(Guid.NewGuid().ToByteArray());
 
@@ -107,6 +108,32 @@ namespace Ae.Dns.Protocol
             hash.Add(QueryClass);
             hash.Add(Host);
             return hash.ToHashCode();
+        }
+
+        public void ReadBytes(byte[] bytes, ref int offset)
+        {
+            Id = bytes.ReadUInt16(ref offset);
+            Flags = bytes.ReadUInt16(ref offset);
+            QuestionCount = bytes.ReadInt16(ref offset);
+            AnswerRecordCount = bytes.ReadInt16(ref offset);
+            NameServerRecordCount = bytes.ReadInt16(ref offset);
+            AdditionalRecordCount = bytes.ReadInt16(ref offset);
+            Labels = bytes.ReadString(ref offset);
+            QueryType = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            QueryClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
+        }
+
+        public IEnumerable<IEnumerable<byte>> WriteBytes()
+        {
+            yield return Id.ToBytes();
+            yield return Flags.ToBytes();
+            yield return QuestionCount.ToBytes();
+            yield return AnswerRecordCount.ToBytes();
+            yield return NameServerRecordCount.ToBytes();
+            yield return AdditionalRecordCount.ToBytes();
+            yield return Labels.ToBytes();
+            yield return QueryType.ToBytes();
+            yield return QueryClass.ToBytes();
         }
     }
 }

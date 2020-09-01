@@ -1,8 +1,7 @@
-﻿using Ae.Dns.Protocol.Enums;
-using Ae.Dns.Protocol.Records;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -108,61 +107,22 @@ namespace Ae.Dns.Protocol
             return parts.ToArray();
         }
 
-        public static DnsHeader ReadDnsHeader(this byte[] bytes)
+        public static byte[] ToBytes(this IByteArrayWriter writer)
+        {
+            return writer.WriteBytes().SelectMany(x => x).ToArray();
+        }
+
+        public static TReader FromBytes<TReader>(this byte[] bytes) where TReader : IByteArrayReader, new()
         {
             var offset = 0;
-            return ReadDnsHeader(bytes, ref offset);
+            return bytes.FromBytes<TReader>(ref offset);
         }
 
-        public static DnsHeader ReadDnsHeader(this byte[] bytes, ref int offset)
+        public static TReader FromBytes<TReader>(this byte[] bytes, ref int offset) where TReader : IByteArrayReader, new()
         {
-            var header = new DnsHeader();
-            header.Id = bytes.ReadUInt16(ref offset);
-            header.Flags = bytes.ReadUInt16(ref offset);
-            header.QuestionCount = bytes.ReadInt16(ref offset);
-            header.AnswerRecordCount = bytes.ReadInt16(ref offset);
-            header.NameServerRecordCount = bytes.ReadInt16(ref offset);
-            header.AdditionalRecordCount = bytes.ReadInt16(ref offset);
-            header.Labels = bytes.ReadString(ref offset);
-            header.QueryType = (DnsQueryType)bytes.ReadUInt16(ref offset);
-            header.QueryClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
-            return header;
-        }
-
-        public static DnsAnswer ReadDnsAnswer(this byte[] bytes)
-        {
-            var offset = 0;
-            return ReadDnsAnswer(bytes, ref offset);
-        }
-
-        public static DnsAnswer ReadDnsAnswer(this byte[] bytes, ref int offset)
-        {
-            var result = new DnsAnswer();
-            result.Header = bytes.ReadDnsHeader(ref offset);
-
-            var records = new List<DnsResourceRecord>();
-            for (var i = 0; i < result.Header.AnswerRecordCount + result.Header.NameServerRecordCount; i++)
-            {
-                records.Add(ReadDnsResourceRecord(bytes, ref offset));
-            }
-            result.Answers = records.ToArray();
-            return result;
-        }
-
-        private static DnsResourceRecord ReadDnsResourceRecord(byte[] bytes, ref int offset)
-        {
-            var recordName = bytes.ReadString(ref offset);
-            var recordType = (DnsQueryType)bytes.ReadUInt16(ref offset);
-
-            var record = DnsResourceRecord.CreateResourceRecord(recordType);
-            record.Name = recordName;
-            record.Type = recordType;
-            record.Class = (DnsQueryClass)bytes.ReadUInt16(ref offset);
-            record.Ttl = bytes.ReadUInt32(ref offset);
-            var recordDataLength = bytes.ReadUInt16(ref offset);
-            record.ReadData(bytes, ref offset, recordDataLength);
-
-            return record;
+            var reader = new TReader();
+            reader.ReadBytes(bytes, ref offset);
+            return reader;
         }
 
         public static IEnumerable<byte> ToBytes(this string[] strings)
@@ -211,42 +171,6 @@ namespace Ae.Dns.Protocol
                 default:
                     throw new NotImplementedException($"Unable to process type {typeCode} ({value})");
             }
-        }
-
-        public static IEnumerable<byte> ToBytes(this DnsHeader header)
-        {
-            IEnumerable<IEnumerable<byte>> Write()
-            {
-                yield return header.Id.ToBytes();
-                yield return header.Flags.ToBytes();
-                yield return header.QuestionCount.ToBytes();
-                yield return header.AnswerRecordCount.ToBytes();
-                yield return header.NameServerRecordCount.ToBytes();
-                yield return header.AdditionalRecordCount.ToBytes();
-                yield return header.Labels.ToBytes();
-                yield return header.QueryType.ToBytes();
-                yield return header.QueryClass.ToBytes();
-            }
-
-            return Write().SelectMany(x => x);
-        }
-
-        public static IEnumerable<byte> ToBytes(this DnsAnswer answer)
-        {
-            IEnumerable<IEnumerable<byte>> Write(DnsResourceRecord resourceRecord)
-            {
-                yield return resourceRecord.Name.ToBytes();
-                yield return resourceRecord.Type.ToBytes();
-                yield return resourceRecord.Class.ToBytes();
-                yield return resourceRecord.Ttl.ToBytes();
-                var data = resourceRecord.WriteData().ToArray();
-                yield return ((ushort)data.Length).ToBytes();
-                yield return data;
-            }
-
-            var header = answer.Header.ToBytes();
-            var answers = answer.Answers.Select(Write).SelectMany(x => x).SelectMany(x => x);
-            return header.Concat(answers);
         }
     }
 }

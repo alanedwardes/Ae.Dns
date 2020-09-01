@@ -9,12 +9,12 @@ namespace Ae.Dns.Tests.Protocol
     {
         [Theory]
         [ClassData(typeof(QueryTheoryData))]
-        public void TestReadQueries(byte[] queryBytes) => queryBytes.ReadDnsHeader();
+        public void TestReadQueries(byte[] queryBytes) => queryBytes.FromBytes<DnsHeader>();
 
         [Fact]
         public void ReadQuery1Packet()
         {
-            var header = SampleDnsPackets.Query1.ReadDnsHeader();
+            var header = SampleDnsPackets.Query1.FromBytes<DnsHeader>();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
@@ -47,7 +47,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void ReadQuery2Packet()
         {
-            var header = SampleDnsPackets.Query2.ReadDnsHeader();
+            var header = SampleDnsPackets.Query2.FromBytes<DnsHeader>();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
@@ -61,7 +61,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void ReadQuery3Packet()
         {
-            var header = SampleDnsPackets.Query3.ReadDnsHeader();
+            var header = SampleDnsPackets.Query3.FromBytes<DnsHeader>();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
@@ -75,7 +75,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void ReadQuery4Packet()
         {
-            var header = SampleDnsPackets.Query4.ReadDnsHeader();
+            var header = SampleDnsPackets.Query4.FromBytes<DnsHeader>();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.AAAA, header.QueryType);
@@ -89,7 +89,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void ReadQuery5Packet()
         {
-            var header = SampleDnsPackets.Query5.ReadDnsHeader();
+            var header = SampleDnsPackets.Query5.FromBytes<DnsHeader>();
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);

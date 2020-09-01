@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Ae.Dns.Protocol.Records
+namespace Ae.Dns.Protocol.Resources
 {
-    public sealed class DnsSoaRecord : DnsResourceRecord, IEquatable<DnsSoaRecord>
+    public sealed class DnsSoaResource : IDnsResource, IEquatable<DnsSoaResource>
     {
         public string MName { get; set; }
         public string RName { get; set; }
@@ -13,21 +13,13 @@ namespace Ae.Dns.Protocol.Records
         public TimeSpan Expire { get; set; }
         public TimeSpan Minimum { get; set; }
 
-        public bool Equals(DnsSoaRecord other)
-        {
-            return MName == other.MName &&
-                   RName == other.RName &&
-                   Serial == other.Serial &&
-                   Refresh == other.Refresh &&
-                   Retry == other.Retry &&
-                   Expire == other.Expire &&
-                   Minimum == other.Minimum &&
-                   base.Equals(other);
-        }
+        public bool Equals(DnsSoaResource other) => MName == other.MName && RName == other.RName && Serial == other.Serial && Refresh == other.Refresh && Retry == other.Retry && Expire == other.Expire && Minimum == other.Minimum;
 
-        public override bool Equals(object obj) => obj is DnsSoaRecord record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object obj) => obj is DnsSoaResource record ? Equals(record) : base.Equals(obj);
 
-        protected override void ReadBytes(byte[] bytes, ref int offset, int expectedLength)
+        public override int GetHashCode() => HashCode.Combine(MName, RName, Serial, Refresh, Retry, Expire, Minimum);
+
+        public void ReadBytes(byte[] bytes, ref int offset, int length)
         {
             MName = string.Join('.', bytes.ReadString(ref offset));
             RName = string.Join('.', bytes.ReadString(ref offset));
@@ -38,7 +30,7 @@ namespace Ae.Dns.Protocol.Records
             Minimum = TimeSpan.FromSeconds(bytes.ReadUInt32(ref offset));
         }
 
-        protected override IEnumerable<IEnumerable<byte>> WriteBytes()
+        public IEnumerable<IEnumerable<byte>> WriteBytes()
         {
             yield return MName.Split('.').ToBytes();
             yield return RName.Split('.').ToBytes();

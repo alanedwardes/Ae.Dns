@@ -1,22 +1,17 @@
 ﻿using Ae.Dns.Protocol.Enums;
+using Ae.Dns.Protocol.Resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
 {
-    public abstract class DnsResourceRecord : IEquatable<DnsResourceRecord>
+    public sealed class DnsResourceRecord : IEquatable<DnsResourceRecord>, IByteArrayReader
     {
         internal string[] Name { get; set; }
         public DnsQueryType Type { get; set; }
         public DnsQueryClass Class { get; set; }
-        internal uint Ttl { get; set; }
-
-        public TimeSpan TimeToLive
-        {
-            get => TimeSpan.FromSeconds(Ttl);
-            set => Ttl = (uint)value.TotalSeconds;
-        }
+        public TimeSpan TimeToLive { get; set; }
 
         public string Host
         {
@@ -24,51 +19,64 @@ namespace Ae.Dns.Protocol.Records
             set => Name = value.Split('.');
         }
 
-        protected abstract void ReadBytes(byte[] bytes, ref int offset, int expectedLength);
-        internal void ReadData(byte[] bytes, ref int offset, int expectedLength)
+        private static IReadOnlyDictionary<DnsQueryType, Func<IDnsResource>> _recordTypeFactories = new Dictionary<DnsQueryType, Func<IDnsResource>>
         {
-            var dataOffset = offset;
-
-            ReadBytes(bytes, ref offset, expectedLength);
-
-            var expectedOffset = dataOffset + expectedLength;
-            if (offset != expectedOffset)
-            {
-                var reader = GetType();
-                throw new InvalidOperationException($"{reader.Name} did not read to offset {expectedOffset} (read to {offset})");
-            }
-        }
-        protected abstract IEnumerable<IEnumerable<byte>> WriteBytes();
-        internal IEnumerable<byte> WriteData() => WriteBytes().SelectMany(x => x);
-
-        private static IReadOnlyDictionary<DnsQueryType, Func<DnsResourceRecord>> _recordTypeFactories = new Dictionary<DnsQueryType, Func<DnsResourceRecord>>
-        {
-            { DnsQueryType.A, () => new DnsIpAddressRecord() },
-            { DnsQueryType.AAAA, () => new DnsIpAddressRecord() },
-            { DnsQueryType.TEXT, () => new DnsTextRecord() },
-            { DnsQueryType.CNAME, () => new DnsTextRecord() },
-            { DnsQueryType.NS, () => new DnsTextRecord() },
-            { DnsQueryType.PTR, () => new DnsTextRecord() },
-            { DnsQueryType.SPF, () => new DnsTextRecord() },
-            { DnsQueryType.SOA, () => new DnsSoaRecord() },
-            { DnsQueryType.MX, () => new DnsMxRecord() }
+            { DnsQueryType.A, () => new DnsIpAddressResource() },
+            { DnsQueryType.AAAA, () => new DnsIpAddressResource() },
+            { DnsQueryType.TEXT, () => new DnsTextResource() },
+            { DnsQueryType.CNAME, () => new DnsTextResource() },
+            { DnsQueryType.NS, () => new DnsTextResource() },
+            { DnsQueryType.PTR, () => new DnsTextResource() },
+            { DnsQueryType.SPF, () => new DnsTextResource() },
+            { DnsQueryType.SOA, () => new DnsSoaResource() },
+            { DnsQueryType.MX, () => new DnsMxResource() }
         };
 
-        internal static DnsResourceRecord CreateResourceRecord(DnsQueryType recordType)
+        public IDnsResource Resource { get; set; }
+
+        private IDnsResource CreateResourceRecord(DnsQueryType recordType)
         {
-            return _recordTypeFactories.TryGetValue(recordType, out var factory) ? factory() : new UnimplementedDnsResourceRecord();
+            return _recordTypeFactories.TryGetValue(recordType, out var factory) ? factory() : new UnknownDnsResource();
         }
 
-        public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {Ttl}";
+        public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {TimeToLive}";
 
-        public bool Equals(DnsResourceRecord other)
-        {
-            return Host == other.Host &&
-                   Type == other.Type &&
-                   Class == other.Class &&
-                   TimeToLive == other.TimeToLive;
-        }
+        public bool Equals(DnsResourceRecord other) => Host == other.Host && Type == other.Type && Class == other.Class && TimeToLive == other.TimeToLive && Resource.Equals(other.Resource);
 
         public override bool Equals(object obj) => obj is DnsResourceRecord record ? Equals(record) : base.Equals(obj);
+
+        public override int GetHashCode() => HashCode.Combine(Name, Type, Class, TimeToLive, Host, Resource);
+
+        public void ReadBytes(byte[] bytes, ref int offset)
+        {
+            Name = bytes.ReadString(ref offset);
+            Type = (DnsQueryType)bytes.ReadUInt16(ref offset);
+            Class = (DnsQueryClass)bytes.ReadUInt16(ref offset);
+            TimeToLive = TimeSpan.FromSeconds(bytes.ReadUInt32(ref offset));
+            Resource = CreateResourceRecord(Type);
+            var dataLength = bytes.ReadUInt16(ref offset);
+            FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
+        }
+
+        private void FromBytesKnownLength(IDnsResource resource, byte[] bytes, ref int offset, int length)
+        {
+            var expectedOffset = offset + length;
+            resource.ReadBytes(bytes, ref offset, length);
+            if (offset != expectedOffset)
+            {
+                throw new InvalidOperationException($"{resource.GetType().Name}.{nameof(IDnsResource.ReadBytes)} did not read to offset {expectedOffset} (read to {offset})");
+            }
+        }
+
+        public IEnumerable<IEnumerable<byte>> WriteBytes()
+        {
+            yield return Name.ToBytes();
+            yield return Type.ToBytes();
+            yield return Class.ToBytes();
+            yield return ((uint)TimeToLive.TotalSeconds).ToBytes();
+            var data = Resource.WriteBytes().SelectMany(x => x).ToArray();
+            yield return ((ushort)data.Length).ToBytes();
+            yield return data;
+        }
     }
 }

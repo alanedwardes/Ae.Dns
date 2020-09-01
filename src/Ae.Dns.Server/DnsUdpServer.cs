@@ -48,7 +48,7 @@ namespace Ae.Dns.Server
             DnsHeader message;
             try
             {
-                message = query.Buffer.ReadDnsHeader();
+                message = query.Buffer.FromBytes<DnsHeader>();
             }
             catch (Exception e)
             {
@@ -59,7 +59,7 @@ namespace Ae.Dns.Server
             DnsAnswer answer;
             try
             {
-                var header = query.Buffer.ReadDnsHeader();
+                var header = query.Buffer.FromBytes<DnsHeader>();
                 answer = await _dnsRepository.Resolve(header);
             }
             catch (Exception e)

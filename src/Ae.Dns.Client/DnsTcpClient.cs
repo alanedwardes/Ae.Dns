@@ -54,7 +54,7 @@ namespace Ae.Dns.Client
                 throw new InvalidOperationException();
             }
 
-            return response.ReadDnsAnswer();
+            return response.FromBytes<DnsAnswer>();
         }
     }
 }
