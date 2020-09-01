@@ -34,7 +34,7 @@ namespace Ae.Dns.Protocol
         public IEnumerable<IEnumerable<byte>> WriteBytes()
         {
             yield return Header.ToBytes();
-            yield return Answers.Select(x => x.WriteBytes()).SelectMany(x => x).SelectMany(x => x);
+            yield return Answers.Select(x => x.ToBytes()).SelectMany(x => x);
         }
     }
 }

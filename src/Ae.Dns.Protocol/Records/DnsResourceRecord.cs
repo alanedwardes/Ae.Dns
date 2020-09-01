@@ -2,7 +2,6 @@
 using Ae.Dns.Protocol.Resources;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
 {
@@ -74,7 +73,7 @@ namespace Ae.Dns.Protocol.Records
             yield return Type.ToBytes();
             yield return Class.ToBytes();
             yield return ((uint)TimeToLive.TotalSeconds).ToBytes();
-            var data = Resource.WriteBytes().SelectMany(x => x).ToArray();
+            var data = Resource.ToBytes();
             yield return ((ushort)data.Length).ToBytes();
             yield return data;
         }
