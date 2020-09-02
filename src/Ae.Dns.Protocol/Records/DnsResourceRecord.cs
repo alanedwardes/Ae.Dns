@@ -35,7 +35,7 @@ namespace Ae.Dns.Protocol.Records
 
         private IDnsResource CreateResourceRecord(DnsQueryType recordType)
         {
-            return _recordTypeFactories.TryGetValue(recordType, out var factory) ? factory() : new UnknownDnsResource();
+            return _recordTypeFactories.TryGetValue(recordType, out var factory) ? factory() : new DnsUnknownResource();
         }
 
         public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {TimeToLive}";

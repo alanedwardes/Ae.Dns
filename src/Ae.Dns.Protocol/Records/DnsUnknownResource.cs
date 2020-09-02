@@ -4,13 +4,13 @@ using System.Linq;
 
 namespace Ae.Dns.Protocol.Resources
 {
-    public sealed class UnknownDnsResource : IDnsResource, IEquatable<UnknownDnsResource>
+    public sealed class DnsUnknownResource : IDnsResource, IEquatable<DnsUnknownResource>
     {
         public byte[] Raw { get; set; }
 
-        public bool Equals(UnknownDnsResource other) => Raw.SequenceEqual(other.Raw);
+        public bool Equals(DnsUnknownResource other) => Raw.SequenceEqual(other.Raw);
 
-        public override bool Equals(object obj) => obj is UnknownDnsResource record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object obj) => obj is DnsUnknownResource record ? Equals(record) : base.Equals(obj);
 
         public override int GetHashCode() => HashCode.Combine(Raw);
 
