@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Ae.Dns.Protocol
 {
-    public sealed class DnsAnswer : IEquatable<DnsAnswer>, IDnsByteArrayReader
+    public sealed class DnsAnswer : IEquatable<DnsAnswer>, IDnsByteArrayReader, IDnsByteArrayWriter
     {
         public DnsHeader Header { get; set; } = new DnsHeader();
 
