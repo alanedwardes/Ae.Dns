@@ -36,11 +36,11 @@ namespace Ae.Dns.Console
             var provider = services.BuildServiceProvider();
 
             var cloudFlareSecure = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://cloudflare-dns.com/") });
-            var cloudFlare1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("1.1.1.1"), "CloudFlare DNS Primary");
-            var cloudFlare2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("1.0.0.1"), "CloudFlare DNS Secondary");
+            var cloudFlare1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("1.1.1.1"));
+            var cloudFlare2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("1.0.0.1"));
             var googleSecure = new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://dns.google/") });
-            var google1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("8.8.8.8"), "Google DNS Primary");
-            var google2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("8.8.4.4"), "Google DNS Secondary");
+            var google1 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("8.8.8.8"));
+            var google2 = new DnsUdpClient(provider.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("8.8.4.4"));
 
             var filter = new DnsRemoteSetFilter(provider.GetRequiredService<ILogger<DnsRemoteSetFilter>>());
 

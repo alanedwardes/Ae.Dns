@@ -38,15 +38,13 @@ namespace Ae.Dns.Client
         private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
         private readonly Socket _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
-        private readonly string _label;
         private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
-        public DnsUdpClient(ILogger<DnsUdpClient> logger, IPAddress address, string label)
+        public DnsUdpClient(ILogger<DnsUdpClient> logger, IPAddress address)
         {
             _logger = logger;
             _socket.Connect(address, 53);
-            _label = label;
             _task = Task.Run(RecieveTask);
         }
 
@@ -63,7 +61,7 @@ namespace Ae.Dns.Client
                 }
                 catch (Exception e)
                 {
-                    _logger.LogCritical(e, "Recieved bad network response from {0}: {1}", _label, buffer.Take(read).ToDebugString());
+                    _logger.LogCritical(e, "Recieved bad network response from {0}: {1}", _socket.RemoteEndPoint.ToString(), buffer.Take(read).ToDebugString());
                     continue;
                 }
 
@@ -83,7 +81,7 @@ namespace Ae.Dns.Client
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Recieved bad DNS response from {0}: {1}", _label, buffer);
+                _logger.LogCritical(e, "Recieved bad DNS response from {0}: {1}", _socket.RemoteEndPoint.ToString(), buffer);
                 return;
             }
 
@@ -101,7 +99,7 @@ namespace Ae.Dns.Client
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
-                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _label);
+                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _socket.RemoteEndPoint.ToString());
                 completionSource.SetException(new DnsClientTimeoutException(timeout, messageId.Name));
             }
         }
