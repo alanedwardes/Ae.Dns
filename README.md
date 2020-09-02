@@ -1,7 +1,7 @@
 # Ae.Dns
 A pure C# implementation of a DNS client, server and configurable caching/filtering layer. This project offers the following packages:
 * [Ae.Dns.Client](#aednsclient) - HTTP and UDP DNS clients
-* [Ae.Dns.Protocol](#aednsprotocol) - Low level DNS wire protcol handling
+* [Ae.Dns.Protocol](#aednsprotocol) - Low level DNS wire protocol handling
 
 ## Ae.Dns.Client
 [![](https://img.shields.io/nuget/v/Ae.Dns.Client)](https://www.nuget.org/packages/Ae.Dns.Client/)
