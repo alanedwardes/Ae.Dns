@@ -22,7 +22,7 @@ namespace Ae.Dns.Client
             public byte[] Data { get; }
             public TimeSpan LowestRecordTimeToLive { get; }
             public DateTimeOffset Expiry => Time + LowestRecordTimeToLive;
-            public TimeSpan Age => DateTime.UtcNow - Time;
+            public TimeSpan Age => DateTimeOffset.UtcNow - Time;
             public TimeSpan Expires => Expiry - DateTimeOffset.UtcNow;
         }
 
