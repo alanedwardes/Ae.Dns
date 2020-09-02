@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Client;
-using Ae.Dns.Repository;
 using Ae.Dns.Server;
 using AWS.Logger;
 using AWS.Logger.SeriLog;
@@ -52,7 +51,7 @@ namespace Ae.Dns.Console
 
             var repository = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("dns"));
 
-            var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new UdpClient(53), repository);
+            var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new UdpClient(53), repository, filter);
 
             await server.Recieve(CancellationToken.None);
         }

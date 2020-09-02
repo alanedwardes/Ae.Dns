@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ae.Dns.Repository\Ae.Dns.Repository.csproj" />
+    <ProjectReference Include="..\Ae.Dns.Client\Ae.Dns.Client.csproj" />
   </ItemGroup>
 
 </Project>

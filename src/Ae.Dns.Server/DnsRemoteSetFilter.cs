@@ -7,7 +7,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Ae.Dns.Repository
+namespace Ae.Dns.Server
 {
     public sealed class DnsRemoteSetFilter : IDnsFilter
     {
