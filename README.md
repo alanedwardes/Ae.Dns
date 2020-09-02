@@ -13,7 +13,7 @@ var httpClient = new HttpClient
 };
 IDnsClient dnsClient = new DnsHttpClient(httpClient);
 
-DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
+DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
 ### Advanced HTTPS Client Usage
 This example uses `Microsoft.Extensions.Http.Polly` to allow retrying of failed requests.
@@ -28,12 +28,14 @@ var provider = servics.BuildServiceProvider();
 
 IDnsClient dnsClient = provider.GetRequiredService<IDnsClient>();
 
-DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
+DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
 ### UDP Client Usage
 This example is a very setup of the UDP client using CloudFlare.
 ```csharp
-using IDnsClient dnsClient = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("1.1.1.1"));
+var dnsAddress = IPAddress.Parse("1.1.1.1");
 
-DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
+using IDnsClient dnsClient = new DnsUdpClient(new NullLogger<DnsUdpClient>(), dnsAddress);
+
+DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
