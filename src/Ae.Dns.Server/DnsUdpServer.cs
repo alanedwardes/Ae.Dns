@@ -1,5 +1,5 @@
-﻿using Ae.Dns.Protocol;
-using Ae.Dns.Repository;
+﻿using Ae.Dns.Client;
+using Ae.Dns.Protocol;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
@@ -14,13 +14,13 @@ namespace Ae.Dns.Server
     {
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly UdpClient _listener;
-        private readonly IDnsRepository _dnsRepository;
+        private readonly IDnsClient _dnsClient;
 
-        public DnsUdpServer(ILogger<DnsUdpServer> logger, UdpClient listener, IDnsRepository dnsRepository)
+        public DnsUdpServer(ILogger<DnsUdpServer> logger, UdpClient listener, IDnsClient dnsClient)
         {
             _logger = logger;
             _listener = listener;
-            _dnsRepository = dnsRepository;
+            _dnsClient = dnsClient;
         }
 
         public async Task Recieve(CancellationToken token)
@@ -32,7 +32,7 @@ namespace Ae.Dns.Server
                 try
                 {
                     var result = await _listener.ReceiveAsync();
-                    Respond(result);
+                    Respond(result, token);
                 }
                 catch (Exception e)
                 {
@@ -41,7 +41,7 @@ namespace Ae.Dns.Server
             }
         }
 
-        private async void Respond(UdpReceiveResult query)
+        private async void Respond(UdpReceiveResult query, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -60,7 +60,7 @@ namespace Ae.Dns.Server
             try
             {
                 var header = query.Buffer.FromBytes<DnsHeader>();
-                answer = await _dnsRepository.Resolve(header);
+                answer = await _dnsClient.Query(header, token);
             }
             catch (Exception e)
             {

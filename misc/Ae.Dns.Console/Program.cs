@@ -50,7 +50,7 @@ namespace Ae.Dns.Console
 
             var combinedDnsClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
 
-            var repository = new DnsRepository(provider.GetRequiredService<ILogger<DnsRepository>>(), combinedDnsClient, new MemoryCache("dns"), filter);
+            var repository = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("dns"));
 
             var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new UdpClient(53), repository);
 

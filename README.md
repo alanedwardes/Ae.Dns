@@ -10,7 +10,7 @@ Offers both HTTP(S) and UDP DNS clients, with a simple round robin client implem
 ### Basic HTTPS Client Usage
 This example is a very simple setup of the HTTP client using CloudFlare.
 ```csharp
-var httpClient = new HttpClient
+using var httpClient = new HttpClient
 {
     BaseAddress = new Uri("https://cloudflare-dns.com/")
 };

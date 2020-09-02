@@ -65,7 +65,7 @@ namespace Ae.Dns.Repository
 
         public Task AddRemoteBlockList(Uri hostsFileUri) => AddRemoteList(hostsFileUri, false);
 
-        public Task AddRemoteAllowList(Uri hostsFileUri) => AddRemoteList(hostsFileUri, false);
+        public Task AddRemoteAllowList(Uri hostsFileUri) => AddRemoteList(hostsFileUri, true);
 
         public bool IsPermitted(DnsHeader query)
         {
