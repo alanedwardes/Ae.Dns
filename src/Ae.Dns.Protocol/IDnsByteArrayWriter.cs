@@ -2,7 +2,7 @@
 
 namespace Ae.Dns.Protocol
 {
-    public interface IByteArrayWriter
+    public interface IDnsByteArrayWriter
     {
         IEnumerable<IEnumerable<byte>> WriteBytes();
     }

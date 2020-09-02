@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Ae.Dns.Protocol
 {
-    public sealed class DnsHeader : IEquatable<DnsHeader>, IByteArrayReader
+    public sealed class DnsHeader : IEquatable<DnsHeader>, IDnsByteArrayReader
     {
         public static ushort GenerateId() => ByteExtensions.ReadUInt16(Guid.NewGuid().ToByteArray());
 

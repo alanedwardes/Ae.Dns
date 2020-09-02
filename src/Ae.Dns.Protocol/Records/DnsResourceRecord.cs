@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Ae.Dns.Protocol.Records
 {
-    public sealed class DnsResourceRecord : IEquatable<DnsResourceRecord>, IByteArrayReader
+    public sealed class DnsResourceRecord : IEquatable<DnsResourceRecord>, IDnsByteArrayReader
     {
         internal string[] Name { get; set; }
         public DnsQueryType Type { get; set; }

@@ -106,18 +106,18 @@ namespace Ae.Dns.Protocol
             return parts.ToArray();
         }
 
-        public static byte[] ToBytes(this IByteArrayWriter writer)
+        public static byte[] ToBytes(this IDnsByteArrayWriter writer)
         {
             return writer.WriteBytes().SelectMany(x => x).ToArray();
         }
 
-        public static TReader FromBytes<TReader>(this byte[] bytes) where TReader : IByteArrayReader, new()
+        public static TReader FromBytes<TReader>(this byte[] bytes) where TReader : IDnsByteArrayReader, new()
         {
             var offset = 0;
             return bytes.FromBytes<TReader>(ref offset);
         }
 
-        public static TReader FromBytes<TReader>(this byte[] bytes, ref int offset) where TReader : IByteArrayReader, new()
+        public static TReader FromBytes<TReader>(this byte[] bytes, ref int offset) where TReader : IDnsByteArrayReader, new()
         {
             var reader = new TReader();
             reader.ReadBytes(bytes, ref offset);
