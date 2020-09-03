@@ -1,5 +1,6 @@
-﻿
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
+
+Remove-Item src/*/bin/Release/*.nupkg
 
 Foreach ($TestProject in Get-ChildItem tests/*/*.csproj)
 {
