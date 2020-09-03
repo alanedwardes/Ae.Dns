@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <WarningsAsErrors>true</WarningsAsErrors>
+    
     <Authors>alanedwardes</Authors>
-    <Description>Pure C# DNS over HTTPS (DoH) and DNS UDP clients for .NET Core</Description>
+    <Description>DNS over HTTPS (DoH) client, DNS UDP client and DNS caching client for .NET Core</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/alanedwardes/Ae.Dns</PackageProjectUrl>
     <PackageTags>DNS;DoH;DNS Client;DNS UDP;DNS HTTP;DNS HTTPS</PackageTags>

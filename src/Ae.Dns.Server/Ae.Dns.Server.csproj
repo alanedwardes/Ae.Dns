@@ -2,9 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <WarningsAsErrors>true</WarningsAsErrors>
+
+    <Authors>alanedwardes</Authors>
+    <Description>DNS UDP server with filtering for .NET Core</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/alanedwardes/Ae.Dns</PackageProjectUrl>
+    <PackageTags>DNS;DNS Server;DNS UDP Server;DNS Filter</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
