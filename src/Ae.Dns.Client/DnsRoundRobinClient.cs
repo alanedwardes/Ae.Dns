@@ -1,5 +1,6 @@
 ﻿using Ae.Dns.Protocol;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +9,9 @@ namespace Ae.Dns.Client
 {
     public sealed class DnsRoundRobinClient : IDnsClient
     {
-        private readonly IDnsClient[] _dnsClients;
+        private readonly IReadOnlyCollection<IDnsClient> _dnsClients;
+
+        public DnsRoundRobinClient(IEnumerable<IDnsClient> dnsClients) => _dnsClients = dnsClients.ToList();
 
         public DnsRoundRobinClient(params IDnsClient[] dnsClients) => _dnsClients = dnsClients;
 

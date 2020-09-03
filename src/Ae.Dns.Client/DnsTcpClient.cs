@@ -14,13 +14,11 @@ namespace Ae.Dns.Client
     {
         private readonly ILogger<DnsTcpClient> _logger;
         private readonly Socket _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-        private readonly string _label;
 
-        public DnsTcpClient(ILogger<DnsTcpClient> logger, IPAddress address, string label)
+        public DnsTcpClient(ILogger<DnsTcpClient> logger, IPAddress address)
         {
             _logger = logger;
             _socket.Connect(address, 53);
-            _label = label;
         }
 
         public void Dispose()

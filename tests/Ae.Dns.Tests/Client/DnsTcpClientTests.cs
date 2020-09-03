@@ -14,7 +14,7 @@ namespace Ae.Dns.Tests.Client
         public async Task TestLookupAlanEdwardesCom()
         {
             DnsAnswer answer;
-            using (var client = new DnsTcpClient(new NullLogger<DnsTcpClient>(), IPAddress.Parse("1.1.1.1"), "test"))
+            using (var client = new DnsTcpClient(new NullLogger<DnsTcpClient>(), IPAddress.Parse("1.1.1.1")))
             {
                 answer = await client.Query(DnsHeader.CreateQuery("alanedwardes.com"), CancellationToken.None);
             }
