@@ -141,6 +141,7 @@ namespace Ae.Dns.Client
             try
             {
                 _socket.Disconnect(false);
+                _socket.Dispose();
             }
             catch (Exception)
             {

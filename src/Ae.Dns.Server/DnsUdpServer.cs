@@ -2,32 +2,53 @@
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ae.Dns.Server
 {
-    public sealed class DnsUdpServer
+    public sealed class DnsUdpServer : IDisposable
     {
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly UdpClient _listener;
         private readonly IDnsClient _dnsClient;
         private readonly IDnsFilter _dnsFilter;
 
-        public DnsUdpServer(ILogger<DnsUdpServer> logger, UdpClient listener, IDnsClient dnsClient, IDnsFilter dnsFilter)
+        public DnsUdpServer(IPEndPoint endpoint, IDnsClient dnsClient, IDnsFilter dnsFilter)
+            : this(new NullLogger<DnsUdpServer>(), endpoint, dnsClient, dnsFilter)
+        {
+        }
+
+        public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsClient dnsClient, IDnsFilter dnsFilter)
         {
             _logger = logger;
-            _listener = listener;
+            _listener = new UdpClient(endpoint);
             _dnsClient = dnsClient;
             _dnsFilter = dnsFilter;
         }
 
+        public void Dispose()
+        {
+            try
+            {
+                _listener.Close();
+                _listener.Dispose();
+            }
+            catch (Exception)
+            {
+            }
+        }
+
         public async Task Recieve(CancellationToken token)
         {
+            token.Register(() => _listener.Close());
+
             _logger.LogInformation("Server now listening");
 
             while (!token.IsCancellationRequested)

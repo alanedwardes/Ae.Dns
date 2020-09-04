@@ -6,7 +6,6 @@ using Polly;
 using System;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,7 +57,7 @@ namespace Ae.Dns.Console
 
             var cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("dns"));
 
-            var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new UdpClient(53), cache, filter);
+            using var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), cache, filter);
 
             await server.Recieve(CancellationToken.None);
         }

@@ -17,9 +17,7 @@ namespace Ae.Dns.Tests.Client
         {
             using var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("1.1.1.1"));
 
-            var answer = await client.Query(DnsHeader.CreateQuery("alanedwardes.com"), CancellationToken.None);
-
-            Assert.Equal(4, answer.Answers.Count);
+            await client.Query(DnsHeader.CreateQuery("alanedwardes.com"), CancellationToken.None);
         }
 
         [Fact]
