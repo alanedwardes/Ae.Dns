@@ -9,7 +9,7 @@ A pure C# implementation of a DNS client, server and configurable caching/filter
 
 Offers both HTTP(S) and UDP DNS clients, with a simple round robin client implementation.
 ### Basic HTTPS Client Usage
-This example is a very simple setup of the HTTP client using CloudFlare.
+This example is a very simple setup of the `DnsHttpClient` using the CloudFlare DNS over HTTPS resolver.
 ```csharp
 using var httpClient = new HttpClient
 {
@@ -37,7 +37,7 @@ IDnsClient dnsClient = provider.GetRequiredService<IDnsClient>();
 DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
 ### Basic UDP Client Usage
-This example is a very setup of the UDP client using CloudFlare.
+This example is a basic setup of the `DnsUdpClient` using the primary CloudFlare UDP resolver.
 ```csharp
 using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
@@ -46,7 +46,7 @@ DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
 
 ### Round Robin Client Usage
-This example uses multiple DNS clients in a round-robin fashion.
+This example uses multiple upstream `IDnsClient` implementations in a round-robin fashion using `DnsRoundRobinClient`. Note that multiple protocols can be mixed, both the `DnsUdpClient` and `DnsHttpClient` can be used here since they implement `IDnsClient`.
 
 ```csharp
 using IDnsClient cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
@@ -60,6 +60,21 @@ IDnsClient dnsClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1
 DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
 
+### Caching Client Usage
+This example uses the `DnsCachingClient` to cache queries into a `MemoryCache`, so that the answer is not retrieved from the upstream if the answer is within its TTL. Note that this can be combined with the `DnsRoundRobinClient`, so the cache can be backed by multiple upstream clients (it just accepts `IDnsClient`).
+
+```csharp
+using IDnsClient upstreamClient = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
+
+IDnsClient cacheClient = new DnsCachingClient(upstreamClient, new MemoryCache("dns"));
+
+// Run an A query for google.com
+DnsAnswer answer = await cacheClient.Query(DnsHeader.CreateQuery("google.com"));
+
+// Get cached result for query since it is inside the TTL
+DnsAnswer answer = await cacheClient.Query(DnsHeader.CreateQuery("google.com"));
+```
+
 ## Ae.Dns.Server
 [![](https://img.shields.io/nuget/v/Ae.Dns.Client)](https://www.nuget.org/packages/Ae.Dns.Server/)
 
@@ -68,13 +83,16 @@ Offers a UDP server with filtering capabilities.
 ### Basic UDP Server
 
 ```csharp
+// Can use the HTTPS, UDP, round robin or caching clients - any IDnsClient
 using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
-// Block www.google.com
-using IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Host == "www.google.com" ? false : true);
+// Allow anything that isn't www.google.com
+using IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Host != "www.google.com");
 
+// Create the server
 using var server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), dnsClient, dnsFilter);
 
+// Listen until cancelled
 await server.Recieve(CancellationToken.None);
 ```
 
