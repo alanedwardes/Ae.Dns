@@ -1,5 +1,6 @@
 ﻿using Ae.Dns.Protocol;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,10 +15,11 @@ namespace Ae.Dns.Server
         private readonly ConcurrentDictionary<string, bool> _domains = new ConcurrentDictionary<string, bool>();
         private readonly ILogger<DnsRemoteSetFilter> _logger;
 
-        public DnsRemoteSetFilter(ILogger<DnsRemoteSetFilter> logger)
+        public DnsRemoteSetFilter() : this(new NullLogger<DnsRemoteSetFilter>())
         {
-            _logger = logger;
         }
+
+        public DnsRemoteSetFilter(ILogger<DnsRemoteSetFilter> logger) => _logger = logger;
 
         private async Task AddRemoteList(Uri fileUri, bool allow)
         {

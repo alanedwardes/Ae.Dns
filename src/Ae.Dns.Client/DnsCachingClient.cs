@@ -1,5 +1,6 @@
 ﻿using Ae.Dns.Protocol;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Linq;
 using System.Runtime.Caching;
@@ -29,6 +30,11 @@ namespace Ae.Dns.Client
         private readonly ILogger<DnsCachingClient> _logger;
         private readonly IDnsClient _dnsClient;
         private readonly ObjectCache _objectCache;
+
+        public DnsCachingClient(IDnsClient dnsClient, ObjectCache objectCache) :
+            this(new NullLogger<DnsCachingClient>(), dnsClient, objectCache)
+        {
+        }
 
         public DnsCachingClient(ILogger<DnsCachingClient> logger, IDnsClient dnsClient, ObjectCache objectCache)
         {

@@ -2,6 +2,7 @@
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
@@ -40,6 +41,11 @@ namespace Ae.Dns.Client
         private readonly Socket _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
         private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+
+        public DnsUdpClient(IPAddress address) :
+            this(new NullLogger<DnsUdpClient>(), address)
+        {
+        }
 
         public DnsUdpClient(ILogger<DnsUdpClient> logger, IPAddress address)
         {
