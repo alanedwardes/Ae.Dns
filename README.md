@@ -36,7 +36,7 @@ IServiceProvider provider = services.BuildServiceProvider();
 IDnsClient dnsClient = provider.GetRequiredService<IDnsClient>();
 
 // Run an A query for google.com
-DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
+DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
 ### Basic UDP Client Usage
 This example is a basic setup of the `DnsUdpClient` using the primary CloudFlare UDP resolver.
@@ -59,7 +59,7 @@ using var google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
 IDnsClient dnsClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
 
 // Run an A query for google.com
-DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
+DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
 
 ### Caching Client Usage
@@ -68,13 +68,15 @@ This example uses the `DnsCachingClient` to cache queries into a `MemoryCache`, 
 ```csharp
 using var upstreamClient = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
 
-IDnsClient cacheClient = new DnsCachingClient(upstreamClient, new MemoryCache("dns"));
+using var memoryCache = new MemoryCache("dns");
+
+IDnsClient cacheClient = new DnsCachingClient(upstreamClient, memoryCache);
 
 // Run an A query for google.com
-DnsAnswer answer1 = await cacheClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
+DnsAnswer answer1 = await cacheClient.Query(DnsHeader.CreateQuery("google.com"));
 
 // Get cached result for query since it is inside the TTL
-DnsAnswer answer2 = await cacheClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
+DnsAnswer answer2 = await cacheClient.Query(DnsHeader.CreateQuery("google.com"));
 ```
 
 ## Ae.Dns.Server
