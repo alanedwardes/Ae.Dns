@@ -31,50 +31,50 @@ var dnsUri = new Uri("https://cloudflare-dns.com/");
 services.AddHttpClient<IDnsClient, DnsHttpClient>(x => x.BaseAddress = dnsUri)
         .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))));
 
-IServiceProvider provider = servics.BuildServiceProvider();
+IServiceProvider provider = services.BuildServiceProvider();
 
 IDnsClient dnsClient = provider.GetRequiredService<IDnsClient>();
 
 // Run an A query for google.com
-DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
+DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
 ```
 ### Basic UDP Client Usage
 This example is a basic setup of the `DnsUdpClient` using the primary CloudFlare UDP resolver.
 ```csharp
-using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+using var dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
 // Run an A query for google.com
-DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
+DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
 ```
 
 ### Round Robin Client Usage
 This example uses multiple upstream `IDnsClient` implementations in a round-robin fashion using `DnsRoundRobinClient`. Note that multiple protocols can be mixed, both the `DnsUdpClient` and `DnsHttpClient` can be used here since they implement `IDnsClient`.
 
 ```csharp
-using IDnsClient cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
-using IDnsClient cloudFlare2 = new DnsUdpClient(IPAddress.Parse("1.0.0.1"));
-using IDnsClient google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
-using IDnsClient google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
+using var cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+using var cloudFlare2 = new DnsUdpClient(IPAddress.Parse("1.0.0.1"));
+using var google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
+using var google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
 
 IDnsClient dnsClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
 
 // Run an A query for google.com
-DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
+DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
 ```
 
 ### Caching Client Usage
 This example uses the `DnsCachingClient` to cache queries into a `MemoryCache`, so that the answer is not retrieved from the upstream if the answer is within its TTL. Note that this can be combined with the `DnsRoundRobinClient`, so the cache can be backed by multiple upstream clients (it just accepts `IDnsClient`).
 
 ```csharp
-using IDnsClient upstreamClient = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
+using var upstreamClient = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
 
 IDnsClient cacheClient = new DnsCachingClient(upstreamClient, new MemoryCache("dns"));
 
 // Run an A query for google.com
-DnsAnswer answer = await cacheClient.Query(DnsHeader.CreateQuery("google.com"));
+DnsAnswer answer1 = await cacheClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
 
 // Get cached result for query since it is inside the TTL
-DnsAnswer answer = await cacheClient.Query(DnsHeader.CreateQuery("google.com"));
+DnsAnswer answer2 = await cacheClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
 ```
 
 ## Ae.Dns.Server
