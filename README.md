@@ -81,7 +81,7 @@ DnsAnswer answer = await cacheClient.Query(DnsHeader.CreateQuery("google.com"));
 Offers a UDP server with filtering capabilities.
 
 ### Basic UDP Server
-A simple UDP server which forwards all queries via UDP to the CloudFlare DNS resolver, and blocks `www.google.com`.
+A example UDP server which forwards all queries via UDP to the CloudFlare DNS resolver, and blocks `www.google.com`.
 
 ```csharp
 // Can use the HTTPS, UDP, round robin or caching clients - any IDnsClient
@@ -98,7 +98,7 @@ await server.Recieve(CancellationToken.None);
 ```
 
 ### Advanced UDP Server
-A more advanced UDP server which uses the caching and round robin DNS clients to cache DNS answers from multiple upstream clients, and the `RemoteSetFilter` to block domains on an open-source hosts file.
+A more advanced UDP server which uses the `DnsCachingClient` and `DnsRoundRobinClient` to cache DNS answers from multiple upstream clients, and the `RemoteSetFilter` to block domains from a remote hosts file.
 
 ```csharp
 using IDnsClient cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
@@ -116,7 +116,7 @@ IDnsClient cacheClient = new DnsCachingClient(roundRobinClient, new MemoryCache(
 var remoteSetFilter = new DnsRemoteSetFilter();
 
 // Block all domains from https://github.com/StevenBlack/hosts
-// (start server without waiting for download to complete)
+// don't await the task to allow the server to start (class is thread safe)
 _ = remoteSetFilter.AddRemoteBlockList(new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"));
 
 // Create the server using the caching client and remote set filter
