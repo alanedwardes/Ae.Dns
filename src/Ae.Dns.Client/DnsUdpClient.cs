@@ -47,10 +47,20 @@ namespace Ae.Dns.Client
         {
         }
 
-        public DnsUdpClient(ILogger<DnsUdpClient> logger, IPAddress address)
+        public DnsUdpClient(IPEndPoint endpoint) :
+            this(new NullLogger<DnsUdpClient>(), endpoint)
+        {
+        }
+
+        public DnsUdpClient(ILogger<DnsUdpClient> logger, IPAddress address) :
+            this(logger, new IPEndPoint(address, 53))
+        {
+        }
+
+        public DnsUdpClient(ILogger<DnsUdpClient> logger, IPEndPoint endpoint)
         {
             _logger = logger;
-            _socket.Connect(address, 53);
+            _socket.Connect(endpoint);
             _task = Task.Run(RecieveTask);
         }
 
