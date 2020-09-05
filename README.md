@@ -87,10 +87,10 @@ A example UDP server which forwards all queries via UDP to the CloudFlare DNS re
 
 ```csharp
 // Can use the HTTPS, UDP, round robin or caching clients - any IDnsClient
-using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+using var dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
 // Allow anything that isn't www.google.com
-using IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Host != "www.google.com");
+IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Host != "www.google.com");
 
 // Create the server
 using var server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), dnsClient, dnsFilter);
@@ -103,10 +103,10 @@ await server.Recieve(CancellationToken.None);
 A more advanced UDP server which uses the `DnsCachingClient` and `DnsRoundRobinClient` to cache DNS answers from multiple upstream clients, and the `RemoteSetFilter` to block domains from a remote hosts file.
 
 ```csharp
-using IDnsClient cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
-using IDnsClient cloudFlare2 = new DnsUdpClient(IPAddress.Parse("1.0.0.1"));
-using IDnsClient google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
-using IDnsClient google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
+using var cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+using var cloudFlare2 = new DnsUdpClient(IPAddress.Parse("1.0.0.1"));
+using var google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
+using var google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
 
 // Aggregate all clients into one
 IDnsClient roundRobinClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
