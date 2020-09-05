@@ -11,14 +11,14 @@ namespace Ae.Dns.Tests.Server
 {
     public class DnsUdpServerTests
     {
-        public static int GeneratePort() => new Random().Next(1024, IPEndPoint.MaxPort);
+        public static IPEndPoint GenerateEndPoint() => new IPEndPoint(IPAddress.Loopback, new Random().Next(1024, IPEndPoint.MaxPort));
 
         [Fact]
         public async Task TestStartupShutdown()
         {
-            using var server = new DnsUdpServer(new IPEndPoint(IPAddress.Loopback, GeneratePort()), null, null);
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
-            var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+            using var server = new DnsUdpServer(GenerateEndPoint(), null, null);
 
             await server.Recieve(tokenSource.Token);
         }
@@ -26,22 +26,28 @@ namespace Ae.Dns.Tests.Server
         [Fact]
         public async Task TestQuery()
         {
-            var endpoint = new IPEndPoint(IPAddress.Loopback, GeneratePort());
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
+            var endpoint = GenerateEndPoint();
+
+            // Create a real upstream DNS client to serve the request (todo: mock this)
             using var upstream = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+
+            // Create a loopback server
             using var server = new DnsUdpServer(endpoint, upstream, new DnsDelegateFilter(x => true));
 
-            var tokenSource = new CancellationTokenSource();
+            // Start recieving
+            using var recieveTask = server.Recieve(tokenSource.Token);
 
-            var recieveTask = server.Recieve(tokenSource.Token);
-
+            // Create a loopback DNS client to talk to the server
             using var client = new DnsUdpClient(endpoint);
 
             try
             {
                 var query = DnsHeader.CreateQuery("google.com");
 
-                var response = await client.Query(query, CancellationToken.None);
+                // Send a DNS request to the server, verify the results
+                var response = await client.Query(query, tokenSource.Token);
 
                 Assert.Equal(query.Id, response.Header.Id);
                 Assert.Equal(query.Host, response.Header.Host);
