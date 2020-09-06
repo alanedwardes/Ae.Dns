@@ -98,7 +98,7 @@ IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Host != "www.google.com");
 using var server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), dnsClient, dnsFilter);
 
 // Listen until cancelled
-await server.Recieve(CancellationToken.None);
+await server.Listen(CancellationToken.None);
 ```
 
 ### Advanced UDP Server
@@ -127,7 +127,7 @@ _ = remoteSetFilter.AddRemoteBlockList(new Uri("https://raw.githubusercontent.co
 using var server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), cacheClient, remoteSetFilter);
 
 // Listen until cancelled
-await server.Recieve(CancellationToken.None);
+await server.Listen(CancellationToken.None);
 ```
 
 ## Ae.Dns.Protocol

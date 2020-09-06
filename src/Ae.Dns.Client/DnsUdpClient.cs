@@ -61,10 +61,10 @@ namespace Ae.Dns.Client
         {
             _logger = logger;
             _socket.Connect(endpoint);
-            _task = Task.Run(RecieveTask);
+            _task = Task.Run(ReceiveTask);
         }
 
-        private async Task RecieveTask()
+        private async Task ReceiveTask()
         {
             var buffer = new byte[1024];
             var read = 0;
@@ -77,7 +77,7 @@ namespace Ae.Dns.Client
                 }
                 catch (Exception e)
                 {
-                    _logger.LogCritical(e, "Recieved bad network response from {0}: {1}", _socket.RemoteEndPoint.ToString(), buffer.Take(read).ToDebugString());
+                    _logger.LogCritical(e, "Received bad network response from {0}: {1}", _socket.RemoteEndPoint.ToString(), buffer.Take(read).ToDebugString());
                     continue;
                 }
 
@@ -97,7 +97,7 @@ namespace Ae.Dns.Client
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Recieved bad DNS response from {0}: {1}", _socket.RemoteEndPoint.ToString(), buffer);
+                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _socket.RemoteEndPoint.ToString(), buffer);
                 return;
             }
 

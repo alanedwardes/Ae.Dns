@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Server
 {
-    public sealed class DnsUdpServer : IDisposable
+    public sealed class DnsUdpServer : IDnsServer
     {
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly UdpClient _listener;
@@ -46,7 +46,7 @@ namespace Ae.Dns.Server
             }
         }
 
-        public async Task Recieve(CancellationToken token)
+        public async Task Listen(CancellationToken token)
         {
             token.Register(() => _listener.Close());
 

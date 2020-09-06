@@ -40,7 +40,7 @@ namespace Ae.Dns.Client
             await _socket.SendAsync(payload, SocketFlags.None, token);
 
             var buffer = new byte[4096];
-            var recieve = await _socket.ReceiveAsync(buffer, SocketFlags.None, token);
+            var receive = await _socket.ReceiveAsync(buffer, SocketFlags.None, token);
 
             var offset = 0;
             var responseLength = buffer.ReadUInt16(ref offset);

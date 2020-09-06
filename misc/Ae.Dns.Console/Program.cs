@@ -60,7 +60,7 @@ namespace Ae.Dns.Console
 
             using var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), cache, filter);
 
-            await server.Recieve(CancellationToken.None);
+            await server.Listen(CancellationToken.None);
         }
     }
 }

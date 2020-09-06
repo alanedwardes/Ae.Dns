@@ -21,7 +21,7 @@ namespace Ae.Dns.Tests.Server
 
             using var server = new DnsUdpServer(GenerateEndPoint(), null, null);
 
-            await server.Recieve(tokenSource.Token);
+            await server.Listen(tokenSource.Token);
         }
 
         [Fact]
@@ -38,7 +38,7 @@ namespace Ae.Dns.Tests.Server
             using var server = new DnsUdpServer(endpoint, upstream, new DnsDelegateFilter(x => true));
 
             // Start recieving
-            using var recieveTask = server.Recieve(tokenSource.Token);
+            using var receiveTask = server.Listen(tokenSource.Token);
 
             // Create a loopback DNS client to talk to the server
             using var client = new DnsUdpClient(endpoint);
@@ -57,7 +57,7 @@ namespace Ae.Dns.Tests.Server
             finally
             {
                 tokenSource.Cancel();
-                await recieveTask;
+                await receiveTask;
             }
         }
     }
