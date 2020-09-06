@@ -1,8 +1,8 @@
-﻿using Ae.Dns.Protocol;
-using Ae.Dns.Server.Filters;
+﻿using Ae.Dns.Client.Filters;
+using Ae.Dns.Protocol;
 using Xunit;
 
-namespace Ae.Dns.Tests.Server.Filters
+namespace Ae.Dns.Tests.Client.Filters
 {
     public class DnsCompositeFilterTests
     {
