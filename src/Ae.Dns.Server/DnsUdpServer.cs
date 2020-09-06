@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
+using Ae.Dns.Server.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;

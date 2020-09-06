@@ -1,6 +1,6 @@
 ﻿using Ae.Dns.Protocol;
 
-namespace Ae.Dns.Server
+namespace Ae.Dns.Server.Filters
 {
     public interface IDnsFilter
     {

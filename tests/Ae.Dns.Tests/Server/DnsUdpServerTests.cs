@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server;
+using Ae.Dns.Server.Filters;
 using System;
 using System.Net;
 using System.Threading;
