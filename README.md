@@ -41,7 +41,7 @@ DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 ### Basic UDP Client Usage
 This example is a basic setup of the `DnsUdpClient` using the primary CloudFlare UDP resolver.
 ```csharp
-using var dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
 // Run an A query for google.com
 DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), CancellationToken.None);
@@ -51,10 +51,10 @@ DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"), Ca
 This example uses multiple upstream `IDnsClient` implementations in a round-robin fashion using `DnsRoundRobinClient`. Note that multiple protocols can be mixed, both the `DnsUdpClient` and `DnsHttpClient` can be used here since they implement `IDnsClient`.
 
 ```csharp
-using var cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
-using var cloudFlare2 = new DnsUdpClient(IPAddress.Parse("1.0.0.1"));
-using var google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
-using var google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
+using IDnsClient cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+using IDnsClient cloudFlare2 = new DnsUdpClient(IPAddress.Parse("1.0.0.1"));
+using IDnsClient google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
+using IDnsClient google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
 
 IDnsClient dnsClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
 
@@ -66,7 +66,7 @@ DnsAnswer answer = await dnsClient.Query(DnsHeader.CreateQuery("google.com"));
 This example uses the `DnsCachingClient` to cache queries into a `MemoryCache`, so that the answer is not retrieved from the upstream if the answer is within its TTL. Note that this can be combined with the `DnsRoundRobinClient`, so the cache can be backed by multiple upstream clients (it just accepts `IDnsClient`).
 
 ```csharp
-using var upstreamClient = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
+using IDnsClient upstreamClient = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
 
 using var memoryCache = new MemoryCache("dns");
 
@@ -89,13 +89,13 @@ A example UDP server which forwards all queries via UDP to the CloudFlare DNS re
 
 ```csharp
 // Can use the HTTPS, UDP, round robin or caching clients - any IDnsClient
-using var dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
 // Allow anything that isn't www.google.com
 IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Host != "www.google.com");
 
 // Create the server
-using var server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), dnsClient, dnsFilter);
+using IDnsServer server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), dnsClient, dnsFilter);
 
 // Listen until cancelled
 await server.Listen(CancellationToken.None);
@@ -105,10 +105,10 @@ await server.Listen(CancellationToken.None);
 A more advanced UDP server which uses the `DnsCachingClient` and `DnsRoundRobinClient` to cache DNS answers from multiple upstream clients, and the `RemoteSetFilter` to block domains from a remote hosts file.
 
 ```csharp
-using var cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
-using var cloudFlare2 = new DnsUdpClient(IPAddress.Parse("1.0.0.1"));
-using var google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
-using var google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
+using IDnsClient cloudFlare1 = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+using IDnsClient cloudFlare2 = new DnsUdpClient(IPAddress.Parse("1.0.0.1"));
+using IDnsClient google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
+using IDnsClient google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
 
 // Aggregate all clients into one
 IDnsClient roundRobinClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
@@ -124,7 +124,7 @@ var remoteSetFilter = new DnsRemoteSetFilter();
 _ = remoteSetFilter.AddRemoteBlockList(new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"));
 
 // Create the server using the caching client and remote set filter
-using var server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), cacheClient, remoteSetFilter);
+using IDnsServer server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), cacheClient, remoteSetFilter);
 
 // Listen until cancelled
 await server.Listen(CancellationToken.None);
