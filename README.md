@@ -123,8 +123,11 @@ var remoteSetFilter = new DnsRemoteSetFilter();
 // don't await the task to allow the server to start (class is thread safe)
 _ = remoteSetFilter.AddRemoteBlockList(new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"));
 
+// Add the filtering layer
+IDnsClient filterClient = new DnsFilterClient(remoteSetFilter, cacheClient);
+
 // Create the server using the caching client and remote set filter
-using IDnsServer server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), cacheClient, remoteSetFilter);
+using IDnsServer server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), filterClient);
 
 // Listen until cancelled
 await server.Listen(CancellationToken.None);

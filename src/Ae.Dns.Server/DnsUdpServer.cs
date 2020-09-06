@@ -1,7 +1,5 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Protocol;
-using Ae.Dns.Protocol.Enums;
-using Ae.Dns.Server.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
@@ -19,19 +17,17 @@ namespace Ae.Dns.Server
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly UdpClient _listener;
         private readonly IDnsClient _dnsClient;
-        private readonly IDnsFilter _dnsFilter;
 
-        public DnsUdpServer(IPEndPoint endpoint, IDnsClient dnsClient, IDnsFilter dnsFilter)
-            : this(new NullLogger<DnsUdpServer>(), endpoint, dnsClient, dnsFilter)
+        public DnsUdpServer(IPEndPoint endpoint, IDnsClient dnsClient)
+            : this(new NullLogger<DnsUdpServer>(), endpoint, dnsClient)
         {
         }
 
-        public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsClient dnsClient, IDnsFilter dnsFilter)
+        public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsClient dnsClient)
         {
             _logger = logger;
             _listener = new UdpClient(endpoint);
             _dnsClient = dnsClient;
-            _dnsFilter = dnsFilter;
         }
 
         public void Dispose()
@@ -66,35 +62,6 @@ namespace Ae.Dns.Server
             }
         }
 
-        private DnsHeader CreateNullHeader(DnsHeader request)
-        {
-            return new DnsHeader
-            {
-                Id = request.Id,
-                ResponseCode = DnsResponseCode.NXDomain,
-                IsQueryResponse = true,
-                RecursionAvailable = true,
-                RecusionDesired = request.RecusionDesired,
-                Host = request.Host,
-                QueryClass = request.QueryClass,
-                QuestionCount = request.QuestionCount,
-                QueryType = request.QueryType
-            };
-        }
-
-        private async Task<DnsAnswer> GetAnswer(DnsHeader message, CancellationToken token)
-        {
-            if (_dnsFilter.IsPermitted(message))
-            {
-                return await _dnsClient.Query(message, token);
-            }
-            else
-            {
-                _logger.LogTrace("DNS query blocked for {Domain}", message.Host);
-                return new DnsAnswer { Header = CreateNullHeader(message) };
-            }
-        }
-
         private async void Respond(UdpReceiveResult query, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -113,7 +80,7 @@ namespace Ae.Dns.Server
             DnsAnswer answer;
             try
             {
-                answer = await GetAnswer(message, token);
+                answer = await _dnsClient.Query(message, token);
             }
             catch (Exception e)
             {

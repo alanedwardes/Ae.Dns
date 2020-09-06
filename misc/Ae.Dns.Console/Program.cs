@@ -1,6 +1,6 @@
 ﻿using Ae.Dns.Client;
+using Ae.Dns.Client.Filters;
 using Ae.Dns.Server;
-using Ae.Dns.Server.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -56,9 +56,11 @@ namespace Ae.Dns.Console
 
             var combinedDnsClient = new DnsRoundRobinClient(httpClients.Concat(udpClients));
 
-            var cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("dns"));
+            var filteringDnsClient = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), filter, combinedDnsClient);
 
-            using var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), cache, filter);
+            var cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), filteringDnsClient, new MemoryCache("dns"));
+
+            using var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), cache);
 
             await server.Listen(CancellationToken.None);
         }

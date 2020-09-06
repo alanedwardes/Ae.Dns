@@ -1,7 +1,6 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server;
-using Ae.Dns.Server.Filters;
 using System;
 using System.Net;
 using System.Threading;
@@ -19,7 +18,7 @@ namespace Ae.Dns.Tests.Server
         {
             using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
-            using var server = new DnsUdpServer(GenerateEndPoint(), null, null);
+            using var server = new DnsUdpServer(GenerateEndPoint(), null);
 
             await server.Listen(tokenSource.Token);
         }
@@ -35,7 +34,7 @@ namespace Ae.Dns.Tests.Server
             using var upstream = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
             // Create a loopback server
-            using var server = new DnsUdpServer(endpoint, upstream, new DnsDelegateFilter(x => true));
+            using var server = new DnsUdpServer(endpoint, upstream);
 
             // Start recieving
             using var receiveTask = server.Listen(tokenSource.Token);
