@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Client
 {
-    public sealed class DnsUdpClient : IDisposable, IDnsClient
+    public sealed class DnsUdpClient : IDnsClient
     {
         private struct MessageId
         {

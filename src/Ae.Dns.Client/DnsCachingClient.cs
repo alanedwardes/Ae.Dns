@@ -91,5 +91,9 @@ namespace Ae.Dns.Client
 
             return answer;
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

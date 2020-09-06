@@ -14,6 +14,10 @@ namespace Ae.Dns.Client
 
         public DnsHttpClient(HttpClient httpClient) => _httpClient = httpClient;
 
+        public void Dispose()
+        {
+        }
+
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
             var raw = query.ToBytes().ToArray();

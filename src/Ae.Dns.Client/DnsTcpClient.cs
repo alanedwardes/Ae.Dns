@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Ae.Dns.Client
 {
     [Obsolete("This class is experimental.")]
-    public sealed class DnsTcpClient : IDnsClient, IDisposable
+    public sealed class DnsTcpClient : IDnsClient
     {
         private readonly ILogger<DnsTcpClient> _logger;
         private readonly Socket _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
