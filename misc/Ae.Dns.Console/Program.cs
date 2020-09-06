@@ -56,7 +56,7 @@ namespace Ae.Dns.Console
 
             var combinedDnsClient = new DnsRoundRobinClient(httpClients.Concat(udpClients));
 
-            var filteringDnsClient = new DnsFilterClient(filter, combinedDnsClient);
+            var filteringDnsClient = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), filter, combinedDnsClient);
 
             var cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), filteringDnsClient, new MemoryCache("dns"));
 
