@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Ae.Dns.Protocol;
+using System.Net;
 
 namespace Ae.Dns.Client
 {
