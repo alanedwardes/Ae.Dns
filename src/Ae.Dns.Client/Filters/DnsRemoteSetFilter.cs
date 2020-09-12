@@ -14,22 +14,29 @@ namespace Ae.Dns.Client.Filters
     {
         private readonly ConcurrentDictionary<string, bool> _domains = new ConcurrentDictionary<string, bool>();
         private readonly ILogger<DnsRemoteSetFilter> _logger;
+        private readonly HttpClient _httpClient;
 
         public DnsRemoteSetFilter() : this(new NullLogger<DnsRemoteSetFilter>())
         {
         }
 
-        public DnsRemoteSetFilter(ILogger<DnsRemoteSetFilter> logger) => _logger = logger;
+        public DnsRemoteSetFilter(ILogger<DnsRemoteSetFilter> logger) : this(logger, new HttpClient())
+        {
+        }
+
+        public DnsRemoteSetFilter(ILogger<DnsRemoteSetFilter> logger, HttpClient httpClient)
+        {
+            _logger = logger;
+            _httpClient = httpClient;
+        }
 
         private async Task AddRemoteList(Uri fileUri, bool allow)
         {
             var set = new HashSet<string>();
 
-            using var httpClient = new HttpClient();
-
             _logger.LogTrace("Downloading {FilterUri}", fileUri);
 
-            var response = await httpClient.GetStreamAsync(fileUri);
+            var response = await _httpClient.GetStreamAsync(fileUri);
             using var sr = new StreamReader(response);
             while (!sr.EndOfStream)
             {
