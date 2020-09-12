@@ -13,7 +13,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ae.Dns.Client\Ae.Dns.Client.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ae.Dns.Protocol\Ae.Dns.Protocol.csproj" />
   </ItemGroup>
 
 </Project>
