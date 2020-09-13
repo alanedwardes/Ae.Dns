@@ -13,7 +13,7 @@ namespace Ae.Dns.Protocol.Resources
 
         public override int GetHashCode() => HashCode.Combine(Text);
 
-        public void ReadBytes(byte[] bytes, ref int offset, int length) => Text = string.Join('.', bytes.ReadString(ref offset, offset + length));
+        public void ReadBytes(byte[] bytes, ref int offset, int length) => Text = string.Join(".", bytes.ReadString(ref offset, offset + length));
 
         public IEnumerable<IEnumerable<byte>> WriteBytes()
         {

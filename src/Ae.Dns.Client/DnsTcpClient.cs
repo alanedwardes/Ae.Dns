@@ -13,23 +13,19 @@ namespace Ae.Dns.Client
     public sealed class DnsTcpClient : IDnsClient
     {
         private readonly ILogger<DnsTcpClient> _logger;
-        private readonly Socket _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+        private readonly TcpClient _socket;
 
         public DnsTcpClient(ILogger<DnsTcpClient> logger, IPAddress address)
         {
             _logger = logger;
+            _socket = new TcpClient(address.AddressFamily);
             _socket.Connect(address, 53);
         }
 
         public void Dispose()
         {
-            try
-            {
-                _socket.Disconnect(false);
-            }
-            catch (Exception)
-            {
-            }
+            _socket.Close();
+            _socket.Dispose();
         }
 
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
@@ -37,10 +33,14 @@ namespace Ae.Dns.Client
             var raw = query.ToBytes().ToArray();
 
             var payload = ((ushort)raw.Length).ToBytes().Concat(raw).ToArray();
-            await _socket.SendAsync(payload, SocketFlags.None, token);
+            var stream = _socket.GetStream();
+
+            await stream.WriteAsync(payload, 0, payload.Length, token);
 
             var buffer = new byte[4096];
-            var receive = await _socket.ReceiveAsync(buffer, SocketFlags.None, token);
+            var receive = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+
+            stream.Close();
 
             var offset = 0;
             var responseLength = buffer.ReadUInt16(ref offset);

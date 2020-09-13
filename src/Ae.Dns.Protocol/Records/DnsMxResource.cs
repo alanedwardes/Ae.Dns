@@ -17,7 +17,7 @@ namespace Ae.Dns.Protocol.Resources
         public void ReadBytes(byte[] bytes, ref int offset, int length)
         {
             Preference = bytes.ReadUInt16(ref offset);
-            Exchange = string.Join('.', bytes.ReadString(ref offset));
+            Exchange = string.Join(".", bytes.ReadString(ref offset));
         }
 
         public IEnumerable<IEnumerable<byte>> WriteBytes()

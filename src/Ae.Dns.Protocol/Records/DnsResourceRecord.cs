@@ -14,7 +14,7 @@ namespace Ae.Dns.Protocol.Records
 
         public string Host
         {
-            get => string.Join('.', Name);
+            get => string.Join(".", Name);
             set => Name = value.Split('.');
         }
 

@@ -21,8 +21,8 @@ namespace Ae.Dns.Protocol.Resources
 
         public void ReadBytes(byte[] bytes, ref int offset, int length)
         {
-            MName = string.Join('.', bytes.ReadString(ref offset));
-            RName = string.Join('.', bytes.ReadString(ref offset));
+            MName = string.Join(".", bytes.ReadString(ref offset));
+            RName = string.Join(".", bytes.ReadString(ref offset));
             Serial = bytes.ReadUInt32(ref offset);
             Refresh = TimeSpan.FromSeconds(bytes.ReadInt32(ref offset));
             Retry = TimeSpan.FromSeconds(bytes.ReadInt32(ref offset));

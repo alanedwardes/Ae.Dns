@@ -54,6 +54,11 @@ namespace Ae.Dns.Server
                     var result = await _listener.ReceiveAsync();
                     Respond(result, token);
                 }
+                catch (ObjectDisposedException)
+                {
+                    // Do nothing, server shutting down
+                    return;
+                }
                 catch (Exception e)
                 {
                     _logger.LogWarning(e, "Error with incoming connection");
