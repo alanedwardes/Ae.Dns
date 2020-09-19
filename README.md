@@ -30,7 +30,8 @@ IServiceCollection services = new ServiceCollection();
 
 var dnsUri = new Uri("https://cloudflare-dns.com/");
 services.AddHttpClient<IDnsClient, DnsHttpClient>(x => x.BaseAddress = dnsUri)
-        .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))));
+        .AddTransientHttpErrorPolicy(x => 
+            x.WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt))));
 
 IServiceProvider provider = services.BuildServiceProvider();
 
@@ -122,7 +123,8 @@ var remoteSetFilter = new DnsRemoteSetFilter();
 
 // Block all domains from https://github.com/StevenBlack/hosts
 // don't await the task to allow the server to start (class is thread safe)
-_ = remoteSetFilter.AddRemoteBlockList(new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"));
+var hostsFile = new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts");
+_ = remoteSetFilter.AddRemoteBlockList(hostsFile);
 
 // Add the filtering layer
 IDnsClient filterClient = new DnsFilterClient(remoteSetFilter, cacheClient);
