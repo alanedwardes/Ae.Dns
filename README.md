@@ -3,7 +3,8 @@
 
 A pure C# implementation of a DNS client, server and configurable caching/filtering layer. This project offers the following packages:
 * [Ae.Dns.Client](#aednsclient) - HTTP and UDP DNS clients with caching and round-robin capabilities
-* [Ae.Dns.Server](#aednsserver) - UDP DNS server with filtering capabilities
+* [Ae.Dns.Server](#aednsserver) - Standard UDP DNS server
+* [Ae.Dns.Server.Http](#aednsserverhttp) - Standard UDP DNS server
 * [Ae.Dns.Protocol](#aednsprotocol) - Low level DNS wire protocol round-trip handling used on the client and server
 
 ## Ae.Dns.Client
@@ -80,9 +81,9 @@ DnsAnswer answer2 = await cacheClient.Query(DnsHeader.CreateQuery("google.com"))
 ```
 
 ## Ae.Dns.Server
-[![](https://img.shields.io/nuget/v/Ae.Dns.Client)](https://www.nuget.org/packages/Ae.Dns.Server/)
+[![](https://img.shields.io/nuget/v/Ae.Dns.Server)](https://www.nuget.org/packages/Ae.Dns.Server/)
 
-Offers a UDP server with filtering capabilities.
+Offers a standard DNS UDP server.
 
 ### Basic UDP Server
 A example UDP server which forwards all queries via UDP to the CloudFlare DNS resolver, and blocks `www.google.com`.
@@ -98,7 +99,7 @@ IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Host != "www.google.com");
 using IDnsServer server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), dnsClient, dnsFilter);
 
 // Listen until cancelled
-await server.Listen(CancellationToken.None);
+await server.Listen();
 ```
 
 ### Advanced UDP Server
@@ -130,7 +131,24 @@ IDnsClient filterClient = new DnsFilterClient(remoteSetFilter, cacheClient);
 using IDnsServer server = new DnsUdpServer(new IPEndPoint(IPAddress.Any, 53), filterClient);
 
 // Listen until cancelled
-await server.Listen(CancellationToken.None);
+await server.Listen();
+```
+
+## Ae.Dns.Server.Http
+[![](https://img.shields.io/nuget/v/Ae.Dns.Server.Http)](https://www.nuget.org/packages/Ae.Dns.Server.Http/)
+
+Offers an HTTPS (DoH) server for use with clients supporting the DNS over HTTPS protocol.
+
+
+```csharp
+// Can use the HTTPS, UDP, round robin or caching clients - any IDnsClient
+using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+
+// Create the HTTP server - see overloads for configuration options
+using IDnsServer server = new DnsHttpServer(dnsClient);
+
+// Listen until cancelled
+await server.Listen();
 ```
 
 ## Ae.Dns.Protocol
@@ -138,7 +156,50 @@ await server.Listen(CancellationToken.None);
 
 Provides the low-level protocol handling for the over-the-wire DNS protocol format as per [RFC 1035](https://tools.ietf.org/html/rfc1035).
 
-See the following types:
+### HttpClient DNS Resolution Middleware
+
+This package includes a `DelegatingHandler` for `HttpClient` which intercepts HTTP requests before they're sent across the wire, resolves the host with the specified `IDnsClient`, replaces the host with one of the resolved IP addresses, then sends the request to the IP address with the host as the `Host` header.
+
+#### Basic DnsDelegatingHandler Example
+
+```csharp
+// Can use the HTTPS, UDP, round robin or caching clients - any IDnsClient
+using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
+
+// Create an HttpClient with the DnsDelegatingHandler
+using httpClient = new HttpClient(new DnsDelegatingHandler(dnsClient)
+{
+    InnerHandler = new SocketsHttpHandler()
+});
+
+// Make a request to GET www.google.com using the DNS middleware
+HttpResponseMessage response = await httpClient.GetAsync("https://www.google.com/");
+```
+
+#### Advanced DnsDelegatingHandler DI Example
+
+```csharp
+// Create a DI container
+IServiceCollection services = new ServiceCollection();
+
+// Add any IDnsClient implementation to it
+services.AddSingleton(new DnsUdpClient(IPAddress.Parse("1.1.1.1")));
+
+// Add the DelegatingHandler
+services.AddTransient<DnsDelegatingHandler>();
+
+// Set up your HTTP client class
+services.AddHttpClient<IMyTypedClient, MyTypedClient>()
+        .AddHttpMessageHandler<DnsDelegatingHandler>();
+
+// Build the service provider
+IServiceProvider provider = services.BuildServiceProvider();
+
+// Retrieve the HTTP client implementation
+IMyTypedClient myTypedClient = provider.GetRequiredService<IMyTypedClient>();
+```
+
+Also see the following types:
 * DnsHeader
 * DnsAnswer
 * DnsResourceRecord
