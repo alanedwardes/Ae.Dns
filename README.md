@@ -8,7 +8,7 @@ A pure C# implementation of a DNS client, server and configurable caching/filter
 * [Ae.Dns.Protocol](#aednsprotocol) - Low level DNS wire protocol round-trip handling used on the client and server
 
 ## Ae.Dns.Client
-[![](https://img.shields.io/nuget/v/Ae.Dns.Client)](https://www.nuget.org/packages/Ae.Dns.Client/) ![](https://img.shields.io/badge/framework-netstandard2.0-blue)
+[![](https://img.shields.io/nuget/v/Ae.Dns.Client) ![](https://img.shields.io/badge/framework-netstandard2.0-blue)](https://www.nuget.org/packages/Ae.Dns.Client/) 
 
 Offers both HTTP(S) and UDP DNS clients, with a simple round robin client implementation.
 ### Basic HTTPS Client Usage
@@ -82,7 +82,7 @@ DnsAnswer answer2 = await cacheClient.Query(DnsHeader.CreateQuery("google.com"))
 ```
 
 ## Ae.Dns.Server
-[![](https://img.shields.io/nuget/v/Ae.Dns.Server)](https://www.nuget.org/packages/Ae.Dns.Server/) ![](https://img.shields.io/badge/framework-netstandard2.0-blue)
+[![](https://img.shields.io/nuget/v/Ae.Dns.Server) ![](https://img.shields.io/badge/framework-netstandard2.0-blue)](https://www.nuget.org/packages/Ae.Dns.Server/)
 
 Offers a standard DNS UDP server.
 
@@ -137,7 +137,7 @@ await server.Listen();
 ```
 
 ## Ae.Dns.Server.Http
-[![](https://img.shields.io/nuget/v/Ae.Dns.Server.Http)](https://www.nuget.org/packages/Ae.Dns.Server.Http/) ![](https://img.shields.io/badge/framework-netcoreapp3.1-blue)
+[![](https://img.shields.io/nuget/v/Ae.Dns.Server.Http) ![](https://img.shields.io/badge/framework-netcoreapp3.1-blue)](https://www.nuget.org/packages/Ae.Dns.Server.Http/)
 
 Offers an HTTPS (DoH) server for use with clients supporting the DNS over HTTPS protocol.
 
@@ -154,7 +154,7 @@ await server.Listen();
 ```
 
 ## Ae.Dns.Protocol
-[![](https://img.shields.io/nuget/v/Ae.Dns.Protocol)](https://www.nuget.org/packages/Ae.Dns.Protocol/) ![](https://img.shields.io/badge/framework-netstandard2.0-blue)
+[![](https://img.shields.io/nuget/v/Ae.Dns.Protocol) ![](https://img.shields.io/badge/framework-netstandard2.0-blue)](https://www.nuget.org/packages/Ae.Dns.Protocol/)
 
 Provides the low-level protocol handling for the over-the-wire DNS protocol format as per [RFC 1035](https://tools.ietf.org/html/rfc1035).
 
