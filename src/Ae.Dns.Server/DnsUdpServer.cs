@@ -1,5 +1,4 @@
-﻿using Ae.Dns.Client;
-using Ae.Dns.Protocol;
+﻿using Ae.Dns.Protocol;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
@@ -54,6 +53,11 @@ namespace Ae.Dns.Server
                 {
                     var result = await _listener.ReceiveAsync();
                     Respond(result, token);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Do nothing, server shutting down
+                    return;
                 }
                 catch (Exception e)
                 {

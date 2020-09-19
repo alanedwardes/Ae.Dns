@@ -77,7 +77,7 @@ namespace Ae.Dns.Protocol
         public string Host
         {
             get => string.Join(".", Labels);
-            set => Labels = value.Split(".");
+            set => Labels = value.Split('.');
         }
 
         public override string ToString() => $"Id: {Id}, Domain: {Host}, type: {QueryType}, class: {QueryClass}";

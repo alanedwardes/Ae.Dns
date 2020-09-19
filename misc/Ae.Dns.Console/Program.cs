@@ -1,5 +1,6 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Client.Filters;
+using Ae.Dns.Protocol;
 using Ae.Dns.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

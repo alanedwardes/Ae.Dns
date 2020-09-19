@@ -38,7 +38,7 @@ namespace Ae.Dns.Client
 
         private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
-        private readonly Socket _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
+        private readonly UdpClient _socket;
         private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
@@ -60,30 +60,35 @@ namespace Ae.Dns.Client
         public DnsUdpClient(ILogger<DnsUdpClient> logger, IPEndPoint endpoint)
         {
             _logger = logger;
+            _socket = new UdpClient(endpoint.AddressFamily);
             _socket.Connect(endpoint);
             _task = Task.Run(ReceiveTask);
         }
 
         private async Task ReceiveTask()
         {
-            var buffer = new byte[1024];
-            var read = 0;
-
             while (!_cancel.IsCancellationRequested)
             {
+                UdpReceiveResult recieve;
+
                 try
                 {
-                    read = await _socket.ReceiveAsync(buffer, SocketFlags.None, _cancel.Token);
+                    recieve = await _socket.ReceiveAsync();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Do nothing, client shutting down
+                    return;
                 }
                 catch (Exception e)
                 {
-                    _logger.LogCritical(e, "Received bad network response from {0}: {1}", _socket.RemoteEndPoint.ToString(), buffer.Take(read).ToDebugString());
+                    _logger.LogCritical(e, "Received bad network response from {0}: {1}", recieve.RemoteEndPoint.ToString(), recieve.Buffer.ToDebugString());
                     continue;
                 }
 
-                if (read > 0)
+                if (recieve.Buffer.Length > 0)
                 {
-                    _ = Task.Run(() => Receive(buffer.ReadBytes(read)));
+                    _ = Task.Run(() => Receive(recieve.Buffer));
                 }
             }
         }
@@ -97,7 +102,7 @@ namespace Ae.Dns.Client
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _socket.RemoteEndPoint.ToString(), buffer);
+                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _socket.Client.RemoteEndPoint.ToString(), buffer);
                 return;
             }
 
@@ -115,7 +120,7 @@ namespace Ae.Dns.Client
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
-                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _socket.RemoteEndPoint.ToString());
+                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _socket.Client.RemoteEndPoint.ToString());
                 completionSource.SetException(new DnsClientTimeoutException(timeout, messageId.Name));
             }
         }
@@ -123,7 +128,7 @@ namespace Ae.Dns.Client
         private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] raw, CancellationToken token)
         {
             _ = RemoveFailedRequest(messageId, token);
-            _ = _socket.SendAsync(raw, SocketFlags.None, token);
+            _ = _socket.SendAsync(raw, raw.Length);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
@@ -146,16 +151,9 @@ namespace Ae.Dns.Client
         public void Dispose()
         {
             _cancel.Cancel();
+            _socket.Close();
             _task.GetAwaiter().GetResult();
-
-            try
-            {
-                _socket.Disconnect(false);
-                _socket.Dispose();
-            }
-            catch (Exception)
-            {
-            }
+            _socket.Dispose();
         }
     }
 }
