@@ -1,5 +1,4 @@
-﻿using Ae.Dns.Client;
-using Ae.Dns.Protocol;
+﻿using Ae.Dns.Protocol;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System.Buffers;
@@ -9,27 +8,29 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Server.Http
 {
-    public class DnsMiddleware
+    public sealed class DnsMiddleware
     {
         private const string DnsMessageType = "application/dns-message";
         private readonly RequestDelegate _next;
         private readonly IDnsClient _dnsClient;
+        private readonly IDnsMiddlewareConfig _middlewareConfig;
 
-        public DnsMiddleware(RequestDelegate next, IDnsClient dnsClient)
+        public DnsMiddleware(RequestDelegate next, IDnsClient dnsClient, IDnsMiddlewareConfig middlewareConfig)
         {
             _next = next;
             _dnsClient = dnsClient;
+            _middlewareConfig = middlewareConfig;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (!context.Request.Path.StartsWithSegments(new PathString("/dns-query")))
+            if (context.Request.Path != _middlewareConfig.Path)
             {
                 await _next(context);
                 return;
             }
 
-            if (!context.Request.Headers.TryGetValue("Accepts", out StringValues accepts) || !accepts.Contains(DnsMessageType))
+            if (context.Request.GetTypedHeaders().Accept.All(x => x.MediaType != DnsMessageType))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
                 return;

@@ -1,4 +1,4 @@
-﻿using Ae.Dns.Client;
+﻿using Ae.Dns.Protocol;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,11 +12,18 @@ namespace Ae.Dns.Server.Http
     {
         private readonly IDnsClient _dnsClient;
         private readonly Func<IWebHostBuilder, IWebHostBuilder> _configureBuilder;
+        private readonly IDnsMiddlewareConfig _middlewareConfig;
 
-        public DnsHttpServer(IDnsClient dnsClient, Func<IWebHostBuilder, IWebHostBuilder> configureBuilder)
+        public DnsHttpServer(IDnsClient dnsClient, Func<IWebHostBuilder, IWebHostBuilder> configureBuilder, IDnsMiddlewareConfig middlewareConfig)
         {
             _dnsClient = dnsClient;
             _configureBuilder = configureBuilder;
+            _middlewareConfig = middlewareConfig;
+        }
+
+        public DnsHttpServer(IDnsClient dnsClient, Func<IWebHostBuilder, IWebHostBuilder> configureBuilder)
+            : this(dnsClient, configureBuilder, new DnsMiddlewareConfig())
+        {
         }
 
         public void Dispose()
@@ -30,7 +37,7 @@ namespace Ae.Dns.Server.Http
                 {
                     _configureBuilder(x);
                     x.UseStartup<DnsStartup>();
-                    x.ConfigureServices(y => y.AddSingleton(_dnsClient));
+                    x.ConfigureServices(y => y.AddSingleton(_dnsClient).AddSingleton(_middlewareConfig));
                 });
 
             await builder.Build().RunAsync(token);
