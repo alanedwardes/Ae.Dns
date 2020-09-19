@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <OutputType>Exe</OutputType>
-    <Version>0.0.4</Version>
+    <Version>0.0.10</Version>
     <WarningsAsErrors>true</WarningsAsErrors>
 
     <Authors>alanedwardes</Authors>
@@ -18,8 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ae.Dns.Client\Ae.Dns.Client.csproj" />
-    <ProjectReference Include="..\Ae.Dns.Server\Ae.Dns.Server.csproj" />
+    <ProjectReference Include="..\Ae.Dns.Protocol\Ae.Dns.Protocol.csproj" />
   </ItemGroup>
 
 </Project>
