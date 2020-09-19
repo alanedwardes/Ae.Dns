@@ -26,6 +26,11 @@ namespace Ae.Dns.Server.Http
         {
         }
 
+        public DnsHttpServer(IDnsClient dnsClient)
+            : this(dnsClient, x => x, new DnsMiddlewareConfig())
+        {
+        }
+
         public void Dispose()
         {
         }
