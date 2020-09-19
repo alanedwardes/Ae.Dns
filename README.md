@@ -178,7 +178,7 @@ using httpClient = new HttpClient(new DnsDelegatingHandler(dnsClient)
 HttpResponseMessage response = await httpClient.GetAsync("https://www.google.com/");
 ```
 
-#### Advanced DnsDelegatingHandler DI Example
+#### Advanced DnsDelegatingHandler Dependency Injection Example
 
 ```csharp
 // Create a DI container
