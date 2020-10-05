@@ -28,7 +28,11 @@ namespace Ae.Dns.Tests.Protocol
                      {
                          Answers = new List<DnsResourceRecord>
                          {
-                             new DnsResourceRecord { Resource = new DnsIpAddressResource{ IPAddress = IPAddress.Parse(address) } }
+                             new DnsResourceRecord
+                             {
+                                 Type = dnsQueryType,
+                                 Resource = new DnsIpAddressResource{ IPAddress = IPAddress.Parse(address) }
+                             }
                          }
                      });
 
