@@ -8,8 +8,10 @@ using Microsoft.Extensions.Logging;
 using Polly;
 using Serilog;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,9 +40,20 @@ namespace Ae.Dns.Console
             var services = new ServiceCollection();
             services.AddLogging(x => x.AddSerilog(logger));
 
+            const string staticDnsResolver = "StaticResolver";
+
+            services.AddHttpClient(staticDnsResolver, x => x.BaseAddress = new Uri("https://1.1.1.1/"));
+
+            static DnsDelegatingHandler CreateDnsDelegatingHandler(IServiceProvider serviceProvider)
+            {
+                var httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(staticDnsResolver);
+                return new DnsDelegatingHandler(new DnsHttpClient(httpClient));
+            }
+
             foreach (Uri httpsUpstream in dnsConfiguration.HttpsUpstreams)
             {
                 services.AddHttpClient<IDnsClient, DnsHttpClient>(x => x.BaseAddress = httpsUpstream)
+                        .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                         .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
             }
 
@@ -50,11 +63,14 @@ namespace Ae.Dns.Console
             }
 
             services.AddHttpClient<DnsRemoteSetFilter>()
+                    .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                     .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
             IServiceProvider provider = services.BuildServiceProvider();
 
             var selfLogger = provider.GetRequiredService<ILogger<Program>>();
+
+            selfLogger.LogInformation("Working directory is {WorkingDirectory}", Directory.GetCurrentDirectory());
 
             var remoteFilter = provider.GetRequiredService<DnsRemoteSetFilter>();
 
