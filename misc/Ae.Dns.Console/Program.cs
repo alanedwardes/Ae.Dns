@@ -27,7 +27,7 @@ namespace Ae.Dns.Console
             var configuration = new ConfigurationBuilder()
                 .AddEnvironmentVariables()
                 .AddCommandLine(args)
-                .AddJsonFile("config.json", true)
+                .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "config.json"), true)
                 .Build();
 
             var logger = new LoggerConfiguration()
