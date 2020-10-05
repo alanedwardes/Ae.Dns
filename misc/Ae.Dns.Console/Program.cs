@@ -2,66 +2,107 @@
 using Ae.Dns.Client.Filters;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Serilog;
+using Serilog.Events;
 using System;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ae.Dns.Console
 {
+    public sealed class DnsConfiguration
+    {
+        public Uri HttpClientResolver { get; set; } = new Uri("https://1.1.1.1/");
+        public Uri[] HttpsUpstreams { get; set; } = new Uri[0];
+        public string[] UdpUpstreams { get; set; } = new string[0];
+        public Uri[] RemoteBlocklists { get; set; } = new Uri[0];
+        public string[] AllowlistedDomains { get; set; } = new string[0];
+    }
+
     class Program
     {
-        static void Main() => DoWork().GetAwaiter().GetResult();
+        static void Main(string[] args) => DoWork(args).GetAwaiter().GetResult();
 
-        private static async Task DoWork()
+        private static async Task DoWork(string[] args)
         {
+            var configuration = new ConfigurationBuilder()
+                .AddCommandLine(args)
+                .Build();
+
+            var dnsConfiguration = new DnsConfiguration();
+            configuration.Bind(dnsConfiguration);
+
+            const string staticDnsResolver = "StaticResolver";
+
+            var logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File("dns.log", LogEventLevel.Warning)
+                .WriteTo.Console()
+                .CreateLogger();
+
             var services = new ServiceCollection();
-            services.AddLogging(x =>
-            {
-                x.AddConsole();
-                x.SetMinimumLevel(LogLevel.Trace);
-            });
+            services.AddLogging(x => x.AddSerilog(logger));
 
-            services.AddHttpClient<IDnsClient, DnsHttpClient>("CloudFlare", x => x.BaseAddress = new Uri("https://cloudflare-dns.com/"))
+            services.AddHttpClient(staticDnsResolver, x => x.BaseAddress = dnsConfiguration.HttpClientResolver);
+
+            static DnsDelegatingHandler CreateDnsDelegatingHandler(IServiceProvider serviceProvider)
+            {
+                var httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(staticDnsResolver);
+                return new DnsDelegatingHandler(new DnsHttpClient(httpClient));
+            }
+
+            foreach (Uri httpsUpstream in dnsConfiguration.HttpsUpstreams)
+            {
+                services.AddHttpClient<IDnsClient, DnsHttpClient>(x => x.BaseAddress = httpsUpstream)
+                        .AddHttpMessageHandler(CreateDnsDelegatingHandler)
+                        .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+            }
+
+            foreach (IPAddress udpUpstream in dnsConfiguration.UdpUpstreams.Select(IPAddress.Parse))
+            {
+                services.AddSingleton<IDnsClient>(new DnsUdpClient(udpUpstream));
+            }
+
+            services.AddHttpClient<DnsRemoteSetFilter>()
+                    .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                     .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
-            services.AddHttpClient<IDnsClient, DnsHttpClient>("Google", x => x.BaseAddress = new Uri("https://dns.google/"))
-                    .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+            IServiceProvider provider = services.BuildServiceProvider();
 
-            services.AddDnsClient();
+            var remoteFilter = provider.GetRequiredService<DnsRemoteSetFilter>();
 
-            var provider = services.BuildServiceProvider();
-
-            var socketClientFactory = provider.GetRequiredService<IDnsSocketClientFactory>();
-
-            var udpClients = new[]
+            foreach (Uri remoteBlockList in dnsConfiguration.RemoteBlocklists)
             {
-                socketClientFactory.CreateUdpClient(IPAddress.Parse("1.1.1.1")),
-                socketClientFactory.CreateUdpClient(IPAddress.Parse("1.0.0.1")),
-                socketClientFactory.CreateUdpClient(IPAddress.Parse("8.8.8.8")),
-                socketClientFactory.CreateUdpClient(IPAddress.Parse("8.8.4.4"))
-            };
+                _ = remoteFilter.AddRemoteBlockList(remoteBlockList);
+            }
 
-            var httpClients = provider.GetServices<IDnsClient>();
+            var selfLogger = provider.GetRequiredService<ILogger<Program>>();
 
-            var filter = new DnsRemoteSetFilter(provider.GetRequiredService<ILogger<DnsRemoteSetFilter>>());
+            var upstreams = provider.GetServices<IDnsClient>().ToArray();
+            if (!upstreams.Any())
+            {
+                throw new Exception("No upstream DNS servers specified");
+            }
 
-            _ = filter.AddRemoteBlockList(new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"));
-            _ = filter.AddRemoteBlockList(new Uri("https://mirror1.malwaredomains.com/files/justdomains"));
-            _ = filter.AddRemoteBlockList(new Uri("https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt"));
+            selfLogger.LogInformation("Using {UpstreamCount} DNS upstreams", upstreams.Length);
 
-            var combinedDnsClient = new DnsRoundRobinClient(httpClients.Concat(udpClients));
+            IDnsClient combinedDnsClient = new DnsRoundRobinClient(upstreams);
 
-            var filteringDnsClient = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), filter, combinedDnsClient);
+            IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("dns"));
 
-            var cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), filteringDnsClient, new MemoryCache("dns"));
+            var staticFilter = new DnsDelegateFilter(x => dnsConfiguration.AllowlistedDomains.Contains(x.Host));
 
-            using var server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), cache);
+            IDnsClient filter = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), new DnsCompositeOrFilter(remoteFilter, staticFilter), cache);
+
+            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), filter);
 
             await server.Listen(CancellationToken.None);
         }
