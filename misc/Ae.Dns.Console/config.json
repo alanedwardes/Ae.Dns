@@ -1,0 +1,12 @@
+{
+    "serilog": {
+        "using": [ "Serilog.Sinks.Console" ],
+        "writeTo": [
+            { "name": "Console" }
+        ]
+    },
+    "httpsUpstreams": [
+        "https://dns.google/",
+        "https://cloudflare-dns.com/"
+    ]
+}

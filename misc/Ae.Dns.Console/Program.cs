@@ -7,26 +7,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Serilog;
-using Serilog.Events;
 using System;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ae.Dns.Console
 {
-    public sealed class DnsConfiguration
-    {
-        public Uri HttpClientResolver { get; set; } = new Uri("https://1.1.1.1/");
-        public Uri[] HttpsUpstreams { get; set; } = new Uri[0];
-        public string[] UdpUpstreams { get; set; } = new string[0];
-        public Uri[] RemoteBlocklists { get; set; } = new Uri[0];
-        public string[] AllowlistedDomains { get; set; } = new string[0];
-    }
-
     class Program
     {
         static void Main(string[] args) => DoWork(args).GetAwaiter().GetResult();
@@ -34,35 +23,24 @@ namespace Ae.Dns.Console
         private static async Task DoWork(string[] args)
         {
             var configuration = new ConfigurationBuilder()
+                .AddEnvironmentVariables()
                 .AddCommandLine(args)
+                .AddJsonFile("config.json", true)
                 .Build();
+
+            var logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configuration)
+                .CreateLogger();
 
             var dnsConfiguration = new DnsConfiguration();
             configuration.Bind(dnsConfiguration);
 
-            const string staticDnsResolver = "StaticResolver";
-
-            var logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.File("dns.log", LogEventLevel.Warning)
-                .WriteTo.Console()
-                .CreateLogger();
-
             var services = new ServiceCollection();
             services.AddLogging(x => x.AddSerilog(logger));
-
-            services.AddHttpClient(staticDnsResolver, x => x.BaseAddress = dnsConfiguration.HttpClientResolver);
-
-            static DnsDelegatingHandler CreateDnsDelegatingHandler(IServiceProvider serviceProvider)
-            {
-                var httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(staticDnsResolver);
-                return new DnsDelegatingHandler(new DnsHttpClient(httpClient));
-            }
 
             foreach (Uri httpsUpstream in dnsConfiguration.HttpsUpstreams)
             {
                 services.AddHttpClient<IDnsClient, DnsHttpClient>(x => x.BaseAddress = httpsUpstream)
-                        .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                         .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
             }
 
@@ -72,24 +50,25 @@ namespace Ae.Dns.Console
             }
 
             services.AddHttpClient<DnsRemoteSetFilter>()
-                    .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                     .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
             IServiceProvider provider = services.BuildServiceProvider();
 
+            var selfLogger = provider.GetRequiredService<ILogger<Program>>();
+
             var remoteFilter = provider.GetRequiredService<DnsRemoteSetFilter>();
+
+            selfLogger.LogInformation("Adding {RemoteBlocklistCount} remote blocklists", dnsConfiguration.RemoteBlocklists.Length);
 
             foreach (Uri remoteBlockList in dnsConfiguration.RemoteBlocklists)
             {
                 _ = remoteFilter.AddRemoteBlockList(remoteBlockList);
             }
 
-            var selfLogger = provider.GetRequiredService<ILogger<Program>>();
-
             var upstreams = provider.GetServices<IDnsClient>().ToArray();
             if (!upstreams.Any())
             {
-                throw new Exception("No upstream DNS servers specified");
+                throw new Exception("No upstream DNS servers specified - you must specify at least one");
             }
 
             selfLogger.LogInformation("Using {UpstreamCount} DNS upstreams", upstreams.Length);
@@ -97,6 +76,8 @@ namespace Ae.Dns.Console
             IDnsClient combinedDnsClient = new DnsRoundRobinClient(upstreams);
 
             IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("dns"));
+
+            selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 
             var staticFilter = new DnsDelegateFilter(x => dnsConfiguration.AllowlistedDomains.Contains(x.Host));
 
