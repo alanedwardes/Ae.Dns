@@ -1,8 +1,7 @@
 ﻿using Ae.Dns.Client;
-using Ae.Dns.Protocol;
+using Ae.Dns.Protocol.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -10,13 +9,20 @@ namespace Ae.Dns.Tests.Client
 {
     public class DnsTcpClientTests
     {
-        [Fact]
-        public async Task TestLookupAlanEdwardesCom()
+        [Theory]
+        [ClassData(typeof(LookupTestCases))]
+        public async Task TestLookupWithCloudFlare(string domain, DnsQueryType type)
         {
-            using (var client = new DnsTcpClient(new NullLogger<DnsTcpClient>(), IPAddress.Parse("1.1.1.1")))
-            {
-                await client.Query(DnsHeader.CreateQuery("alanedwardes.com"), CancellationToken.None);
-            }
+            using var client = new DnsTcpClient(new NullLogger<DnsTcpClient>(), IPAddress.Parse("1.1.1.1"));
+            await client.RunQuery(domain, type, type == DnsQueryType.ANY ? DnsResponseCode.NotImp : DnsResponseCode.NoError);
+        }
+
+        [Theory]
+        [ClassData(typeof(LookupTestCases))]
+        public async Task TestLookupWithGoogle(string domain, DnsQueryType type)
+        {
+            using var client = new DnsTcpClient(new NullLogger<DnsTcpClient>(), IPAddress.Parse("8.8.8.8"));
+            await client.RunQuery(domain, type);
         }
     }
 }
