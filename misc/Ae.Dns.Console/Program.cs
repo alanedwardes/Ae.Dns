@@ -97,7 +97,11 @@ namespace Ae.Dns.Console
 
             var staticFilter = new DnsDelegateFilter(x => dnsConfiguration.AllowlistedDomains.Contains(x.Host));
 
-            IDnsClient filter = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), new DnsCompositeOrFilter(remoteFilter, staticFilter), cache);
+            selfLogger.LogInformation("Adding {DisallowedDomainPrefixes} domain suffixes to explicit disallow list", dnsConfiguration.DisallowedDomainSuffixes.Length);
+
+            var staticSuffixFilter = new DnsDomainSuffixFilter(dnsConfiguration.DisallowedDomainSuffixes);
+
+            IDnsClient filter = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), new DnsCompositeOrFilter(remoteFilter, staticFilter, staticSuffixFilter), cache);
 
             IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), filter);
 

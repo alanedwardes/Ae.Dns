@@ -8,5 +8,6 @@ namespace Ae.Dns.Console
         public string[] UdpUpstreams { get; set; } = new string[0];
         public Uri[] RemoteBlocklists { get; set; } = new Uri[0];
         public string[] AllowlistedDomains { get; set; } = new string[0];
+        public string[] DisallowedDomainSuffixes { get; set; } = new string[0];
     }
 }
