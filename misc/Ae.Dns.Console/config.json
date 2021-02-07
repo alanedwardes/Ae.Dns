@@ -4,9 +4,23 @@
         "writeTo": [
             { "name": "Console" }
         ]
+        // Change level: "minimumLevel": "Warning"
     },
     "httpsUpstreams": [
         "https://dns.google/",
         "https://cloudflare-dns.com/"
+    ],
+    "remoteBlocklists": [
+        // Examples:
+        // * https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+        // * https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
+        // A remote hosts file or simply a list of domain names
+    ],
+    "disallowedDomainSuffixes": [
+        // Adding example.org here means *.example.org is blocked
+    ],
+    "allowlistedDomains": [
+        // Adding google.com means google.com is explicitly allowed regardless of the blocklists
+        // It doesn't mean *.google.com is allowed, this is an exact match only
     ]
 }

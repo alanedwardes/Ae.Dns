@@ -95,13 +95,19 @@ namespace Ae.Dns.Console
 
             selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 
-            var staticFilter = new DnsDelegateFilter(x => dnsConfiguration.AllowlistedDomains.Contains(x.Host));
+            var allowListFilter = new DnsDelegateFilter(x => dnsConfiguration.AllowlistedDomains.Contains(x.Host));
 
             selfLogger.LogInformation("Adding {DisallowedDomainPrefixes} domain suffixes to explicit disallow list", dnsConfiguration.DisallowedDomainSuffixes.Length);
 
-            var staticSuffixFilter = new DnsDomainSuffixFilter(dnsConfiguration.DisallowedDomainSuffixes);
+            var suffixFilter = new DnsDomainSuffixFilter(dnsConfiguration.DisallowedDomainSuffixes);
 
-            IDnsClient filter = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), new DnsCompositeOrFilter(remoteFilter, staticFilter, staticSuffixFilter), cache);
+            // The domain must pass all of these filters to be allowed
+            var denyFilter = new DnsCompositeAndFilter(remoteFilter, suffixFilter);
+
+            // The domain must pass one of these filters to be allowed
+            var compositeFilter = new DnsCompositeOrFilter(denyFilter, allowListFilter);
+
+            IDnsClient filter = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), compositeFilter, cache);
 
             IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), filter);
 
