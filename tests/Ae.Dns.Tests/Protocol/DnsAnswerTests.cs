@@ -1,7 +1,6 @@
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
-using Ae.Dns.Protocol.Resources;
 using System;
 using System.Linq;
 using System.Net;

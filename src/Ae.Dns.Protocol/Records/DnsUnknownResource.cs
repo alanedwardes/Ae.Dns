@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ae.Dns.Protocol.Resources
+namespace Ae.Dns.Protocol.Records
 {
     public sealed class DnsUnknownResource : IDnsResource, IEquatable<DnsUnknownResource>
     {

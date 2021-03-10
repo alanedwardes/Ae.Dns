@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Ae.Dns.Protocol.Resources
+namespace Ae.Dns.Protocol.Records
 {
     public sealed class DnsMxResource : IDnsResource, IEquatable<DnsMxResource>
     {

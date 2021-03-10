@@ -1,4 +1,4 @@
-﻿namespace Ae.Dns.Protocol.Resources
+﻿namespace Ae.Dns.Protocol.Records
 {
     public interface IDnsResource : IDnsByteArrayWriter
     {

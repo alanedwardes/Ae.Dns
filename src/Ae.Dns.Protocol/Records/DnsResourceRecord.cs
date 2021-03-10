@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Protocol.Enums;
-using Ae.Dns.Protocol.Resources;
 using System;
 using System.Collections.Generic;
 
