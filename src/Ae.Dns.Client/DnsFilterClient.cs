@@ -8,17 +8,26 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Client
 {
+    /// <summary>
+    /// Represents a DNS client which supports filtering.
+    /// </summary>
     public sealed class DnsFilterClient : IDnsClient
     {
         private readonly ILogger<DnsFilterClient> _logger;
         private readonly IDnsFilter _dnsFilter;
         private readonly IDnsClient _dnsClient;
 
+        /// <summary>
+        /// Create a new filter client using the specified <see cref="IDnsFilter"/> and <see cref="IDnsClient"/>.
+        /// </summary>
         public DnsFilterClient(IDnsFilter dnsFilter, IDnsClient dnsClient)
             : this(new NullLogger<DnsFilterClient>(), dnsFilter, dnsClient)
         {
         }
 
+        /// <summary>
+        /// Create a new filter client using the specified logger, <see cref="IDnsFilter"/> and <see cref="IDnsClient"/>.
+        /// </summary>
         public DnsFilterClient(ILogger<DnsFilterClient> logger, IDnsFilter dnsFilter, IDnsClient dnsClient)
         {
             _logger = logger;
@@ -26,6 +35,7 @@ namespace Ae.Dns.Client
             _dnsClient = dnsClient;
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
         }
@@ -43,6 +53,7 @@ namespace Ae.Dns.Client
             QueryType = query.QueryType
         };
 
+        /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default)
         {
             if (_dnsFilter.IsPermitted(query))

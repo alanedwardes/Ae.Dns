@@ -9,6 +9,10 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Client
 {
+    /// <summary>
+    /// Represents a DNS client which provides in-memory caching facilities,
+    /// forwarding uncached DNS queries to another client.
+    /// </summary>
     public sealed class DnsCachingClient : IDnsClient
     {
         private class DnsCacheEntry
@@ -31,11 +35,19 @@ namespace Ae.Dns.Client
         private readonly IDnsClient _dnsClient;
         private readonly ObjectCache _objectCache;
 
+        /// <summary>
+        /// Construct a new caching DNS client using the specified client to
+        /// forward requests to, and the specified memory cache.
+        /// </summary>
         public DnsCachingClient(IDnsClient dnsClient, ObjectCache objectCache) :
             this(new NullLogger<DnsCachingClient>(), dnsClient, objectCache)
         {
         }
 
+        /// <summary>
+        /// Construct a new caching DNS client using the specified logger,
+        /// DNS client to forward requests to, and the specified memory cache.
+        /// </summary>
         public DnsCachingClient(ILogger<DnsCachingClient> logger, IDnsClient dnsClient, ObjectCache objectCache)
         {
             _logger = logger;
@@ -45,6 +57,7 @@ namespace Ae.Dns.Client
 
         private string GetCacheKey(DnsHeader header) => $"{header.Host}~{header.QueryType}~{header.QueryClass}";
 
+        /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
             string cacheKey = GetCacheKey(query);
@@ -92,6 +105,7 @@ namespace Ae.Dns.Client
             return answer;
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
         }

@@ -7,17 +7,25 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Client
 {
+    /// <summary>
+    /// Represents a DNS client which operates over HTTPS (DoH).
+    /// </summary>
     public sealed class DnsHttpClient : IDnsClient
     {
         private const string DnsMessageType = "application/dns-message";
         private readonly HttpClient _httpClient;
 
+        /// <summary>
+        /// Create a new DNS HTTP client using the specified <see cref="HttpClient"/> instance.
+        /// </summary>
         public DnsHttpClient(HttpClient httpClient) => _httpClient = httpClient;
 
+        /// <inheritdoc/>
         public void Dispose()
         {
         }
 
+        /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
             var raw = query.ToBytes().ToArray();
