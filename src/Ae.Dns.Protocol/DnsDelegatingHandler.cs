@@ -23,6 +23,7 @@ namespace Ae.Dns.Protocol
             _queryType = internetProtocolV4 ? DnsQueryType.A : DnsQueryType.AAAA;
         }
 
+        /// <inheritdoc/>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             // Never attempt this with a host that looks like an IP address

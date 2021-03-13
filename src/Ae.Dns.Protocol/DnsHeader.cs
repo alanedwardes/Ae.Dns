@@ -36,8 +36,12 @@ namespace Ae.Dns.Protocol
         }
 
         /// <summary>
-        /// The unique ID of this DNS query.
+        /// Gets or sets the unique ID of this DNS query.
         /// </summary>
+        /// <value>
+        /// A unique ID which allows the sender/receiver to
+        /// identify this DNS message (for example if the transport protocol is stateless).
+        /// </value>
         public ushort Id { get; set; }
 
         internal ushort Flags { get; set; }
@@ -45,21 +49,33 @@ namespace Ae.Dns.Protocol
         /// <summary>
         /// The number of questions in this header.
         /// </summary>
+        /// <value>
+        /// A count of the number of questions asked of the DNS server.
+        /// </value>
         public short QuestionCount { get; set; }
 
         /// <summary>
         /// The number of <see cref="DnsAnswer"/> records in this header.
         /// </summary>
+        /// <value>
+        /// A count of the number of answers contained within this DNS message.
+        /// </value>
         public short AnswerRecordCount { get; set; }
 
         /// <summary>
         /// The number of name server records in this header.
         /// </summary>
+        /// <value>
+        /// A count of the number of DNS name server records in this header.
+        /// </value>
         public short NameServerRecordCount { get; set; }
 
         /// <summary>
         /// The number of additional records in this header.
         /// </summary>
+        /// <value>
+        /// A count of the number of additional records in this header.
+        /// </value>
         public short AdditionalRecordCount { get; set; }
 
         internal string[] Labels { get; set; }
@@ -67,16 +83,25 @@ namespace Ae.Dns.Protocol
         /// <summary>
         /// The <see cref="DnsQueryType"/> of this header.
         /// </summary>
+        /// <value>
+        /// If the type of query is <see cref="DnsQueryType.A"/>, it means the query is for IP address records.
+        /// </value>
         public DnsQueryType QueryType { get; set; }
 
         /// <summary>
         /// The <see cref="DnsQueryClass"/> of this header, normally <see cref="DnsQueryClass.IN"/> (Internet).
         /// </summary>
+        /// <value>
+        /// The class of query, most likely <see cref="DnsQueryClass.IN"/> to represent Internet DNS queries.
+        /// </value>
         public DnsQueryClass QueryClass { get; set; }
 
         /// <summary>
         /// Determines whether this is a DNS query or answer.
         /// </summary>
+        /// <value>
+        /// For DNS queries this is false, for DNS responses this is true.
+        /// </value>
         public bool IsQueryResponse
         {
             get => (Flags & 0x8000) == 0x8000;
@@ -86,6 +111,9 @@ namespace Ae.Dns.Protocol
         /// <summary>
         /// Determines the operation code for this DNS header.
         /// </summary>
+        /// <value>
+        /// The DNS operation code for this DNS answer. For example <see cref="DnsOperationCode.QUERY"/>.
+        /// </value>
         public DnsOperationCode OperationCode
         {
             get => (DnsOperationCode)((Flags & 0x7800) >> 11);
@@ -95,6 +123,9 @@ namespace Ae.Dns.Protocol
         /// <summary>
         /// Determines whether the answer was from an authoritative DNS server.
         /// </summary>
+        /// <value>
+        /// If true, this DNS answer is authoritative.
+        /// </value>
         public bool AuthoritativeAnswer
         {
             get => (Flags & 0x0400) == 0x0400;

@@ -13,11 +13,13 @@ namespace Ae.Dns.Protocol
         /// <summary>
         /// The <see cref="DnsHeader"/> section of this answer.
         /// </summary>
+        /// <value>Gets or sets the <see cref="DnsHeader"/>, which describes the original DNS query.</value>
         public DnsHeader Header { get; set; } = new DnsHeader();
 
         /// <summary>
         /// The list of DNS resources returned by the server.
         /// </summary>
+        /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
         public IList<DnsResourceRecord> Answers { get; set; } = new List<DnsResourceRecord>();
 
         /// <inheritdoc/>
