@@ -37,14 +37,19 @@ namespace Ae.Dns.Protocol.Records
             return _recordTypeFactories.TryGetValue(recordType, out var factory) ? factory() : new DnsUnknownResource();
         }
 
+        /// <inheritdoc/>
         public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {TimeToLive}";
 
+        /// <inheritdoc/>
         public bool Equals(DnsResourceRecord other) => Host == other.Host && Type == other.Type && Class == other.Class && TimeToLive == other.TimeToLive && Resource.Equals(other.Resource);
 
+        /// <inheritdoc/>
         public override bool Equals(object obj) => obj is DnsResourceRecord record ? Equals(record) : base.Equals(obj);
 
+        /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Name, Type, Class, TimeToLive, Host, Resource);
 
+        /// <inheritdoc/>
         public void ReadBytes(byte[] bytes, ref int offset)
         {
             Name = bytes.ReadString(ref offset);
@@ -56,7 +61,7 @@ namespace Ae.Dns.Protocol.Records
             FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
         }
 
-        private void FromBytesKnownLength(IDnsResource resource, byte[] bytes, ref int offset, int length)
+        private static void FromBytesKnownLength(IDnsResource resource, byte[] bytes, ref int offset, int length)
         {
             var expectedOffset = offset + length;
             resource.ReadBytes(bytes, ref offset, length);
@@ -66,6 +71,7 @@ namespace Ae.Dns.Protocol.Records
             }
         }
 
+        /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()
         {
             yield return Name.ToBytes();

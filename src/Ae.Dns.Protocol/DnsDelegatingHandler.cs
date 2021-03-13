@@ -36,7 +36,7 @@ namespace Ae.Dns.Protocol
             var originalHost = request.RequestUri.Host;
 
             // Make a DNS request for the host
-            var answers = await _dnsClient.Query(DnsHeader.CreateQuery(originalHost, _queryType), cancellationToken);
+            var answers = await _dnsClient.Query(DnsQueryFactory.CreateQuery(originalHost, _queryType), cancellationToken);
 
             // Pull out the relevant queries
             var ipResponses = answers.Answers.Where(x => x.Type == _queryType).ToArray();

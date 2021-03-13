@@ -9,7 +9,7 @@ namespace Ae.Dns.Tests.Client
     {
         public static async Task RunQuery(this IDnsClient client, string host, DnsQueryType queryType, DnsResponseCode expectedResponseCode = DnsResponseCode.NoError)
         {
-            var query = DnsHeader.CreateQuery(host, queryType);
+            var query = DnsQueryFactory.CreateQuery(host, queryType);
             var answer = await client.Query(query);
             Assert.Equal(host, answer.Header.Host);
             Assert.Equal(query.Id, answer.Header.Id);

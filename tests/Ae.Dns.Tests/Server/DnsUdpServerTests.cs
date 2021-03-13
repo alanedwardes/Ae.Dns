@@ -44,7 +44,7 @@ namespace Ae.Dns.Tests.Server
 
             try
             {
-                var query = DnsHeader.CreateQuery("google.com");
+                var query = DnsQueryFactory.CreateQuery("google.com");
 
                 // Send a DNS request to the server, verify the results
                 var response = await client.Query(query, tokenSource.Token);

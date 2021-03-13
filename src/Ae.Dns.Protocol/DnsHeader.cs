@@ -6,33 +6,16 @@ namespace Ae.Dns.Protocol
 {
     /// <summary>
     /// Represents a DNS header, used to represent a DNS query and a DNS query result.
+    /// See <see cref="DnsQueryFactory"/> for methods to create DNS headers for specific purposes.
     /// </summary>
     public sealed class DnsHeader : IEquatable<DnsHeader>, IDnsByteArrayReader, IDnsByteArrayWriter
     {
         /// <summary>
-        /// Generate a unique ID to identify this DNS message.
+        /// Create a from-scratch DNS header.
+        /// See <see cref="DnsQueryFactory"/> for methods to create DNS headers for specific purposes.
         /// </summary>
-        /// <returns>A random <see cref="ushort"/> value.</returns>
-        public static ushort GenerateId() => ByteExtensions.ReadUInt16(Guid.NewGuid().ToByteArray());
-
-        /// <summary>
-        /// Create a DNS query using the specified host name and DNS query type.
-        /// </summary>
-        /// <param name="host">The DNS host to request in the query.</param>
-        /// <param name="type">The type of DNS query to request.</param>
-        /// <returns>The complete DNS query.</returns>
-        public static DnsHeader CreateQuery(string host, DnsQueryType type = DnsQueryType.A)
+        public DnsHeader()
         {
-            return new DnsHeader
-            {
-                Id = GenerateId(),
-                Host = host,
-                QueryType = type,
-                QueryClass = DnsQueryClass.IN,
-                OperationCode = DnsOperationCode.QUERY,
-                QuestionCount = 1,
-                RecusionDesired = true
-            };
         }
 
         /// <summary>

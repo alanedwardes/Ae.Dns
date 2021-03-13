@@ -33,7 +33,16 @@ namespace Ae.Dns.Tests.Client
         {
             // Reserved - see https://en.wikipedia.org/wiki/Reserved_IP_addresses
             using var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("192.88.99.0"));
-            await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.Query(DnsHeader.CreateQuery("alanedwardes.com"), CancellationToken.None));
+            await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.Query(DnsQueryFactory.CreateQuery("alanedwardes.com"), CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task TestLookupReverse()
+        {
+            // Reserved - see https://en.wikipedia.org/wiki/Reserved_IP_addresses
+            var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("8.8.8.8"));
+            var answer1 = await client.Query(DnsQueryFactory.CreateReverseQuery(IPAddress.Parse("2600:9000:2015:3600:1a:36dc:e5c0:93a1")), CancellationToken.None);
+            var answer2 = await client.Query(DnsQueryFactory.CreateReverseQuery(IPAddress.Parse("82.41.144.186")), CancellationToken.None);
         }
     }
 }

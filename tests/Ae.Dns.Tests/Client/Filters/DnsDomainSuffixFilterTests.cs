@@ -11,10 +11,10 @@ namespace Ae.Dns.Tests.Client.Filters
         {
             var dnsFilter = new DnsDomainSuffixFilter("example.com");
 
-            Assert.False(dnsFilter.IsPermitted(DnsHeader.CreateQuery("test.example.com")));
-            Assert.True(dnsFilter.IsPermitted(DnsHeader.CreateQuery("test.example.org")));
-            Assert.False(dnsFilter.IsPermitted(DnsHeader.CreateQuery("test.example.org.example.com")));
-            Assert.True(dnsFilter.IsPermitted(DnsHeader.CreateQuery("test.example.com.example.org")));
+            Assert.False(dnsFilter.IsPermitted(DnsQueryFactory.CreateQuery("test.example.com")));
+            Assert.True(dnsFilter.IsPermitted(DnsQueryFactory.CreateQuery("test.example.org")));
+            Assert.False(dnsFilter.IsPermitted(DnsQueryFactory.CreateQuery("test.example.org.example.com")));
+            Assert.True(dnsFilter.IsPermitted(DnsQueryFactory.CreateQuery("test.example.com.example.org")));
         }
     }
 }
