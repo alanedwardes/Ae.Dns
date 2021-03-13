@@ -17,6 +17,11 @@ namespace Ae.Dns.Protocol
         private readonly IDnsClient _dnsClient;
         private readonly DnsQueryType _queryType;
 
+        /// <summary>
+        /// Create a new <see cref="DnsDelegatingHandler"/> using the specified <see cref="IDnsClient"/>, optionally using IPv6.
+        /// </summary>
+        /// <param name="dnsClient"></param>
+        /// <param name="internetProtocolV4"></param>
         public DnsDelegatingHandler(IDnsClient dnsClient, bool internetProtocolV4 = true)
         {
             _dnsClient = dnsClient;

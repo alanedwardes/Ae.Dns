@@ -40,13 +40,13 @@ namespace Ae.Dns.Server.Http
 
             var buffer = ms.Buffer.ToArray();
 
-            var header = buffer.FromBytes<DnsHeader>();
+            var header = DnsByteExtensions.FromBytes<DnsHeader>(buffer);
 
             var answer = await _dnsClient.Query(header, context.RequestAborted);
 
             context.Response.Headers.Add("Content-Type", new StringValues(DnsMessageType));
 
-            await context.Response.BodyWriter.WriteAsync(answer.ToBytes(), context.RequestAborted);
+            await context.Response.BodyWriter.WriteAsync(DnsByteExtensions.ToBytes(answer), context.RequestAborted);
         }
     }
 }

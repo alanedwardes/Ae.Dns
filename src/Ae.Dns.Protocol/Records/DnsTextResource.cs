@@ -26,11 +26,15 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Text);
 
         /// <inheritdoc/>
-        public void ReadBytes(byte[] bytes, ref int offset, int length) => Text = string.Join(".", bytes.ReadString(ref offset, offset + length));
+        public void ReadBytes(byte[] bytes, ref int offset, int length)
+        {
+            Text = string.Join(".", DnsByteExtensions.ReadString(bytes, ref offset, offset + length));
+        }
 
+        /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()
         {
-            yield return Text.Split('.').ToBytes();
+            yield return DnsByteExtensions.ToBytes(Text.Split('.'));
         }
 
         /// <inheritdoc/>

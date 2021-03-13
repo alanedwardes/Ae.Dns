@@ -198,29 +198,29 @@ namespace Ae.Dns.Protocol
         /// <inheritdoc/>
         public void ReadBytes(byte[] bytes, ref int offset)
         {
-            Id = bytes.ReadUInt16(ref offset);
-            Flags = bytes.ReadUInt16(ref offset);
-            QuestionCount = bytes.ReadInt16(ref offset);
-            AnswerRecordCount = bytes.ReadInt16(ref offset);
-            NameServerRecordCount = bytes.ReadInt16(ref offset);
-            AdditionalRecordCount = bytes.ReadInt16(ref offset);
-            Labels = bytes.ReadString(ref offset);
-            QueryType = (DnsQueryType)bytes.ReadUInt16(ref offset);
-            QueryClass = (DnsQueryClass)bytes.ReadUInt16(ref offset);
+            Id = DnsByteExtensions.ReadUInt16(bytes, ref offset);
+            Flags = DnsByteExtensions.ReadUInt16(bytes, ref offset);
+            QuestionCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
+            AnswerRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
+            NameServerRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
+            AdditionalRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
+            Labels = DnsByteExtensions.ReadString(bytes, ref offset);
+            QueryType = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
+            QueryClass = (DnsQueryClass)DnsByteExtensions.ReadUInt16(bytes, ref offset);
         }
 
         /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()
         {
-            yield return Id.ToBytes();
-            yield return Flags.ToBytes();
-            yield return QuestionCount.ToBytes();
-            yield return AnswerRecordCount.ToBytes();
-            yield return NameServerRecordCount.ToBytes();
-            yield return AdditionalRecordCount.ToBytes();
-            yield return Labels.ToBytes();
-            yield return QueryType.ToBytes();
-            yield return QueryClass.ToBytes();
+            yield return DnsByteExtensions.ToBytes(Id);
+            yield return DnsByteExtensions.ToBytes(Flags);
+            yield return DnsByteExtensions.ToBytes(QuestionCount);
+            yield return DnsByteExtensions.ToBytes(AnswerRecordCount);
+            yield return DnsByteExtensions.ToBytes(NameServerRecordCount);
+            yield return DnsByteExtensions.ToBytes(AdditionalRecordCount);
+            yield return DnsByteExtensions.ToBytes(Labels);
+            yield return DnsByteExtensions.ToBytes(QueryType);
+            yield return DnsByteExtensions.ToBytes(QueryClass);
         }
     }
 }

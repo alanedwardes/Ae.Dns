@@ -17,8 +17,10 @@ namespace Ae.Dns.Client
 
         private IDnsClient GetRandomClient() => _dnsClients.OrderBy(x => Guid.NewGuid()).First();
 
+        /// <inheritdoc/>
         public Task<DnsAnswer> Query(DnsHeader query, CancellationToken token) => GetRandomClient().Query(query, token);
 
+        /// <inheritdoc/>
         public void Dispose()
         {
         }

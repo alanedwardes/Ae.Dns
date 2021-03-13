@@ -39,7 +39,7 @@ namespace Ae.Dns.Protocol
             var records = new List<DnsResourceRecord>();
             for (var i = 0; i < Header.AnswerRecordCount + Header.NameServerRecordCount; i++)
             {
-                records.Add(bytes.FromBytes<DnsResourceRecord>(ref offset));
+                records.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
             }
             Answers = records.ToArray();
         }
@@ -50,8 +50,8 @@ namespace Ae.Dns.Protocol
         /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()
         {
-            yield return Header.ToBytes();
-            yield return Answers.Select(x => x.ToBytes()).SelectMany(x => x);
+            yield return DnsByteExtensions.ToBytes(Header);
+            yield return Answers.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
         }
     }
 }

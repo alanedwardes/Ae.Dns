@@ -10,16 +10,16 @@ namespace Ae.Dns.Tests.Protocol
         [ClassData(typeof(QueryTheoryData))]
         public void TestRoundTripQueries(byte[] queryBytes)
         {
-            var query = queryBytes.FromBytes<DnsHeader>();
-            Assert.Equal(query, query.ToBytes().ToArray().FromBytes<DnsHeader>());
+            var query = DnsByteExtensions.FromBytes<DnsHeader>(queryBytes);
+            Assert.Equal(query, DnsByteExtensions.FromBytes<DnsHeader>(DnsByteExtensions.ToBytes(query).ToArray()));
         }
 
         [Theory]
         [ClassData(typeof(AnswerTheoryData))]
         public void TestRoundTripAnswers(byte[] answerBytes)
         {
-            var answer = answerBytes.FromBytes<DnsAnswer>();
-            Assert.Equal(answer, answer.ToBytes().ToArray().FromBytes<DnsAnswer>());
+            var answer = DnsByteExtensions.FromBytes<DnsAnswer>(answerBytes);
+            Assert.Equal(answer, DnsByteExtensions.FromBytes<DnsAnswer>(DnsByteExtensions.ToBytes(answer).ToArray()));
         }
     }
 }

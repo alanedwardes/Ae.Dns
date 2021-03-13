@@ -12,7 +12,7 @@ namespace Ae.Dns.Protocol
         /// <summary>
         /// Return an answer for the specified DNS query.
         /// </summary>
-        /// <param name="query">The DNS query to run, see <see cref="DnsHeader.CreateQuery(string, Enums.DnsQueryType)"/>.</param>
+        /// <param name="query">The DNS query to run, see <see cref="DnsQueryFactory"/>.</param>
         /// <param name="token">The <see cref="CancellationToken"/> to use to cancel the operation.</param>
         /// <returns>The <see cref="DnsAnswer"/> result.</returns>
         Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default);

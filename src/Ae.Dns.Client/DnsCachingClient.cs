@@ -20,7 +20,7 @@ namespace Ae.Dns.Client
             public DnsCacheEntry(DnsAnswer answer)
             {
                 LowestRecordTimeToLive = answer.Answers.Min(x => x.TimeToLive);
-                Data = answer.ToBytes();
+                Data = DnsByteExtensions.ToBytes(answer);
             }
 
             public DateTimeOffset Time { get; } = DateTimeOffset.UtcNow;
@@ -74,7 +74,7 @@ namespace Ae.Dns.Client
             {
                 _logger.LogTrace("Returned cached DNS result for {Domain} (expires in: {ExpiryTime})", query.Host, cacheEntry.Expires);
 
-                answer = cacheEntry.Data.FromBytes<DnsAnswer>();
+                answer = DnsByteExtensions.FromBytes<DnsAnswer>(cacheEntry.Data);
                 
                 // Replace the ID
                 answer.Header.Id = query.Id;

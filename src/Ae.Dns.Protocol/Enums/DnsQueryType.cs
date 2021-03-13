@@ -1,4 +1,6 @@
-﻿namespace Ae.Dns.Protocol.Enums
+﻿#pragma warning disable CS1591
+
+namespace Ae.Dns.Protocol.Enums
 {
     /// <summary>
     /// DNS resource record type. See https://www.iana.org/assignments/dns-parameters/dns-parameters.xml#dns-parameters-4

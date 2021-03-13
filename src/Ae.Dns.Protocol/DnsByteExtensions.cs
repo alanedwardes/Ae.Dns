@@ -6,26 +6,35 @@ using System.Text;
 
 namespace Ae.Dns.Protocol
 {
-    public static class ByteExtensions
+    /// <summary>
+    /// Provides extension methods around reading and writing <see cref="byte"/> buffers.
+    /// </summary>
+    public static class DnsByteExtensions
     {
-        public static short ReadInt16(params byte[] bytes)
+        private static short ReadInt16(params byte[] bytes)
         {
             return (short)(bytes[0] << 0 |
                            bytes[1] << 8);
         }
 
-        public static ushort ReadUInt16(params byte[] bytes) => (ushort)ReadInt16(bytes);
+        internal static ushort ReadUInt16(params byte[] bytes) => (ushort)ReadInt16(bytes);
 
-        public static short ReadInt16(this byte[] bytes, ref int offset)
+        internal static short ReadInt16(byte[] bytes, ref int offset)
         {
             var value = ReadInt16(bytes[offset + 1], bytes[offset + 0]);
             offset += sizeof(short);
             return value;
         }
 
-        public static ushort ReadUInt16(this byte[] bytes, ref int offset) => (ushort)bytes.ReadInt16(ref offset);
+        /// <summary>
+        /// Read a <see cref="ushort"/> from the specified byte array, incrementing offset by the length of the data read.
+        /// </summary>
+        /// <param name="bytes">The buffer to read from.</param>
+        /// <param name="offset">The offset to increment.</param>
+        /// <returns>The read unsigned short.</returns>
+        public static ushort ReadUInt16(byte[] bytes, ref int offset) => (ushort)ReadInt16(bytes, ref offset);
 
-        public static int ReadInt32(this byte[] bytes, ref int offset)
+        internal static int ReadInt32(byte[] bytes, ref int offset)
         {
             var value = bytes[offset + 3] << 0 |
                         bytes[offset + 2] << 8 |
@@ -35,9 +44,14 @@ namespace Ae.Dns.Protocol
             return value;
         }
 
-        public static uint ReadUInt32(this byte[] bytes, ref int offset) => (uint)bytes.ReadInt32(ref offset);
+        internal static uint ReadUInt32(byte[] bytes, ref int offset) => (uint)ReadInt32(bytes, ref offset);
 
-        public static string ToDebugString(this IEnumerable<byte> bytes)
+        /// <summary>
+        /// Convert the specified byte array to a C# statement to initialise it in code.
+        /// </summary>
+        /// <param name="bytes">The byte array to convert.</param>
+        /// <returns>The new array statement for use in C# code.</returns>
+        public static string ToDebugString(IEnumerable<byte> bytes)
         {
             if (bytes == null)
             {
@@ -47,13 +61,14 @@ namespace Ae.Dns.Protocol
             return $"new [] {{{string.Join(", ", bytes)}}}";
         }
 
-        public static byte[] ReadBytes(this byte[] bytes, int length)
-        {
-            var offset = 0;
-            return ReadBytes(bytes, length, ref offset);
-        }
-
-        public static byte[] ReadBytes(this byte[] bytes, int length, ref int offset)
+        /// <summary>
+        /// Read the specified number of bytes from the buffer, incrementing offset by the length of the data read.
+        /// </summary>
+        /// <param name="bytes">The buffer to read from.</param>
+        /// <param name="length">The number of byes to read.</param>
+        /// <param name="offset">The offset to increment.</param>
+        /// <returns></returns>
+        public static byte[] ReadBytes(byte[] bytes, int length, ref int offset)
         {
             var data = new byte[length];
             Array.Copy(bytes, offset, data, 0, length);
@@ -61,7 +76,7 @@ namespace Ae.Dns.Protocol
             return data;
         }
 
-        public static string[] ReadString(this byte[] bytes, ref int offset, int? maxOffset = int.MaxValue)
+        internal static string[] ReadString(byte[] bytes, ref int offset, int? maxOffset = int.MaxValue)
         {
             var parts = new List<string>();
 
@@ -106,25 +121,41 @@ namespace Ae.Dns.Protocol
             return parts.ToArray();
         }
 
-        public static byte[] ToBytes(this IDnsByteArrayWriter writer)
+        /// <summary>
+        /// Serialise the specified <see cref="IDnsByteArrayWriter"/> to a buffer.
+        /// </summary>
+        /// <param name="writer">The instance to serialise to bytes.</param>
+        /// <returns>The serialised byte array.</returns>
+        public static byte[] ToBytes(IDnsByteArrayWriter writer)
         {
             return writer.WriteBytes().SelectMany(x => x).ToArray();
         }
 
-        public static TReader FromBytes<TReader>(this byte[] bytes) where TReader : IDnsByteArrayReader, new()
+        /// <summary>
+        /// Deserialise the specified bytes to the supplied type.
+        /// </summary>
+        /// <typeparam name="TReader">The type to create from the byte array.</typeparam>
+        /// <param name="bytes">The buffer to read from.</param>
+        /// <returns>An instance of the type, created from the byte array.</returns>
+        public static TReader FromBytes<TReader>(byte[] bytes) where TReader : IDnsByteArrayReader, new()
         {
             var offset = 0;
-            return bytes.FromBytes<TReader>(ref offset);
+            return FromBytes<TReader>(bytes, ref offset);
         }
 
-        public static TReader FromBytes<TReader>(this byte[] bytes, ref int offset) where TReader : IDnsByteArrayReader, new()
+        internal static TReader FromBytes<TReader>(byte[] bytes, ref int offset) where TReader : IDnsByteArrayReader, new()
         {
             var reader = new TReader();
             reader.ReadBytes(bytes, ref offset);
             return reader;
         }
 
-        public static IEnumerable<byte> ToBytes(this string[] strings)
+        /// <summary>
+        /// Serialise the specified string array to a byte array.
+        /// </summary>
+        /// <param name="strings">The specified strings to serialise.</param>
+        /// <returns>An enumerable of bytes representing the supplied strings.</returns>
+        public static IEnumerable<byte> ToBytes(string[] strings)
         {
             foreach (var str in strings)
             {
@@ -138,7 +169,12 @@ namespace Ae.Dns.Protocol
             yield return 0;
         }
 
-        public static IEnumerable<byte> ToBytes(this object value)
+        /// <summary>
+        /// Serialise the specified <see cref="IConvertible"/> value to a byte array.
+        /// </summary>
+        /// <param name="value">The specified value to convert to a byte array.</param>
+        /// <returns>An enumerable of bytes representing the supplied <see cref="IConvertible"/> value.</returns>
+        public static IEnumerable<byte> ToBytes(IConvertible value)
         {
             var typeCode = Type.GetTypeCode(value.GetType());
             switch (typeCode)

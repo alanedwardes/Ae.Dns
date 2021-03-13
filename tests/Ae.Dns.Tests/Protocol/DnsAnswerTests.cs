@@ -12,12 +12,12 @@ namespace Ae.Dns.Tests.Protocol
     {
         [Theory]
         [ClassData(typeof(AnswerTheoryData))]
-        public void TestReadAnswers(byte[] answerBytes) => answerBytes.FromBytes<DnsAnswer>();
+        public void TestReadAnswers(byte[] answerBytes) => DnsByteExtensions.FromBytes<DnsAnswer>(answerBytes);
 
         [Fact]
         public void ReadAnswer1()
         {
-            var message = SampleDnsPackets.Answer1.FromBytes<DnsAnswer>();
+            var message = DnsByteExtensions.FromBytes<DnsAnswer>(SampleDnsPackets.Answer1);
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
             Assert.Equal(DnsQueryType.PTR, message.Header.QueryType);
@@ -41,7 +41,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void ReadAnswer2()
         {
-            var message = SampleDnsPackets.Answer2.FromBytes<DnsAnswer>();
+            var message = DnsByteExtensions.FromBytes<DnsAnswer>(SampleDnsPackets.Answer2);
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
             Assert.Equal(DnsQueryType.A, message.Header.QueryType);
@@ -104,7 +104,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void ReadAnswer3()
         {
-            var message = SampleDnsPackets.Answer3.FromBytes<DnsAnswer>();
+            var message = DnsByteExtensions.FromBytes<DnsAnswer>(SampleDnsPackets.Answer3);
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
             Assert.Equal(DnsQueryType.A, message.Header.QueryType);
@@ -123,7 +123,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void ReadAnswer4()
         {
-            var message = SampleDnsPackets.Answer4.FromBytes<DnsAnswer>();
+            var message = DnsByteExtensions.FromBytes<DnsAnswer>(SampleDnsPackets.Answer4);
 
             Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
             Assert.Equal(DnsQueryType.A, message.Header.QueryType);

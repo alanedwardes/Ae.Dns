@@ -30,9 +30,9 @@ namespace Ae.Dns.Client
 
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
-            var raw = query.ToBytes().ToArray();
+            var raw = DnsByteExtensions.ToBytes(query).ToArray();
 
-            var payload = ((ushort)raw.Length).ToBytes().Concat(raw).ToArray();
+            var payload = DnsByteExtensions.ToBytes((ushort)raw.Length).Concat(raw).ToArray();
             var stream = _socket.GetStream();
 
             await stream.WriteAsync(payload, 0, payload.Length, token);
@@ -43,16 +43,16 @@ namespace Ae.Dns.Client
             stream.Close();
 
             var offset = 0;
-            var responseLength = buffer.ReadUInt16(ref offset);
+            var responseLength = DnsByteExtensions.ReadUInt16(buffer, ref offset);
 
-            var response = buffer.ReadBytes(responseLength, ref offset);
+            var response = DnsByteExtensions.ReadBytes(buffer, responseLength, ref offset);
 
             if (response.Length != responseLength)
             {
                 throw new InvalidOperationException();
             }
 
-            return response.FromBytes<DnsAnswer>();
+            return DnsByteExtensions.FromBytes<DnsAnswer>(response);
         }
     }
 }

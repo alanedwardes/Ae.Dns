@@ -15,7 +15,7 @@ namespace Ae.Dns.Protocol
         /// Generate a unique ID to identify this DNS message.
         /// </summary>
         /// <returns>A random <see cref="ushort"/> value.</returns>
-        public static ushort GenerateId() => ByteExtensions.ReadUInt16(Guid.NewGuid().ToByteArray());
+        public static ushort GenerateId() => DnsByteExtensions.ReadUInt16(Guid.NewGuid().ToByteArray());
 
         /// <summary>
         /// Create a DNS query using the specified host name and DNS query type.

@@ -73,11 +73,11 @@ namespace Ae.Dns.Server
             DnsHeader message;
             try
             {
-                message = query.Buffer.FromBytes<DnsHeader>();
+                message = DnsByteExtensions.FromBytes<DnsHeader>(query.Buffer);
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Unable to parse incoming packet: {0}", query.Buffer.ToDebugString());
+                _logger.LogCritical(e, "Unable to parse incoming packet: {0}", DnsByteExtensions.ToDebugString(query.Buffer));
                 return;
             }
 
@@ -92,7 +92,7 @@ namespace Ae.Dns.Server
                 return;
             }
 
-            var answerBytes = answer.ToBytes().ToArray();
+            var answerBytes = DnsByteExtensions.ToBytes(answer).ToArray();
 
             try
             {

@@ -71,25 +71,25 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void ReadBytes(byte[] bytes, ref int offset, int length)
         {
-            MName = string.Join(".", bytes.ReadString(ref offset));
-            RName = string.Join(".", bytes.ReadString(ref offset));
-            Serial = bytes.ReadUInt32(ref offset);
-            Refresh = TimeSpan.FromSeconds(bytes.ReadInt32(ref offset));
-            Retry = TimeSpan.FromSeconds(bytes.ReadInt32(ref offset));
-            Expire = TimeSpan.FromSeconds(bytes.ReadInt32(ref offset));
-            Minimum = TimeSpan.FromSeconds(bytes.ReadUInt32(ref offset));
+            MName = string.Join(".", DnsByteExtensions.ReadString(bytes, ref offset));
+            RName = string.Join(".", DnsByteExtensions.ReadString(bytes, ref offset));
+            Serial = DnsByteExtensions.ReadUInt32(bytes, ref offset);
+            Refresh = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
+            Retry = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
+            Expire = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
+            Minimum = TimeSpan.FromSeconds(DnsByteExtensions.ReadUInt32(bytes, ref offset));
         }
 
         /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()
         {
-            yield return MName.Split('.').ToBytes();
-            yield return RName.Split('.').ToBytes();
-            yield return Serial.ToBytes();
-            yield return ((int)Refresh.TotalSeconds).ToBytes();
-            yield return ((int)Retry.TotalSeconds).ToBytes();
-            yield return ((int)Expire.TotalSeconds).ToBytes();
-            yield return ((uint)Minimum.TotalSeconds).ToBytes();
+            yield return DnsByteExtensions.ToBytes(MName.Split('.'));
+            yield return DnsByteExtensions.ToBytes(RName.Split('.'));
+            yield return DnsByteExtensions.ToBytes(Serial);
+            yield return DnsByteExtensions.ToBytes((int)Refresh.TotalSeconds);
+            yield return DnsByteExtensions.ToBytes((int)Retry.TotalSeconds);
+            yield return DnsByteExtensions.ToBytes((int)Expire.TotalSeconds);
+            yield return DnsByteExtensions.ToBytes((uint)Minimum.TotalSeconds);
         }
 
         /// <inheritdoc/>

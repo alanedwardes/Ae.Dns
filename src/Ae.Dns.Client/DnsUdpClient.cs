@@ -82,7 +82,7 @@ namespace Ae.Dns.Client
                 }
                 catch (Exception e)
                 {
-                    _logger.LogCritical(e, "Received bad network response from {0}: {1}", recieve.RemoteEndPoint.ToString(), recieve.Buffer.ToDebugString());
+                    _logger.LogCritical(e, "Received bad network response from {0}: {1}", recieve.RemoteEndPoint.ToString(), DnsByteExtensions.ToDebugString(recieve.Buffer));
                     continue;
                 }
 
@@ -98,7 +98,7 @@ namespace Ae.Dns.Client
             DnsAnswer answer;
             try
             {
-                answer = buffer.FromBytes<DnsAnswer>();
+                answer = DnsByteExtensions.FromBytes<DnsAnswer>(buffer);
             }
             catch (Exception e)
             {
@@ -134,13 +134,13 @@ namespace Ae.Dns.Client
 
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
-            var raw = query.ToBytes().ToArray();
+            var raw = DnsByteExtensions.ToBytes(query).ToArray();
 
             var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, raw, token));
 
             var result = await completionSource.Task;
 
-            var answer = result.FromBytes<DnsAnswer>();
+            var answer = DnsByteExtensions.FromBytes<DnsAnswer>(result);
 
             // Copy the same ID from the request
             answer.Header.Id = query.Id;

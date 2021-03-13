@@ -28,7 +28,7 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
-            var raw = query.ToBytes().ToArray();
+            var raw = DnsByteExtensions.ToBytes(query).ToArray();
 
             var content = new ByteArrayContent(raw);
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);
@@ -42,7 +42,7 @@ namespace Ae.Dns.Client
             var response = await _httpClient.SendAsync(request, token);
             response.EnsureSuccessStatusCode();
 
-            return (await response.Content.ReadAsByteArrayAsync()).FromBytes<DnsAnswer>();
+            return DnsByteExtensions.FromBytes<DnsAnswer>(await response.Content.ReadAsByteArrayAsync());
         }
     }
 }
