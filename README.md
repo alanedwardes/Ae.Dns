@@ -1,4 +1,6 @@
 # Ae.Dns
+**API Documentation: https://alanedwardes.github.io/docs/Ae.Dns/**
+
 ![.NET Core](https://github.com/alanedwardes/Ae.Dns/workflows/.NET%20Core/badge.svg?branch=main)
 
 A pure C# implementation of a DNS client, server and configurable caching/filtering layer. This project offers the following packages:
