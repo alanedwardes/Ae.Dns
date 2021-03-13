@@ -41,6 +41,7 @@ namespace Ae.Dns.Server
             }
         }
 
+        /// <inheritdoc/>
         public async Task Listen(CancellationToken token)
         {
             token.Register(() => _listener.Close());

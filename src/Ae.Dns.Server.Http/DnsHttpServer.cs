@@ -35,6 +35,7 @@ namespace Ae.Dns.Server.Http
         {
         }
 
+        /// <inheritdoc/>
         public async Task Listen(CancellationToken token)
         {
             var builder = Host.CreateDefaultBuilder()

@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Client
 {
+    /// <summary>
+    /// A DNS UDP client implementation.
+    /// </summary>
     public sealed class DnsUdpClient : IDnsClient
     {
         private struct MessageId
@@ -93,7 +96,7 @@ namespace Ae.Dns.Client
             }
         }
 
-        public void Receive(byte[] buffer)
+        private void Receive(byte[] buffer)
         {
             DnsAnswer answer;
             try
@@ -132,6 +135,7 @@ namespace Ae.Dns.Client
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
+        /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
             var raw = DnsByteExtensions.ToBytes(query).ToArray();
@@ -148,6 +152,7 @@ namespace Ae.Dns.Client
             return answer;
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             _cancel.Cancel();
