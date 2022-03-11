@@ -4,4 +4,4 @@ ADD build/output /opt/aedns
 
 VOLUME ["/data"]
 
-ENTRYPOINT ["/opt/aedns/Ae.Dns"]
+ENTRYPOINT ["/opt/aedns/Ae.Dns.Console"]
