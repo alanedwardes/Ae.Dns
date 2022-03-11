@@ -4,4 +4,6 @@ ADD build/output /opt/aedns
 
 VOLUME ["/data"]
 
+WORKDIR /data
+
 ENTRYPOINT ["/opt/aedns/Ae.Dns.Console"]
