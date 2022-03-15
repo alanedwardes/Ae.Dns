@@ -1,4 +1,7 @@
 ﻿using Ae.Dns.Protocol;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,6 +15,10 @@ namespace Ae.Dns.Client
     /// </summary>
     public sealed class DnsHttpClient : IDnsClient
     {
+        private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsHttpClient");
+        private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>("success");
+        private static readonly Counter<int> _failureCounter = _meter.CreateCounter<int>("failure");
+
         private const string DnsMessageType = "application/dns-message";
         private readonly HttpClient _httpClient;
 
@@ -28,6 +35,9 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
+            var queryMetricState = new KeyValuePair<string, object>("Query", query);
+            var upstreamMetricState = new KeyValuePair<string, object>("Address", _httpClient.BaseAddress);
+
             var raw = DnsByteExtensions.ToBytes(query).ToArray();
 
             var content = new ByteArrayContent(raw);
@@ -39,8 +49,18 @@ namespace Ae.Dns.Client
             };
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(DnsMessageType));
 
-            var response = await _httpClient.SendAsync(request, token);
-            response.EnsureSuccessStatusCode();
+            HttpResponseMessage response;
+            try
+            {
+                response = await _httpClient.SendAsync(request, token);
+                response.EnsureSuccessStatusCode();
+                _successCounter.Add(1, upstreamMetricState, queryMetricState);
+            }
+            catch
+            {
+                _failureCounter.Add(1, upstreamMetricState, queryMetricState);
+                throw;
+            }
 
             return DnsByteExtensions.FromBytes<DnsAnswer>(await response.Content.ReadAsByteArrayAsync());
         }

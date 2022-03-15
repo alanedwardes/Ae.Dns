@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Runtime.Caching;
 using System.Threading;
@@ -30,6 +32,10 @@ namespace Ae.Dns.Client
             public TimeSpan Age => DateTimeOffset.UtcNow - Time;
             public TimeSpan Expires => Expiry - DateTimeOffset.UtcNow;
         }
+
+        private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsCachingClient");
+        private static readonly Counter<int> _cacheHitCounter = _meter.CreateCounter<int>("hit");
+        private static readonly Counter<int> _cacheMissCounter = _meter.CreateCounter<int>("miss");
 
         private readonly ILogger<DnsCachingClient> _logger;
         private readonly IDnsClient _dnsClient;
@@ -65,6 +71,8 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
+            var queryMetricState = new KeyValuePair<string, object>("Query", query);
+
             string cacheKey = GetCacheKey(query);
 
             DnsAnswer answer;
@@ -85,6 +93,7 @@ namespace Ae.Dns.Client
                     record.TimeToLive -= cacheEntry.Age;
                 }
 
+                _cacheHitCounter.Add(1, queryMetricState);
                 return answer;
             }
 
@@ -107,6 +116,7 @@ namespace Ae.Dns.Client
                 _objectCache.Add(cacheKey, cacheEntry, new CacheItemPolicy { AbsoluteExpiration = cacheEntry.Expiry });
             }
 
+            _cacheMissCounter.Add(1, queryMetricState);
             return answer;
         }
 
