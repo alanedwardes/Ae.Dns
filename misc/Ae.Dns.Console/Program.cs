@@ -2,8 +2,10 @@
 using Ae.Dns.Client.Filters;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Serilog;
@@ -111,7 +113,13 @@ namespace Ae.Dns.Console
 
             IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), filter);
 
-            await server.Listen(CancellationToken.None);
+            var builder = Host.CreateDefaultBuilder()
+                .ConfigureWebHostDefaults(webHostBuilder => webHostBuilder.UseStartup<Startup>());
+
+            await Task.WhenAll(
+                builder.Build().RunAsync(CancellationToken.None),
+                server.Listen(CancellationToken.None)
+            );
         }
     }
 }
