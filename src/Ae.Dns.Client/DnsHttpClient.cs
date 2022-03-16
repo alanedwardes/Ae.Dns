@@ -1,6 +1,5 @@
 ﻿using Ae.Dns.Protocol;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net.Http;

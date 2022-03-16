@@ -8,11 +8,19 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics.Metrics;
 
 namespace Ae.Dns.Server
 {
     public sealed class DnsUdpServer : IDnsServer
     {
+        private static readonly Meter _meter = new Meter("Ae.Dns.Server.DnsUdpServer");
+        private static readonly Counter<int> _incomingErrorCounter = _meter.CreateCounter<int>("incoming-error");
+        private static readonly Counter<int> _packetParseErrorCounter = _meter.CreateCounter<int>("packet-parse-error");
+        private static readonly Counter<int> _lookupErrorCounter = _meter.CreateCounter<int>("lookup-error");
+        private static readonly Counter<int> _respondErrorCounter = _meter.CreateCounter<int>("respond-error");
+        private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>("success");
+
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly UdpClient _listener;
         private readonly IDnsClient _dnsClient;
@@ -62,6 +70,7 @@ namespace Ae.Dns.Server
                 }
                 catch (Exception e)
                 {
+                    _incomingErrorCounter.Add(1);
                     _logger.LogWarning(e, "Error with incoming connection");
                 }
             }
@@ -78,6 +87,7 @@ namespace Ae.Dns.Server
             }
             catch (Exception e)
             {
+                _packetParseErrorCounter.Add(1);
                 _logger.LogCritical(e, "Unable to parse incoming packet: {0}", DnsByteExtensions.ToDebugString(query.Buffer));
                 return;
             }
@@ -89,6 +99,7 @@ namespace Ae.Dns.Server
             }
             catch (Exception e)
             {
+                _lookupErrorCounter.Add(1);
                 _logger.LogCritical(e, "Unable to resolve {0}", message);
                 return;
             }
@@ -101,10 +112,12 @@ namespace Ae.Dns.Server
             }
             catch (Exception e)
             {
+                _respondErrorCounter.Add(1);
                 _logger.LogCritical(e, "Unable to send back response to {0}", query.RemoteEndPoint);
                 return;
             }
 
+            _successCounter.Add(1);
             _logger.LogTrace("Responded to DNS request for {Domain} in {ResponseTime}", message.Host, stopwatch.Elapsed.TotalSeconds);
         }
     }
