@@ -86,22 +86,22 @@ namespace Ae.Dns.Console
                 throw new InvalidOperationException();
             }
 
-            if (metricId == "Ae.Dns.Client.DnsFilterClient.blocked")
+            if (metricId == "Ae.Dns.Client.DnsFilterClient.Blocked")
             {
                 _topBlockedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
             }
 
-            if (metricId == "Ae.Dns.Client.DnsFilterClient.allowed")
+            if (metricId == "Ae.Dns.Client.DnsFilterClient.Allowed")
             {
                 _topPermittedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
             }
 
-            if (metricId == "Ae.Dns.Client.DnsHttpClient.success")
+            if (metricId == "Ae.Dns.Client.DnsHttpClient.Success")
             {
                 _topUpstreamSuccesses.AddOrUpdate(GetObjectFromTags<Uri>(tags, "Address").Host, 1, (id, count) => count + 1);
             }
 
-            if (metricId == "Ae.Dns.Client.DnsHttpClient.failure")
+            if (metricId == "Ae.Dns.Client.DnsHttpClient.Failure")
             {
                 _topUpstreamFailures.AddOrUpdate(GetObjectFromTags<Uri>(tags, "Address").Host, 1, (id, count) => count + 1);
             }

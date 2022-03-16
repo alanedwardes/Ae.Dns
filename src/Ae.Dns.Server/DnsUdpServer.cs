@@ -15,11 +15,12 @@ namespace Ae.Dns.Server
     public sealed class DnsUdpServer : IDnsServer
     {
         private static readonly Meter _meter = new Meter("Ae.Dns.Server.DnsUdpServer");
-        private static readonly Counter<int> _incomingErrorCounter = _meter.CreateCounter<int>("incoming-error");
-        private static readonly Counter<int> _packetParseErrorCounter = _meter.CreateCounter<int>("packet-parse-error");
-        private static readonly Counter<int> _lookupErrorCounter = _meter.CreateCounter<int>("lookup-error");
-        private static readonly Counter<int> _respondErrorCounter = _meter.CreateCounter<int>("respond-error");
-        private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>("success");
+        private static readonly Counter<int> _incomingErrorCounter = _meter.CreateCounter<int>("IncomingReadError");
+        private static readonly Counter<int> _packetParseErrorCounter = _meter.CreateCounter<int>("RequestParseError");
+        private static readonly Counter<int> _lookupErrorCounter = _meter.CreateCounter<int>("LookupError");
+        private static readonly Counter<int> _respondErrorCounter = _meter.CreateCounter<int>("RespondError");
+        private static readonly Counter<int> _responseCounter = _meter.CreateCounter<int>("Response");
+        private static readonly Counter<int> _requestCounter = _meter.CreateCounter<int>("Request");
 
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly UdpClient _listener;
@@ -61,6 +62,7 @@ namespace Ae.Dns.Server
                 try
                 {
                     var result = await _listener.ReceiveAsync();
+                    _requestCounter.Add(1);
                     Respond(result, token);
                 }
                 catch (ObjectDisposedException)
@@ -117,7 +119,7 @@ namespace Ae.Dns.Server
                 return;
             }
 
-            _successCounter.Add(1);
+            _responseCounter.Add(1);
             _logger.LogTrace("Responded to DNS request for {Domain} in {ResponseTime}", message.Host, stopwatch.Elapsed.TotalSeconds);
         }
     }

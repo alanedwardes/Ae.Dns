@@ -34,8 +34,8 @@ namespace Ae.Dns.Client
         }
 
         private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsCachingClient");
-        private static readonly Counter<int> _cacheHitCounter = _meter.CreateCounter<int>("hit");
-        private static readonly Counter<int> _cacheMissCounter = _meter.CreateCounter<int>("miss");
+        private static readonly Counter<int> _cacheHitCounter = _meter.CreateCounter<int>("Hit");
+        private static readonly Counter<int> _cacheMissCounter = _meter.CreateCounter<int>("Miss");
 
         private readonly ILogger<DnsCachingClient> _logger;
         private readonly IDnsClient _dnsClient;

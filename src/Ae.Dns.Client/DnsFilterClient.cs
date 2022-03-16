@@ -16,8 +16,8 @@ namespace Ae.Dns.Client
     public sealed class DnsFilterClient : IDnsClient
     {
         private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsFilterClient");
-        private static readonly Counter<int> _blockedCounter = _meter.CreateCounter<int>("blocked");
-        private static readonly Counter<int> _allowedCounter = _meter.CreateCounter<int>("allowed");
+        private static readonly Counter<int> _blockedCounter = _meter.CreateCounter<int>("Blocked");
+        private static readonly Counter<int> _allowedCounter = _meter.CreateCounter<int>("Allowed");
 
         private readonly ILogger<DnsFilterClient> _logger;
         private readonly IDnsFilter _dnsFilter;

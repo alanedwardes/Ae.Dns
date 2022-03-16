@@ -15,8 +15,8 @@ namespace Ae.Dns.Client
     public sealed class DnsHttpClient : IDnsClient
     {
         private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsHttpClient");
-        private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>("success");
-        private static readonly Counter<int> _failureCounter = _meter.CreateCounter<int>("failure");
+        private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>("Success");
+        private static readonly Counter<int> _failureCounter = _meter.CreateCounter<int>("Failure");
 
         private const string DnsMessageType = "application/dns-message";
         private readonly HttpClient _httpClient;
