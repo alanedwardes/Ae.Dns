@@ -42,19 +42,22 @@ namespace Ae.Dns.Console
             var services = new ServiceCollection();
             services.AddLogging(x => x.AddSerilog(logger));
 
-            const string staticDnsResolver = "StaticResolver";
+            const string staticDnsResolverHttpClient = "StaticResolver";
 
-            services.AddHttpClient(staticDnsResolver, x => x.BaseAddress = new Uri("https://1.1.1.1/"));
+            var memoryCache = new MemoryCache("dns");
+
+            services.AddHttpClient(staticDnsResolverHttpClient, x => x.BaseAddress = new Uri("https://1.1.1.1/"));
+            services.AddSingleton<ObjectCache>(memoryCache);
 
             static DnsDelegatingHandler CreateDnsDelegatingHandler(IServiceProvider serviceProvider)
             {
-                var httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(staticDnsResolver);
-                return new DnsDelegatingHandler(new DnsHttpClient(httpClient));
+                var httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(staticDnsResolverHttpClient);
+                return new DnsDelegatingHandler(new DnsCachingClient(new DnsHttpClient(httpClient), serviceProvider.GetRequiredService<ObjectCache>()));
             }
 
             foreach (Uri httpsUpstream in dnsConfiguration.HttpsUpstreams)
             {
-                services.AddHttpClient<IDnsClient, DnsHttpClient>(x => x.BaseAddress = httpsUpstream)
+                services.AddHttpClient<IDnsClient, DnsHttpClient>(httpsUpstream.ToString(), x => x.BaseAddress = httpsUpstream)
                         .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                         .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
             }
@@ -93,7 +96,7 @@ namespace Ae.Dns.Console
 
             IDnsClient combinedDnsClient = new DnsRoundRobinClient(upstreams);
 
-            IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("dns"));
+            IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, memoryCache);
 
             selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 
