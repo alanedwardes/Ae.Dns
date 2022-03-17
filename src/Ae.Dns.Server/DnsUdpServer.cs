@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics.Metrics;
+using System.Collections.Generic;
 
 namespace Ae.Dns.Server
 {
@@ -21,6 +22,7 @@ namespace Ae.Dns.Server
         private static readonly Counter<int> _respondErrorCounter = _meter.CreateCounter<int>("RespondError");
         private static readonly Counter<int> _responseCounter = _meter.CreateCounter<int>("Response");
         private static readonly Counter<int> _requestCounter = _meter.CreateCounter<int>("Request");
+        private static readonly Counter<int> _queryCounter = _meter.CreateCounter<int>("Query");
 
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly UdpClient _listener;
@@ -93,6 +95,9 @@ namespace Ae.Dns.Server
                 _logger.LogCritical(e, "Unable to parse incoming packet: {0}", DnsByteExtensions.ToDebugString(query.Buffer));
                 return;
             }
+
+            var queryMetricState = new KeyValuePair<string, object>("Query", message);
+            _queryCounter.Add(1, queryMetricState);
 
             DnsAnswer answer;
             try

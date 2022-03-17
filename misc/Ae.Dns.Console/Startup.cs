@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Ae.Dns.Protocol;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace Ae.Dns.Console
 {
@@ -28,6 +31,29 @@ namespace Ae.Dns.Console
 
             app.Use(async (context, next) =>
             {
+                var responseBufferingFeature = context.Features.Get<IHttpResponseBodyFeature>();
+                responseBufferingFeature?.DisableBuffering();
+
+                context.Response.StatusCode = StatusCodes.Status200OK;
+                context.Response.ContentType = "text/plain; charset=utf-8";
+
+                if (context.Request.Path.StartsWithSegments("/live"))
+                {
+                    while (!context.RequestAborted.IsCancellationRequested)
+                    {
+                        _lastListenTime = DateTimeOffset.UtcNow;
+
+                        if (_requests.TryDequeue(out var header))
+                        {
+                            await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(header + Environment.NewLine), context.RequestAborted);
+                            await context.Response.BodyWriter.FlushAsync(context.RequestAborted);
+                        }
+
+                        await Task.Delay(TimeSpan.FromMilliseconds(10), context.RequestAborted);
+                    }
+                    return;
+                }
+
                 var statsSets = new Dictionary<string, IDictionary<string, int>>
                 {
                     { "Statistics", _stats },
@@ -59,9 +85,11 @@ namespace Ae.Dns.Console
             });
         }
 
+        private DateTimeOffset _lastListenTime;
         private readonly ConcurrentDictionary<string, int> _stats = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentQueue<DnsHeader> _requests = new ConcurrentQueue<DnsHeader>();
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
@@ -90,6 +118,18 @@ namespace Ae.Dns.Console
             if (metricId == "Ae.Dns.Client.DnsFilterClient.Allowed")
             {
                 _topPermittedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
+            }
+
+            if (metricId == "Ae.Dns.Server.DnsUdpServer.Query")
+            {
+                if (DateTimeOffset.UtcNow - _lastListenTime > TimeSpan.FromSeconds(5))
+                {
+                    _requests.Clear();
+                }
+                else
+                {
+                    _requests.Enqueue(GetObjectFromTags<DnsHeader>(tags, "Query"));
+                }
             }
         }
     }
