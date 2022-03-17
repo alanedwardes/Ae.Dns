@@ -44,10 +44,8 @@ namespace Ae.Dns.Console
 
             const string staticDnsResolverHttpClient = "StaticResolver";
 
-            var memoryCache = new MemoryCache("dns");
-
             services.AddHttpClient(staticDnsResolverHttpClient, x => x.BaseAddress = new Uri("https://1.1.1.1/"));
-            services.AddSingleton<ObjectCache>(memoryCache);
+            services.AddSingleton<ObjectCache>(new MemoryCache("ResolverCache"));
 
             static DnsDelegatingHandler CreateDnsDelegatingHandler(IServiceProvider serviceProvider)
             {
@@ -57,7 +55,7 @@ namespace Ae.Dns.Console
 
             foreach (Uri httpsUpstream in dnsConfiguration.HttpsUpstreams)
             {
-                services.AddHttpClient<IDnsClient, DnsHttpClient>(httpsUpstream.ToString(), x => x.BaseAddress = httpsUpstream)
+                services.AddHttpClient<IDnsClient, DnsHttpClient>(Guid.NewGuid().ToString(), x => x.BaseAddress = httpsUpstream)
                         .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                         .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
             }
@@ -96,7 +94,7 @@ namespace Ae.Dns.Console
 
             IDnsClient combinedDnsClient = new DnsRoundRobinClient(upstreams);
 
-            IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, memoryCache);
+            IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("MainCache"));
 
             selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 

@@ -14,9 +14,9 @@ namespace Ae.Dns.Client
     /// </summary>
     public sealed class DnsHttpClient : IDnsClient
     {
-        private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsHttpClient");
-        private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>("Success");
-        private static readonly Counter<int> _failureCounter = _meter.CreateCounter<int>("Failure");
+        private readonly Meter _meter;
+        private readonly Counter<int> _successCounter;
+        private readonly Counter<int> _failureCounter;
 
         private const string DnsMessageType = "application/dns-message";
         private readonly HttpClient _httpClient;
@@ -24,7 +24,14 @@ namespace Ae.Dns.Client
         /// <summary>
         /// Create a new DNS HTTP client using the specified <see cref="HttpClient"/> instance.
         /// </summary>
-        public DnsHttpClient(HttpClient httpClient) => _httpClient = httpClient;
+        public DnsHttpClient(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+
+            _meter = new Meter($"Ae.Dns.Client.DnsHttpClient.{httpClient.BaseAddress.Host}");
+            _successCounter = _meter.CreateCounter<int>("Success");
+            _failureCounter = _meter.CreateCounter<int>("Failure");
+    }
 
         /// <inheritdoc/>
         public void Dispose()

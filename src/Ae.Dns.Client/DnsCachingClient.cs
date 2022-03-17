@@ -33,9 +33,9 @@ namespace Ae.Dns.Client
             public TimeSpan Expires => Expiry - DateTimeOffset.UtcNow;
         }
 
-        private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsCachingClient");
-        private static readonly Counter<int> _cacheHitCounter = _meter.CreateCounter<int>("Hit");
-        private static readonly Counter<int> _cacheMissCounter = _meter.CreateCounter<int>("Miss");
+        private readonly Meter _meter;
+        private readonly Counter<int> _cacheHitCounter;
+        private readonly Counter<int> _cacheMissCounter;
 
         private readonly ILogger<DnsCachingClient> _logger;
         private readonly IDnsClient _dnsClient;
@@ -64,6 +64,10 @@ namespace Ae.Dns.Client
             _logger = logger;
             _dnsClient = dnsClient;
             _objectCache = objectCache;
+
+            _meter = new Meter($"Ae.Dns.Client.DnsCachingClient.{objectCache.Name}");
+            _cacheHitCounter = _meter.CreateCounter<int>("Hit");
+            _cacheMissCounter = _meter.CreateCounter<int>("Miss");
         }
 
         private string GetCacheKey(DnsHeader header) => $"{header.Host}~{header.QueryType}~{header.QueryClass}";
