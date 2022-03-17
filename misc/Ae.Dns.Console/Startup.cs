@@ -32,9 +32,7 @@ namespace Ae.Dns.Console
                 {
                     { "Statistics", _stats },
                     { "Top Blocked Domains", _topBlockedDomains },
-                    { "Top Permitted Domains", _topPermittedDomains },
-                    { "Top Upstream Successes", _topUpstreamSuccesses },
-                    { "Top Upstream Failures", _topUpstreamFailures }
+                    { "Top Permitted Domains", _topPermittedDomains }
                 };
 
                 foreach (var statsSet in statsSets)
@@ -64,8 +62,6 @@ namespace Ae.Dns.Console
         private readonly ConcurrentDictionary<string, int> _stats = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentDictionary<string, int> _topUpstreamSuccesses = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentDictionary<string, int> _topUpstreamFailures = new ConcurrentDictionary<string, int>();
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
@@ -94,16 +90,6 @@ namespace Ae.Dns.Console
             if (metricId == "Ae.Dns.Client.DnsFilterClient.Allowed")
             {
                 _topPermittedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
-            }
-
-            if (metricId == "Ae.Dns.Client.DnsHttpClient.Success")
-            {
-                _topUpstreamSuccesses.AddOrUpdate(GetObjectFromTags<Uri>(tags, "Address").Host, 1, (id, count) => count + 1);
-            }
-
-            if (metricId == "Ae.Dns.Client.DnsHttpClient.Failure")
-            {
-                _topUpstreamFailures.AddOrUpdate(GetObjectFromTags<Uri>(tags, "Address").Host, 1, (id, count) => count + 1);
             }
         }
     }
