@@ -59,7 +59,7 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {TimeToLive}";
+        public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {TimeToLive} Resource: {Resource}";
 
         /// <inheritdoc/>
         public bool Equals(DnsResourceRecord other) => Host == other.Host && Type == other.Type && Class == other.Class && TimeToLive == other.TimeToLive && Resource.Equals(other.Resource);

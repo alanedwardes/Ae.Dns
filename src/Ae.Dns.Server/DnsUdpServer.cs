@@ -111,6 +111,8 @@ namespace Ae.Dns.Server
                 return;
             }
 
+            var answerMetricState = new KeyValuePair<string, object>("Answer", answer);
+
             var answerBytes = DnsByteExtensions.ToBytes(answer).ToArray();
 
             try
@@ -124,7 +126,7 @@ namespace Ae.Dns.Server
                 return;
             }
 
-            _responseCounter.Add(1);
+            _responseCounter.Add(1, queryMetricState, answerMetricState);
             _logger.LogTrace("Responded to DNS request for {Domain} in {ResponseTime}", message.Host, stopwatch.Elapsed.TotalSeconds);
         }
     }

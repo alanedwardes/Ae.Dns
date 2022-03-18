@@ -163,7 +163,7 @@ namespace Ae.Dns.Protocol
 
 
         /// <inheritdoc/>
-        public override string ToString() => $"Id: {Id}, Domain: {Host}, type: {QueryType}, class: {QueryClass}";
+        public override string ToString() => $"QRY: {Id} Domain: {Host} Type: {QueryType} Class: {QueryClass}";
 
         /// <inheritdoc/>
         public bool Equals(DnsHeader other)

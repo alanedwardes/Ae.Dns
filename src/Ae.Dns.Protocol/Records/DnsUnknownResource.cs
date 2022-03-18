@@ -38,5 +38,8 @@ namespace Ae.Dns.Protocol.Records
         {
             yield return Raw;
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"Raw {Raw.Length} bytes";
     }
 }

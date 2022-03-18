@@ -48,5 +48,8 @@ namespace Ae.Dns.Protocol.Records
             yield return DnsByteExtensions.ToBytes(Preference);
             yield return DnsByteExtensions.ToBytes(Exchange.Split('.'));
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => Exchange.ToString();
     }
 }

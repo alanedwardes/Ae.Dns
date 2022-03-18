@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
+using System.IO.Pipelines;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,16 +38,28 @@ namespace Ae.Dns.Console
                 context.Response.StatusCode = StatusCodes.Status200OK;
                 context.Response.ContentType = "text/plain; charset=utf-8";
 
+                async Task WriteString(string str)
+                {
+                    await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(str), context.RequestAborted);
+                    await context.Response.BodyWriter.FlushAsync(context.RequestAborted);
+                }
+
                 if (context.Request.Path.StartsWithSegments("/live"))
                 {
+                    await WriteString("Listening..." + Environment.NewLine);
+
                     while (!context.RequestAborted.IsCancellationRequested)
                     {
                         _lastListenTime = DateTimeOffset.UtcNow;
 
-                        if (_requests.TryDequeue(out var header))
+                        if (_queries.TryDequeue(out var query))
                         {
-                            await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(header + Environment.NewLine), context.RequestAborted);
-                            await context.Response.BodyWriter.FlushAsync(context.RequestAborted);
+                            await WriteString(query + Environment.NewLine);
+                        }
+
+                        if (_answers.TryDequeue(out var answer))
+                        {
+                            await WriteString(answer + Environment.NewLine);
                         }
 
                         await Task.Delay(TimeSpan.FromMilliseconds(10), context.RequestAborted);
@@ -63,24 +76,24 @@ namespace Ae.Dns.Console
 
                 foreach (var statsSet in statsSets)
                 {
-                    await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(statsSet.Key));
-                    await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(Environment.NewLine));
-                    await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(new string('=', statsSet.Key.Length)));
-                    await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(Environment.NewLine));
+                    await WriteString(statsSet.Key);
+                    await WriteString(Environment.NewLine);
+                    await WriteString(new string('=', statsSet.Key.Length));
+                    await WriteString(Environment.NewLine);
 
                     if (!statsSet.Value.Any())
                     {
-                        await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes("None"));
-                        await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(Environment.NewLine));
+                        await WriteString("None");
+                        await WriteString(Environment.NewLine);
                     }
 
                     foreach (var statistic in statsSet.Value.OrderByDescending(x => x.Value))
                     {
-                        await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes($"{statistic.Key} = {statistic.Value}"));
-                        await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(Environment.NewLine));
+                        await WriteString($"{statistic.Key} = {statistic.Value}");
+                        await WriteString(Environment.NewLine);
                     }
 
-                    await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(Environment.NewLine));
+                    await WriteString(Environment.NewLine);
                 }
             });
         }
@@ -89,7 +102,8 @@ namespace Ae.Dns.Console
         private readonly ConcurrentDictionary<string, int> _stats = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentQueue<DnsHeader> _requests = new ConcurrentQueue<DnsHeader>();
+        private readonly ConcurrentQueue<DnsHeader> _queries = new ConcurrentQueue<DnsHeader>();
+        private readonly ConcurrentQueue<DnsAnswer> _answers = new ConcurrentQueue<DnsAnswer>();
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
@@ -120,15 +134,29 @@ namespace Ae.Dns.Console
                 _topPermittedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
             }
 
+            bool IsListening() => DateTimeOffset.UtcNow - _lastListenTime > TimeSpan.FromSeconds(5);
+
             if (metricId == "Ae.Dns.Server.DnsUdpServer.Query")
             {
-                if (DateTimeOffset.UtcNow - _lastListenTime > TimeSpan.FromSeconds(5))
+                if (IsListening())
                 {
-                    _requests.Clear();
+                    _queries.Clear();
                 }
                 else
                 {
-                    _requests.Enqueue(GetObjectFromTags<DnsHeader>(tags, "Query"));
+                    _queries.Enqueue(GetObjectFromTags<DnsHeader>(tags, "Query"));
+                }
+            }
+
+            if (metricId == "Ae.Dns.Server.DnsUdpServer.Response")
+            {
+                if (IsListening())
+                {
+                    _answers.Clear();
+                }
+                else
+                {
+                    _answers.Enqueue(GetObjectFromTags<DnsAnswer>(tags, "Answer"));
                 }
             }
         }

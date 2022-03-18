@@ -36,5 +36,8 @@ namespace Ae.Dns.Protocol.Records
         {
             yield return IPAddress.GetAddressBytes();
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => IPAddress.ToString();
     }
 }

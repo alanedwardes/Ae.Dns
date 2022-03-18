@@ -45,7 +45,7 @@ namespace Ae.Dns.Protocol
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"RESPONSE: {Header}";
+        public override string ToString() => $"RES: {Header.Id} Response: {Header.ResponseCode} Answers: {Answers.Count}" + string.Concat(Answers.Select(x => $"{Environment.NewLine} * {x}"));
 
         /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()
