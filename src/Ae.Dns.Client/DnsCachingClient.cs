@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Runtime.Caching;
@@ -17,7 +18,7 @@ namespace Ae.Dns.Client
     /// </summary>
     public sealed class DnsCachingClient : IDnsClient
     {
-        private class DnsCacheEntry
+        private sealed class DnsCacheEntry
         {
             public DnsCacheEntry(DnsAnswer answer)
             {
@@ -40,6 +41,7 @@ namespace Ae.Dns.Client
         private readonly ILogger<DnsCachingClient> _logger;
         private readonly IDnsClient _dnsClient;
         private readonly ObjectCache _objectCache;
+        private readonly DnsCachingClientConfiguration _configuration;
 
         /// <summary>
         /// Construct a new caching DNS client using the specified client to
@@ -53,80 +55,116 @@ namespace Ae.Dns.Client
         }
 
         /// <summary>
+        /// Construct a new caching DNS client using the specified client to
+        /// forward requests to, and the specified memory cache.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/> instance to use.</param>
+        /// <param name="dnsClient">The see <see cref="IDnsClient"/> to delegate uncached requests to.</param>
+        /// <param name="objectCache">The in-memory cache to use.</param>
+        public DnsCachingClient(ILogger<DnsCachingClient> logger, IDnsClient dnsClient, ObjectCache objectCache) :
+            this(logger, dnsClient, objectCache, new DnsCachingClientConfiguration())
+        {
+        }
+
+        /// <summary>
         /// Construct a new caching DNS client using the specified logger,
         /// DNS client to forward requests to, and the specified memory cache.
         /// </summary>
         /// <param name="logger">The <see cref="ILogger"/> instance to use.</param>
         /// <param name="dnsClient">The see <see cref="IDnsClient"/> to delegate uncached requests to.</param>
         /// <param name="objectCache">The in-memory cache to use.</param>
-        public DnsCachingClient(ILogger<DnsCachingClient> logger, IDnsClient dnsClient, ObjectCache objectCache)
+        public DnsCachingClient(ILogger<DnsCachingClient> logger, IDnsClient dnsClient, ObjectCache objectCache, DnsCachingClientConfiguration configuration)
         {
             _logger = logger;
             _dnsClient = dnsClient;
             _objectCache = objectCache;
+            _configuration = configuration;
 
             _meter = new Meter($"Ae.Dns.Client.DnsCachingClient.{objectCache.Name}");
             _cacheHitCounter = _meter.CreateCounter<int>("Hit");
             _cacheMissCounter = _meter.CreateCounter<int>("Miss");
         }
 
-        private string GetCacheKey(DnsHeader header) => $"{header.Host}~{header.QueryType}~{header.QueryClass}";
-
         /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
         {
             var queryMetricState = new KeyValuePair<string, object>("Query", query);
 
-            string cacheKey = GetCacheKey(query);
-
-            DnsAnswer answer;
-
-            var cacheEntry = (DnsCacheEntry)_objectCache.Get(cacheKey);
-            if (cacheEntry != null)
+            if (TryGetAnswer(query, out DnsAnswer answer, out var expires))
             {
-                _logger.LogTrace("Returned cached DNS result for {Domain} (expires in: {ExpiryTime})", query.Host, cacheEntry.Expires);
-
-                answer = DnsByteExtensions.FromBytes<DnsAnswer>(cacheEntry.Data);
-                
-                // Replace the ID
-                answer.Header.Id = query.Id;
-                
-                // Adjust the TTLs to be correct
                 foreach (var record in answer.Answers)
                 {
-                    record.TimeToLive -= cacheEntry.Age;
+                    // We can return stale data when uing the AdditionalTimeToLive option
+                    if (record.TimeToLive < TimeSpan.Zero)
+                    {
+                        // Give the server time to refresh the cache entry
+                        record.TimeToLive = TimeSpan.FromSeconds(10);
+                    }
                 }
 
+                if (expires < TimeSpan.Zero)
+                {
+                    _logger.LogDebug("Cached DNS result for {Domain} is stale, refreshing in the background", query.Host);
+                    _ = RefreshCache(query, token);
+                }
+
+                _logger.LogDebug("Returned cached DNS result for {Domain} (expires: {Expires})", query.Host, expires);
                 _cacheHitCounter.Add(1, queryMetricState);
                 return answer;
             }
 
-            answer = await _dnsClient.Query(new DnsHeader
-            {
-                Id = query.Id,
-                Host = query.Host,
-                IsQueryResponse = false,
-                RecusionDesired = query.RecusionDesired,
-                QueryClass = query.QueryClass,
-                QueryType = query.QueryType,
-                QuestionCount = query.QuestionCount
-            }, token);
-
-            _logger.LogTrace("Returned fresh DNS result for {Domain}", query.Host);
-
-            if (answer.Answers.Count > 0)
-            {
-                cacheEntry = new DnsCacheEntry(answer);
-                _objectCache.Add(cacheKey, cacheEntry, new CacheItemPolicy { AbsoluteExpiration = cacheEntry.Expiry });
-            }
-
             _cacheMissCounter.Add(1, queryMetricState);
-            return answer;
+            return await RefreshCache(query, token);
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
+        }
+
+        public string GetCacheKey(DnsHeader header) => $"{header.Host}~{header.QueryType}~{header.QueryClass}";
+
+        public async Task<DnsAnswer> RefreshCache(DnsHeader query, CancellationToken token)
+        {
+            var sw = Stopwatch.StartNew();
+
+            var answer = await _dnsClient.Query(query, token);
+            if (answer.Answers.Count > 0)
+            {
+                var cacheEntry = new DnsCacheEntry(answer);
+                _objectCache.Set(GetCacheKey(query), cacheEntry, new CacheItemPolicy
+                {
+                    AbsoluteExpiration = cacheEntry.Expiry + _configuration.AdditionalTimeToLive
+                });
+                _logger.LogDebug("Refreshed cache for {Domain} in {ElapsedMilliseconds}ms", query.Host, sw.ElapsedMilliseconds);
+            }
+
+            return answer;
+        }
+
+        public bool TryGetAnswer(DnsHeader query, out DnsAnswer answer, out TimeSpan expires)
+        {
+            var entry = (DnsCacheEntry)_objectCache.Get(GetCacheKey(query));
+            if (entry == null)
+            {
+                answer = null;
+                expires = TimeSpan.Zero;
+                return false;
+            }
+
+            answer = DnsByteExtensions.FromBytes<DnsAnswer>(entry.Data);
+
+            // Replace the ID
+            answer.Header.Id = query.Id;
+
+            // Adjust the TTLs to be correct
+            foreach (var record in answer.Answers)
+            {
+                record.TimeToLive -= entry.Age;
+            }
+
+            expires = entry.Expires;
+            return true;
         }
     }
 }

@@ -94,7 +94,10 @@ namespace Ae.Dns.Console
 
             IDnsClient combinedDnsClient = new DnsRoundRobinClient(upstreams);
 
-            IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("MainCache"));
+            IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), combinedDnsClient, new MemoryCache("MainCache"), new DnsCachingClientConfiguration
+            {
+                AdditionalTimeToLive = dnsConfiguration.AdditionalCacheTimeToLive
+            });
 
             selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 
