@@ -4,7 +4,6 @@ namespace Ae.Dns.Console
 {
     public sealed class DnsConfiguration
     {
-        public TimeSpan AdditionalCacheTimeToLive { get; set; } = TimeSpan.Zero;
         public Uri[] HttpsUpstreams { get; set; } = new Uri[0];
         public string[] UdpUpstreams { get; set; } = new string[0];
         public Uri[] RemoteBlocklists { get; set; } = new Uri[0];
