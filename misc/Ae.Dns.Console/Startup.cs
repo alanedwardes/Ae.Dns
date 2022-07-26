@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.IO.Pipelines;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,7 +29,7 @@ namespace Ae.Dns.Console
             meterListener.SetMeasurementEventCallback<int>(OnMeasurementRecorded);
             meterListener.Start();
 
-            app.Use(async (context, next) =>
+            app.Run(async context =>
             {
                 var responseBufferingFeature = context.Features.Get<IHttpResponseBodyFeature>();
                 responseBufferingFeature?.DisableBuffering();
