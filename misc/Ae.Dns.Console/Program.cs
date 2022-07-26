@@ -115,7 +115,9 @@ namespace Ae.Dns.Console
             IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), filter);
 
             // Add a very basic stats panel
-            var builder = Host.CreateDefaultBuilder().ConfigureWebHostDefaults(webHostBuilder => webHostBuilder.UseStartup<Startup>());
+            var builder = Host.CreateDefaultBuilder()
+                .ConfigureLogging(x => x.ClearProviders().AddSerilog(logger))
+                .ConfigureWebHostDefaults(webHostBuilder => webHostBuilder.UseStartup<Startup>());
 
             await Task.WhenAll(
                 builder.Build().RunAsync(CancellationToken.None),
