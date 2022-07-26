@@ -105,7 +105,7 @@ namespace Ae.Dns.Client
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _socket.Client.RemoteEndPoint.ToString(), buffer);
+                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _socket.Client.RemoteEndPoint, buffer);
                 return;
             }
 
@@ -123,7 +123,7 @@ namespace Ae.Dns.Client
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
-                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _socket.Client.RemoteEndPoint.ToString());
+                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _socket.Client.RemoteEndPoint);
                 completionSource.SetException(new DnsClientTimeoutException(timeout, messageId.Name));
             }
         }
