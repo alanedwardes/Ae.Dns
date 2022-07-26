@@ -86,7 +86,7 @@ namespace Ae.Dns.Console
                         await WriteString(Environment.NewLine);
                     }
 
-                    foreach (var statistic in statsSet.Value.OrderByDescending(x => x.Value))
+                    foreach (var statistic in statsSet.Value.OrderByDescending(x => x.Value).Take(25))
                     {
                         await WriteString($"{statistic.Key} = {statistic.Value}");
                         await WriteString(Environment.NewLine);
