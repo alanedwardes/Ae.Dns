@@ -70,7 +70,8 @@ namespace Ae.Dns.Console
                 {
                     { "Statistics", _stats },
                     { "Top Blocked Domains", _topBlockedDomains },
-                    { "Top Permitted Domains", _topPermittedDomains }
+                    { "Top Permitted Domains", _topPermittedDomains },
+                    { "Top Prefetched Domains", _topPrefetchedDomains }
                 };
 
                 foreach (var statsSet in statsSets)
@@ -101,6 +102,7 @@ namespace Ae.Dns.Console
         private readonly ConcurrentDictionary<string, int> _stats = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentDictionary<string, int> _topPrefetchedDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentQueue<DnsHeader> _queries = new ConcurrentQueue<DnsHeader>();
         private readonly ConcurrentQueue<DnsAnswer> _answers = new ConcurrentQueue<DnsAnswer>();
 
@@ -131,6 +133,11 @@ namespace Ae.Dns.Console
             if (metricId == "Ae.Dns.Client.DnsFilterClient.Allowed")
             {
                 _topPermittedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
+            }
+
+            if (metricId.StartsWith("Ae.Dns.Client.DnsCachingClient.") && metricId.EndsWith(".Prefetch"))
+            {
+                _topPrefetchedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
             }
 
             bool IsListening() => DateTimeOffset.UtcNow - _lastListenTime > TimeSpan.FromSeconds(5);
