@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Collections.Generic;
 
 namespace Ae.Dns.Protocol
 {
@@ -21,10 +19,6 @@ namespace Ae.Dns.Protocol
         public static DnsRootServer M = new DnsRootServer('M', "202.12.27.33", "2001:dc3::35", "WIDE Project");
 
         public static IReadOnlyList<DnsRootServer> All => new[] { A, B, C, D, E, F, G, H, I, J, K, L, M };
-
-        private static ThreadLocal<Random> _random = new ThreadLocal<Random>(() => new Random());
-
-        public static DnsRootServer Random => All[_random.Value.Next(All.Count)];
     }
 }
 
