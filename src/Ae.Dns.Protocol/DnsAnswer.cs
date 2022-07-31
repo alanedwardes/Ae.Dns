@@ -23,6 +23,12 @@ namespace Ae.Dns.Protocol
         public IList<DnsResourceRecord> Answers { get; set; } = new List<DnsResourceRecord>();
 
         /// <summary>
+        /// The list of name server DNS resources returned by the server.
+        /// </summary>
+        /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
+        public IList<DnsResourceRecord> NameServers { get; set; } = new List<DnsResourceRecord>();
+
+        /// <summary>
         /// The list of additional DNS resources returned by the server.
         /// </summary>
         /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
@@ -43,11 +49,18 @@ namespace Ae.Dns.Protocol
             Header.ReadBytes(bytes, ref offset);
 
             var records = new List<DnsResourceRecord>();
-            for (var i = 0; i < Header.AnswerRecordCount + Header.NameServerRecordCount; i++)
+            for (var i = 0; i < Header.AnswerRecordCount; i++)
             {
                 records.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
             }
             Answers = records.ToArray();
+
+            var nameservers = new List<DnsResourceRecord>();
+            for (var i = 0; i < Header.NameServerRecordCount; i++)
+            {
+                nameservers.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
+            }
+            NameServers = nameservers.ToArray();
 
             var additionalRecords = new List<DnsResourceRecord>();
             for (var i = 0; i < Header.AdditionalRecordCount; i++)

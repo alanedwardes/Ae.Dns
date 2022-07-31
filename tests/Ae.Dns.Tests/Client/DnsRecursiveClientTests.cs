@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Xunit;

@@ -9,7 +9,7 @@ using Ae.Dns.Protocol.Records;
 
 namespace Ae.Dns.Client
 {
-    internal sealed class DnsRecursiveClient : IDnsClient
+    public sealed class DnsRecursiveClient : IDnsClient
     {
         private readonly IReadOnlyList<IDnsClient> _rootServerClients = DnsRootServers.All.Select(x => new DnsUdpClient(x.Ipv4Address)).ToArray();
 
@@ -27,7 +27,7 @@ namespace Ae.Dns.Client
         {
             DnsIpAddressResource lookup = null;
 
-            foreach (var part in query.Host.Split('.').Reverse())
+            while (true)
             {
                 IDnsClient dnsClient;
 
@@ -40,14 +40,24 @@ namespace Ae.Dns.Client
                     dnsClient = new DnsUdpClient(lookup.IPAddress);
                 }
 
-                var answer = await dnsClient.Query(DnsQueryFactory.CreateQuery(part, DnsQueryType.NS), token);
+                var answer = await dnsClient.Query(query, token);
+                if (answer.Answers.Any())
+                {
+                    return answer;
+                }
+
+                if (!answer.Additional.Any())
+                {
+                    var nameserver = Random(answer.NameServers.Where(x => x.Type == DnsQueryType.NS).Select(x => x.Resource).Cast<DnsTextResource>());
+
+                    var answer1 = await Query(DnsQueryFactory.CreateQuery(nameserver.Text, DnsQueryType.A), token);
+
+                    lookup = Random(answer.Answers.Where(x => x.Type == DnsQueryType.A).Select(x => x.Resource).Cast<DnsIpAddressResource>());
+                    continue;
+                }
 
                 lookup = Random(answer.Additional.Where(x => x.Type == DnsQueryType.A).Select(x => x.Resource).Cast<DnsIpAddressResource>());
-
-
             }
-
-            throw new NotImplementedException();
         }
     }
 }
