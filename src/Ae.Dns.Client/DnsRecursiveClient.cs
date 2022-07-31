@@ -11,7 +11,7 @@ namespace Ae.Dns.Client
 {
     public sealed class DnsRecursiveClient : IDnsClient
     {
-        private readonly IReadOnlyList<IDnsClient> _rootServerClients = DnsRootServers.All.Select(x => new DnsUdpClient(x.Ipv4Address)).ToArray();
+        private readonly IReadOnlyList<IDnsClient> _rootServerClients = DnsRootServer.All.Select(x => new DnsUdpClient(x.Ipv4Address)).ToArray();
 
         public void Dispose()
         {
