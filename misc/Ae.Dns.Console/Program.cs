@@ -44,7 +44,9 @@ namespace Ae.Dns.Console
 
             const string staticDnsResolverHttpClient = "StaticResolver";
 
-            services.AddHttpClient(staticDnsResolverHttpClient, x => x.BaseAddress = new Uri("https://1.1.1.1/"));
+            services.AddHttpClient(staticDnsResolverHttpClient, x => x.BaseAddress = new Uri("https://1.1.1.1/"))
+                    .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+
             services.AddSingleton<ObjectCache>(new MemoryCache("ResolverCache"));
 
             static DnsDelegatingHandler CreateDnsDelegatingHandler(IServiceProvider serviceProvider)
@@ -56,6 +58,7 @@ namespace Ae.Dns.Console
             foreach (Uri httpsUpstream in dnsConfiguration.HttpsUpstreams)
             {
                 services.AddHttpClient<IDnsClient, DnsHttpClient>(Guid.NewGuid().ToString(), x => x.BaseAddress = httpsUpstream)
+                        .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
                         .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                         .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
             }
@@ -66,6 +69,7 @@ namespace Ae.Dns.Console
             }
 
             services.AddHttpClient<DnsRemoteSetFilter>()
+                    .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
                     .AddHttpMessageHandler(CreateDnsDelegatingHandler)
                     .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
