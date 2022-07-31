@@ -27,7 +27,10 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(1, message.Header.QuestionCount);
             Assert.Equal(1, message.Header.NameServerRecordCount);
 
-            var record = message.Answers.Single();
+            Assert.Empty(message.Additional);
+            Assert.Empty(message.Answers);
+
+            var record = message.Nameservers.Single();
             Assert.Equal(DnsQueryType.SOA, record.Type);
             Assert.Equal(DnsQueryClass.IN, record.Class);
             Assert.Equal("in-addr.arpa", record.Host);
@@ -51,6 +54,9 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(1, message.Header.QuestionCount);
             Assert.Equal(0, message.Header.NameServerRecordCount);
             Assert.Equal(7, message.Answers.Count);
+
+            Assert.Empty(message.Additional);
+            Assert.Empty(message.Nameservers);
 
             var record1 = message.Answers[0];
             Assert.Equal(DnsQueryType.CNAME, record1.Type);
@@ -112,6 +118,9 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(0, message.Header.AdditionalRecordCount);
             Assert.Equal(1, message.Header.QuestionCount);
 
+            Assert.Empty(message.Additional);
+            Assert.Empty(message.Nameservers);
+
             var record = Assert.Single(message.Answers);
             Assert.Equal(DnsQueryType.A, record.Type);
             Assert.Equal(DnsQueryClass.IN, record.Class);
@@ -131,6 +140,9 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(0, message.Header.AdditionalRecordCount);
             Assert.Equal(1, message.Header.QuestionCount);
             Assert.Equal(5, message.Answers.Count);
+
+            Assert.Empty(message.Additional);
+            Assert.Empty(message.Nameservers);
 
             var record1 = message.Answers[0];
             Assert.Equal(DnsQueryType.CNAME, record1.Type);

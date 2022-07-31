@@ -12,9 +12,6 @@ namespace Ae.Dns.Tests.Client
         {
             var client = new DnsRecursiveClient();
 
-            var t = DnsRootServers.Random;
-
-
             var test = await client.Query(DnsQueryFactory.CreateQuery("argos.co.uk"));
         }
     }

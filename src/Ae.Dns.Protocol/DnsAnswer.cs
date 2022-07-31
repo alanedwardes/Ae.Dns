@@ -26,7 +26,7 @@ namespace Ae.Dns.Protocol
         /// The list of name server DNS resources returned by the server.
         /// </summary>
         /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
-        public IList<DnsResourceRecord> NameServers { get; set; } = new List<DnsResourceRecord>();
+        public IList<DnsResourceRecord> Nameservers { get; set; } = new List<DnsResourceRecord>();
 
         /// <summary>
         /// The list of additional DNS resources returned by the server.
@@ -43,31 +43,24 @@ namespace Ae.Dns.Protocol
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Header, Answers);
 
+        private IList<DnsResourceRecord> ReadRecords(int count, byte[] bytes, ref int offset)
+        {
+            var records = new List<DnsResourceRecord>();
+            for (var i = 0; i < count; i++)
+            {
+                records.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
+            }
+
+            return records;
+        }
+
         /// <inheritdoc/>
         public void ReadBytes(byte[] bytes, ref int offset)
         {
             Header.ReadBytes(bytes, ref offset);
-
-            var records = new List<DnsResourceRecord>();
-            for (var i = 0; i < Header.AnswerRecordCount; i++)
-            {
-                records.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
-            }
-            Answers = records.ToArray();
-
-            var nameservers = new List<DnsResourceRecord>();
-            for (var i = 0; i < Header.NameServerRecordCount; i++)
-            {
-                nameservers.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
-            }
-            NameServers = nameservers.ToArray();
-
-            var additionalRecords = new List<DnsResourceRecord>();
-            for (var i = 0; i < Header.AdditionalRecordCount; i++)
-            {
-                additionalRecords.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
-            }
-            Additional = additionalRecords.ToArray();
+            Answers = ReadRecords(Header.AnswerRecordCount, bytes, ref offset);
+            Nameservers = ReadRecords(Header.NameServerRecordCount, bytes, ref offset);
+            Additional = ReadRecords(Header.AdditionalRecordCount, bytes, ref offset);
         }
 
         /// <inheritdoc/>
@@ -78,6 +71,7 @@ namespace Ae.Dns.Protocol
         {
             yield return DnsByteExtensions.ToBytes(Header);
             yield return Answers.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
+            yield return Nameservers.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
             yield return Additional.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
         }
     }

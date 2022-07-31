@@ -48,7 +48,7 @@ namespace Ae.Dns.Client
 
                 if (!answer.Additional.Any())
                 {
-                    var nameserver = Random(answer.NameServers.Where(x => x.Type == DnsQueryType.NS).Select(x => x.Resource).Cast<DnsTextResource>());
+                    var nameserver = Random(answer.Nameservers.Where(x => x.Type == DnsQueryType.NS).Select(x => x.Resource).Cast<DnsTextResource>());
 
                     var answer1 = await Query(DnsQueryFactory.CreateQuery(nameserver.Text, DnsQueryType.A), token);
 
