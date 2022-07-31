@@ -5,22 +5,22 @@ namespace Ae.Dns.Client.Exceptions
     /// <summary>
     /// An exception thrown when a DNS request times out.
     /// </summary>
-    public class DnsClientException : Exception
+    public sealed class DnsClientTimeoutException : DnsClientException
     {
         /// <summary>
         /// Construct a new <see cref="DnsClientTimeoutException"/> using the specified timeout and domain name.
         /// </summary>
-        /// <param name="message">The error message.</param>
+        /// <param name="timeout">The timeout for this request.</param>
         /// <param name="domain">The related DNS query.</param>
-        public DnsClientException(string message, string domain)
-            : base($"{message} for {domain}")
+        public DnsClientTimeoutException(TimeSpan timeout, string domain)
+            : base($"Query timed out after {timeout}s", domain)
         {
-            Domain = domain;
+            Timeout = timeout;
         }
 
         /// <summary>
-        /// The domain which timed out.
+        /// The timeout for this request.
         /// </summary>
-        public string Domain { get; }
+        public TimeSpan Timeout { get; }
     }
 }

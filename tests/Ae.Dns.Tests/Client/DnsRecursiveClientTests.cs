@@ -7,12 +7,23 @@ namespace Ae.Dns.Tests.Client
 {
     public class DnsRecursiveClientTests
     {
-        [Fact]
-        public async Task Test()
+        [Theory]
+        [InlineData("argos.co.uk")]
+        [InlineData("pages.github.com")]
+        [InlineData("twitter.com")]
+        [InlineData("news.bbc.co.uk")]
+        [InlineData("www.theguardian.com")]
+        //[InlineData("ae-infrastructure-eu-west-1.s3.eu-west-1.amazonaws.com")] TODO investigate
+        [InlineData("news.ycombinator.com")]
+        [InlineData("asimov.vortex.data.trafficmanager.net")]
+        public async Task RecursiveLookup(string domain)
         {
-            var client = new DnsRecursiveClient();
+            using var client = new DnsRecursiveClient();
 
-            var test = await client.Query(DnsQueryFactory.CreateQuery("argos.co.uk"));
+            var answer = await client.Query(DnsQueryFactory.CreateQuery(domain));
+
+            Assert.Empty(answer.Additional);
+            Assert.NotEmpty(answer.Answers);
         }
     }
 }
