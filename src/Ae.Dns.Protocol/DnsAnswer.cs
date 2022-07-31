@@ -22,6 +22,12 @@ namespace Ae.Dns.Protocol
         /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
         public IList<DnsResourceRecord> Answers { get; set; } = new List<DnsResourceRecord>();
 
+        /// <summary>
+        /// The list of additional DNS resources returned by the server.
+        /// </summary>
+        /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
+        public IList<DnsResourceRecord> Additional { get; set; } = new List<DnsResourceRecord>();
+
         /// <inheritdoc/>
         public bool Equals(DnsAnswer other) => Header.Equals(other.Header) && Answers.SequenceEqual(other.Answers);
 
@@ -42,6 +48,13 @@ namespace Ae.Dns.Protocol
                 records.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
             }
             Answers = records.ToArray();
+
+            var additionalRecords = new List<DnsResourceRecord>();
+            for (var i = 0; i < Header.AdditionalRecordCount; i++)
+            {
+                additionalRecords.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
+            }
+            Additional = additionalRecords.ToArray();
         }
 
         /// <inheritdoc/>
@@ -52,6 +65,7 @@ namespace Ae.Dns.Protocol
         {
             yield return DnsByteExtensions.ToBytes(Header);
             yield return Answers.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
+            yield return Additional.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
         }
     }
 }
