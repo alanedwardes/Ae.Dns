@@ -49,16 +49,12 @@ namespace Ae.Dns.Client
 
         private async Task<DnsAnswer> QueryRecursive(DnsHeader query, int depth, CancellationToken token = default)
         {
-            Console.WriteLine(query.ToString());
-
             int lookups = 0;
             DnsIpAddressResource lookup = null;
 
             while (depth < 3 && lookups < 5)
             {
                 using IDnsClient dnsClient = lookup == null ? null : new DnsUdpClient(lookup.IPAddress);
-
-                Console.WriteLine(lookup);
 
                 lookups++;
                 var nameserverAnswer = await (dnsClient ?? Random(_rootServerClients)).Query(query, token);
