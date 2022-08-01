@@ -7,7 +7,7 @@ namespace Ae.Dns.Tests.Client
 {
     public class DnsRecursiveClientTests
     {
-        [Theory]
+        [Theory(Skip = "Temporary debugging")]
         [InlineData("argos.co.uk")]
         [InlineData("pages.github.com")]
         [InlineData("twitter.com")]
