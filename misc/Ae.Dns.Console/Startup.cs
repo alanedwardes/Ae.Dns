@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ae.Dns.Protocol;
+using MathNet.Numerics.Statistics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -74,6 +76,26 @@ namespace Ae.Dns.Console
                     { "Top Prefetched Domains", _topPrefetchedDomains }
                 };
 
+                if (_responseTimes.Count > 0)
+                {
+                    var responseTimesTitle = $"Query Response Statistics ({_responseTimes.Count})";
+                    await WriteString(responseTimesTitle);
+                    await WriteString(Environment.NewLine);
+                    await WriteString(new string('=', responseTimesTitle.Length));
+                    await WriteString(Environment.NewLine);
+                    await WriteString($"avg = {_responseTimes.Average():n2}s");
+                    await WriteString(Environment.NewLine);
+                    await WriteString($"p90 = {_responseTimes.Percentile(90):n2}s");
+                    await WriteString(Environment.NewLine);
+                    await WriteString($"p99 = {_responseTimes.Percentile(99):n2}s");
+                    await WriteString(Environment.NewLine);
+                    await WriteString($"p75 = {_responseTimes.Percentile(75):n2}s");
+                    await WriteString(Environment.NewLine);
+                    await WriteString($"sdv = {_responseTimes.StandardDeviation():n2}s");
+                    await WriteString(Environment.NewLine);
+                    await WriteString(Environment.NewLine);
+                }
+
                 foreach (var statsSet in statsSets)
                 {
                     await WriteString(statsSet.Key);
@@ -99,6 +121,7 @@ namespace Ae.Dns.Console
         }
 
         private DateTimeOffset _lastListenTime;
+        private readonly BlockingCollection<float> _responseTimes = new BlockingCollection<float>(sizeof(float) * 10_000_000);
         private readonly ConcurrentDictionary<string, int> _stats = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new ConcurrentDictionary<string, int>();
@@ -164,6 +187,8 @@ namespace Ae.Dns.Console
                 {
                     _answers.Enqueue(GetObjectFromTags<DnsAnswer>(tags, "Answer"));
                 }
+
+                _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
             }
         }
     }

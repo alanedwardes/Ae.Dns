@@ -83,6 +83,7 @@ namespace Ae.Dns.Server
         private async void Respond(UdpReceiveResult query, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
+            var stopwatchMetricState = new KeyValuePair<string, object>("Stopwatch", stopwatch);
 
             DnsHeader message;
             try
@@ -125,8 +126,12 @@ namespace Ae.Dns.Server
                 _logger.LogCritical(e, "Unable to send back response to {0}", query.RemoteEndPoint);
                 return;
             }
+            finally
+            {
+                stopwatch.Stop();
+            }
 
-            _responseCounter.Add(1, queryMetricState, answerMetricState);
+            _responseCounter.Add(1, queryMetricState, answerMetricState, stopwatchMetricState);
             _logger.LogTrace("Responded to DNS request for {Domain} in {ResponseTime}", message.Host, stopwatch.Elapsed.TotalSeconds);
         }
     }
