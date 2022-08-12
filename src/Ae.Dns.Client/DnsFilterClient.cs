@@ -49,7 +49,7 @@ namespace Ae.Dns.Client
         private DnsHeader CreateNullHeader(DnsHeader query) => new DnsHeader
         {
             Id = query.Id,
-            ResponseCode = DnsResponseCode.NXDomain,
+            ResponseCode = DnsResponseCode.Refused,
             IsQueryResponse = true,
             RecursionAvailable = true,
             RecusionDesired = query.RecusionDesired,

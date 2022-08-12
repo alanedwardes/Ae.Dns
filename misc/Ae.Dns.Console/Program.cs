@@ -118,7 +118,9 @@ namespace Ae.Dns.Console
 
             IDnsClient filter = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), compositeFilter, cache);
 
-            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), filter);
+            IDnsClient metrics = new DnsMetricsClient(filter);
+
+            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), metrics);
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()

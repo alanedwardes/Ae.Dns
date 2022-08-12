@@ -73,7 +73,9 @@ namespace Ae.Dns.Console
                     { "Statistics", _stats },
                     { "Top Blocked Domains", _topBlockedDomains },
                     { "Top Permitted Domains", _topPermittedDomains },
-                    { "Top Prefetched Domains", _topPrefetchedDomains }
+                    { "Top Prefetched Domains", _topPrefetchedDomains },
+                    { "Top Missing Domains", _topMissingDomains },
+                    { "Top Other Error Domains", _topOtherErrorDomains }
                 };
 
                 if (_responseTimes.Count > 0)
@@ -126,6 +128,8 @@ namespace Ae.Dns.Console
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentDictionary<string, int> _topPrefetchedDomains = new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentDictionary<string, int> _topMissingDomains = new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentDictionary<string, int> _topOtherErrorDomains = new ConcurrentDictionary<string, int>();
         private readonly ConcurrentQueue<DnsHeader> _queries = new ConcurrentQueue<DnsHeader>();
         private readonly ConcurrentQueue<DnsAnswer> _answers = new ConcurrentQueue<DnsAnswer>();
 
@@ -189,6 +193,16 @@ namespace Ae.Dns.Console
                 }
 
                 _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
+            }
+
+            if (metricId == "Ae.Dns.Client.DnsMetricsClient.Missing")
+            {
+                _topMissingDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
+            }
+
+            if (metricId == "Ae.Dns.Client.DnsMetricsClient.Other")
+            {
+                _topOtherErrorDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
             }
         }
     }
