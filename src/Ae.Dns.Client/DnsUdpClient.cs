@@ -119,12 +119,21 @@ namespace Ae.Dns.Client
         {
             var timeout = TimeSpan.FromSeconds(2);
 
-            await Task.Delay(timeout, token);
+            Exception exception = new DnsClientTimeoutException(timeout, messageId.Name);
+            try
+            {
+                await Task.Delay(timeout, token);
+            }
+            catch (OperationCanceledException e)
+            {
+                // Ensure cancellation does complete the task
+                exception = e;
+            }
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
                 _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _socket.Client.RemoteEndPoint);
-                completionSource.SetException(new DnsClientTimeoutException(timeout, messageId.Name));
+                completionSource.SetException(exception);
             }
         }
 

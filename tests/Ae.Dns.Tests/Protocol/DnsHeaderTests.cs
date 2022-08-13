@@ -11,8 +11,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             foreach (var answer in SampleDnsPackets.Answers)
             {
-                var header = DnsByteExtensions.FromBytes<DnsHeader>(answer);
-                Assert.True(header.IsQueryResponse);
+                Assert.True(DnsByteExtensions.FromBytes<DnsAnswer>(answer).Header.IsQueryResponse);
             }
 
             foreach (var query in SampleDnsPackets.Queries)
@@ -51,13 +50,6 @@ namespace Ae.Dns.Tests.Protocol
             header.RecusionDesired = true;
             Assert.True(header.RecusionDesired);
             Assert.Equal(36228, header.Flags);
-        }
-
-        [Fact]
-        public void TestDnsHeaderIsNxDomainResponse()
-        {
-            var header = DnsByteExtensions.FromBytes<DnsHeader>(SampleDnsPackets.Answer1);
-            Assert.Equal(DnsResponseCode.NXDomain, header.ResponseCode);
         }
     }
 }
