@@ -12,10 +12,42 @@ namespace Ae.Dns.Client
     /// </summary>
     public sealed class DnsMetricsClient : IDnsClient
     {
-        private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsMetricsClient");
-        private static readonly Counter<int> _missingCounter = _meter.CreateCounter<int>("Missing");
-        private static readonly Counter<int> _refusedCounter = _meter.CreateCounter<int>("Refused");
-        private static readonly Counter<int> _otherCounter = _meter.CreateCounter<int>("Other");
+        /// <summary>
+        /// The name of the metrics meter.
+        /// </summary>
+        public static readonly string MeterName = "Ae.Dns.Client.DnsMetricsClient";
+
+        /// <summary>
+        /// The name of the successful response counter.
+        /// </summary>
+        public static readonly string SuccessCounterName = "Success";
+
+        /// <summary>
+        /// The name of the missing response (NXDomain) counter.
+        /// </summary>
+        public static readonly string MissingErrorCounterName = "MissingError";
+
+        /// <summary>
+        /// The name of the refused response counter.
+        /// </summary>
+        public static readonly string RefusedErrorCounterName = "RefusedError";
+
+        /// <summary>
+        /// The name of the other error response counter.
+        /// </summary>
+        public static readonly string OtherErrorCounterName = "OtherError";
+
+        /// <summary>
+        /// The name of the exception error response counter.
+        /// </summary>
+        public static readonly string ExceptionErrorCounterName = "ExceptionError";
+
+        private static readonly Meter _meter = new Meter(MeterName);
+        private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>(SuccessCounterName);
+        private static readonly Counter<int> _missingCounter = _meter.CreateCounter<int>(MissingErrorCounterName);
+        private static readonly Counter<int> _refusedCounter = _meter.CreateCounter<int>(RefusedErrorCounterName);
+        private static readonly Counter<int> _otherErrorCounter = _meter.CreateCounter<int>(OtherErrorCounterName);
+        private static readonly Counter<int> _exceptionCounter = _meter.CreateCounter<int>(ExceptionErrorCounterName);
 
         private readonly IDnsClient _dnsClient;
 
@@ -32,22 +64,32 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default)
         {
-            var queryMetricState = new KeyValuePair<string, object>("Query", query);
+            void IncrementCounter(Counter<int> counter) => counter.Add(1, new KeyValuePair<string, object>("Query", query));
 
-            var answer = await _dnsClient.Query(query, token);
+            DnsAnswer answer;
+            try
+            {
+                answer = await _dnsClient.Query(query, token);
+            }
+            catch
+            {
+                IncrementCounter(_exceptionCounter);
+                throw;
+            }
 
             switch (answer.Header.ResponseCode)
             {
                 case DnsResponseCode.NoError:
+                    IncrementCounter(_successCounter);
                     break;
                 case DnsResponseCode.NXDomain:
-                    _missingCounter.Add(1, queryMetricState);
+                    IncrementCounter(_missingCounter);
                     break;
                 case DnsResponseCode.Refused:
-                    _refusedCounter.Add(1, queryMetricState);
+                    IncrementCounter(_refusedCounter);
                     break;
                 default:
-                    _otherCounter.Add(1, queryMetricState);
+                    IncrementCounter(_otherErrorCounter);
                     break;
             }
 

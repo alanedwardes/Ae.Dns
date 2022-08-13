@@ -6,6 +6,7 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using MathNet.Numerics.Statistics;
 using Microsoft.AspNetCore.Builder;
@@ -18,7 +19,7 @@ namespace Ae.Dns.Console
     {
         public void Configure(IApplicationBuilder app)
         {
-            MeterListener meterListener = new MeterListener
+            MeterListener meterListener = new()
             {
                 InstrumentPublished = (instrument, listener) =>
                 {
@@ -43,29 +44,6 @@ namespace Ae.Dns.Console
                 {
                     await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(str), context.RequestAborted);
                     await context.Response.BodyWriter.FlushAsync(context.RequestAborted);
-                }
-
-                if (context.Request.Path.StartsWithSegments("/live"))
-                {
-                    await WriteString("Listening..." + Environment.NewLine);
-
-                    while (!context.RequestAborted.IsCancellationRequested)
-                    {
-                        _lastListenTime = DateTimeOffset.UtcNow;
-
-                        if (_queries.TryDequeue(out var query))
-                        {
-                            await WriteString(query + Environment.NewLine);
-                        }
-
-                        if (_answers.TryDequeue(out var answer))
-                        {
-                            await WriteString(answer + Environment.NewLine);
-                        }
-
-                        await Task.Delay(TimeSpan.FromMilliseconds(10), context.RequestAborted);
-                    }
-                    return;
                 }
 
                 var statsSets = new Dictionary<string, IDictionary<string, int>>
@@ -122,16 +100,16 @@ namespace Ae.Dns.Console
             });
         }
 
-        private DateTimeOffset _lastListenTime;
-        private readonly BlockingCollection<float> _responseTimes = new BlockingCollection<float>(sizeof(float) * 10_000_000);
-        private readonly ConcurrentDictionary<string, int> _stats = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentDictionary<string, int> _topPrefetchedDomains = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentDictionary<string, int> _topMissingDomains = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentDictionary<string, int> _topOtherErrorDomains = new ConcurrentDictionary<string, int>();
-        private readonly ConcurrentQueue<DnsHeader> _queries = new ConcurrentQueue<DnsHeader>();
-        private readonly ConcurrentQueue<DnsAnswer> _answers = new ConcurrentQueue<DnsAnswer>();
+        private readonly ConcurrentDictionary<string, int> _topExceptionDomains = new();
+        private readonly BlockingCollection<float> _responseTimes = new(sizeof(float) * 10_000_000);
+        private readonly ConcurrentDictionary<string, int> _stats = new();
+        private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new();
+        private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new();
+        private readonly ConcurrentDictionary<string, int> _topPrefetchedDomains = new();
+        private readonly ConcurrentDictionary<string, int> _topMissingDomains = new();
+        private readonly ConcurrentDictionary<string, int> _topOtherErrorDomains = new();
+        private readonly ConcurrentQueue<DnsHeader> _queries = new();
+        private readonly ConcurrentQueue<DnsAnswer> _answers = new();
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
@@ -152,57 +130,37 @@ namespace Ae.Dns.Console
                 throw new InvalidOperationException();
             }
 
-            if (metricId == "Ae.Dns.Client.DnsFilterClient.Blocked")
-            {
-                _topBlockedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
-            }
-
-            if (metricId == "Ae.Dns.Client.DnsFilterClient.Allowed")
-            {
-                _topPermittedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
-            }
-
             if (metricId.StartsWith("Ae.Dns.Client.DnsCachingClient.") && metricId.EndsWith(".Prefetch"))
             {
                 _topPrefetchedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
             }
 
-            bool IsListening() => DateTimeOffset.UtcNow - _lastListenTime > TimeSpan.FromSeconds(5);
-
             if (metricId == "Ae.Dns.Server.DnsUdpServer.Query")
             {
-                if (IsListening())
-                {
-                    _queries.Clear();
-                }
-                else
-                {
-                    _queries.Enqueue(GetObjectFromTags<DnsHeader>(tags, "Query"));
-                }
+                _queries.Enqueue(GetObjectFromTags<DnsHeader>(tags, "Query"));
             }
 
             if (metricId == "Ae.Dns.Server.DnsUdpServer.Response")
             {
-                if (IsListening())
-                {
-                    _answers.Clear();
-                }
-                else
-                {
-                    _answers.Enqueue(GetObjectFromTags<DnsAnswer>(tags, "Answer"));
-                }
-
+                _answers.Enqueue(GetObjectFromTags<DnsAnswer>(tags, "Answer"));
                 _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
             }
 
-            if (metricId == "Ae.Dns.Client.DnsMetricsClient.Missing")
+            if (instrument.Meter.Name == DnsMetricsClient.MeterName)
             {
-                _topMissingDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
-            }
+                var meterMap = new Dictionary<string, ConcurrentDictionary<string, int>>
+                {
+                    { DnsMetricsClient.SuccessCounterName, _topPermittedDomains },
+                    { DnsMetricsClient.OtherErrorCounterName, _topOtherErrorDomains },
+                    { DnsMetricsClient.MissingErrorCounterName, _topMissingDomains },
+                    { DnsMetricsClient.RefusedErrorCounterName, _topBlockedDomains },
+                    { DnsMetricsClient.ExceptionErrorCounterName, _topExceptionDomains }
+                };
 
-            if (metricId == "Ae.Dns.Client.DnsMetricsClient.Other")
-            {
-                _topOtherErrorDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
+                if (meterMap.TryGetValue(instrument.Name, out var domainCounts))
+                {
+                    domainCounts.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
+                }
             }
         }
     }
