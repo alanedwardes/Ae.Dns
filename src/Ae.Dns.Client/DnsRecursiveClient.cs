@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,6 +58,7 @@ namespace Ae.Dns.Client
                 using IDnsClient dnsClient = lookup == null ? null : new DnsUdpClient(lookup.IPAddress);
 
                 lookups++;
+                query.Id = DnsQueryFactory.GenerateId();
                 var nameserverAnswer = await (dnsClient ?? Random(_rootServerClients)).Query(query, token);
                 if (nameserverAnswer.Answers.Any())
                 {
@@ -69,14 +71,36 @@ namespace Ae.Dns.Client
                     continue;
                 }
 
-                string nameserver = nameserverAnswer.Nameservers.Any() ? RandomRecord<DnsTextResource>(nameserverAnswer.Nameservers, DnsQueryType.NS).Text : query.Host;
-                var nameserverAddressLookup = DnsQueryFactory.CreateQuery(nameserver, _ipAddressQueryType);
-                var nameserverAddressAnswer = await QueryRecursive(nameserverAddressLookup, depth++, token);
+                if (nameserverAnswer.Nameservers.Any())
+                {
+                    string nameserver = RandomRecord<DnsTextResource>(nameserverAnswer.Nameservers, DnsQueryType.NS).Text;
+                    lookup = await LookupNameserverIpAddress(nameserver, depth, token);
+                    continue;
+                }
 
-                lookup = RandomRecord<DnsIpAddressResource>(nameserverAddressAnswer.Answers, _ipAddressQueryType);
+                lookup = await LookupNameserverIpAddress(query.Host, depth, token);
             }
 
             throw new DnsClientException($"Too much recursion ({depth}) or too many lookups ({lookups})", query.Host);
+        }
+
+        private async Task<DnsIpAddressResource> LookupNameserverIpAddress(string nameserver, int depth, CancellationToken token)
+        {
+            var nameserverAddressLookup = DnsQueryFactory.CreateQuery(nameserver, _ipAddressQueryType);
+            var nameserverAddressAnswer = await QueryRecursive(nameserverAddressLookup, depth++, token);
+
+            if (nameserverAddressAnswer.Answers.Any(x => x.Type == _ipAddressQueryType))
+            {
+                return RandomRecord<DnsIpAddressResource>(nameserverAddressAnswer.Answers, _ipAddressQueryType);
+            }
+
+            if (nameserverAddressAnswer.Answers.Any(x => x.Type == DnsQueryType.CNAME))
+            {
+                var cname = RandomRecord<DnsTextResource>(nameserverAddressAnswer.Answers, DnsQueryType.CNAME);
+                return await LookupNameserverIpAddress(cname.Text, depth, token);
+            }
+
+            throw new DnsClientException($"Unable to process answer {nameserverAddressAnswer}", nameserver);
         }
     }
 }
