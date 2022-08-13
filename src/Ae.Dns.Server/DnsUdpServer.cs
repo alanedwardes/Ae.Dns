@@ -80,35 +80,35 @@ namespace Ae.Dns.Server
             }
         }
 
-        private async void Respond(UdpReceiveResult query, CancellationToken token)
+        private async void Respond(UdpReceiveResult request, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
             var stopwatchMetricState = new KeyValuePair<string, object>("Stopwatch", stopwatch);
 
-            DnsHeader message;
+            DnsHeader query;
             try
             {
-                message = DnsByteExtensions.FromBytes<DnsHeader>(query.Buffer);
+                query = DnsByteExtensions.FromBytes<DnsHeader>(request.Buffer);
             }
             catch (Exception e)
             {
                 _packetParseErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to parse incoming packet: {0}", DnsByteExtensions.ToDebugString(query.Buffer));
+                _logger.LogCritical(e, "Unable to parse incoming packet {PacketBytes}", DnsByteExtensions.ToDebugString(request.Buffer));
                 return;
             }
 
-            var queryMetricState = new KeyValuePair<string, object>("Query", message);
+            var queryMetricState = new KeyValuePair<string, object>("Query", query);
             _queryCounter.Add(1, queryMetricState);
 
             DnsAnswer answer;
             try
             {
-                answer = await _dnsClient.Query(message, token);
+                answer = await _dnsClient.Query(query, token);
             }
             catch (Exception e)
             {
                 _lookupErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to resolve {0}", message);
+                _logger.LogCritical(e, "Unable to resolve {Query}", query);
                 return;
             }
 
@@ -118,12 +118,12 @@ namespace Ae.Dns.Server
 
             try
             {
-                await _listener.SendAsync(answerBytes, answerBytes.Length, query.RemoteEndPoint);
+                await _listener.SendAsync(answerBytes, answerBytes.Length, request.RemoteEndPoint);
             }
             catch (Exception e)
             {
                 _respondErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to send back response to {0}", query.RemoteEndPoint);
+                _logger.LogCritical(e, "Unable to send back response to {RemoteEndPoint}", request.RemoteEndPoint);
                 return;
             }
             finally
@@ -132,7 +132,7 @@ namespace Ae.Dns.Server
             }
 
             _responseCounter.Add(1, queryMetricState, answerMetricState, stopwatchMetricState);
-            _logger.LogTrace("Responded to DNS request for {Domain} in {ResponseTime}", message.Host, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogTrace("Responded to {Query} from {RemoteEndPoint} in {ResponseTime}", query, request.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }
