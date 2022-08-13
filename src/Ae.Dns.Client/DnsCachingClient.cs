@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Runtime.Caching;
 using System.Threading;
@@ -33,10 +32,6 @@ namespace Ae.Dns.Client
             public TimeSpan Expires => Expiry - DateTimeOffset.UtcNow;
         }
 
-        private readonly Meter _meter;
-        private readonly Counter<int> _cacheHitCounter;
-        private readonly Counter<int> _cacheMissCounter;
-        private readonly Counter<int> _cachePrefetchCounter;
         private readonly ILogger<DnsCachingClient> _logger;
         private readonly IDnsClient _dnsClient;
         private readonly ObjectCache _objectCache;
@@ -64,11 +59,6 @@ namespace Ae.Dns.Client
             _logger = logger;
             _dnsClient = dnsClient;
             _objectCache = objectCache;
-
-            _meter = new Meter($"Ae.Dns.Client.DnsCachingClient.{objectCache.Name}");
-            _cacheHitCounter = _meter.CreateCounter<int>("Hit");
-            _cacheMissCounter = _meter.CreateCounter<int>("Miss");
-            _cachePrefetchCounter = _meter.CreateCounter<int>("Prefetch");
         }
 
         private string GetCacheKey(DnsHeader header) => $"{header.Host}~{header.QueryType}~{header.QueryClass}";
@@ -81,11 +71,10 @@ namespace Ae.Dns.Client
             var cachedAnswer = GetCachedAnswer(query);
             if (cachedAnswer != null)
             {
-                _cacheHitCounter.Add(1, GetMetricState(query));
+                cachedAnswer.Header.Tags.Add("IsCached", true);
                 return cachedAnswer;
             }
 
-            _cacheMissCounter.Add(1, GetMetricState(query));
             return await GetFreshAnswer(query, token);
         }
 
@@ -128,6 +117,8 @@ namespace Ae.Dns.Client
         {
             using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
+            query.Tags.Add("IsPrefetch", true);
+
             try
             {
                 await GetFreshAnswer(query, tokenSource.Token);
@@ -137,8 +128,6 @@ namespace Ae.Dns.Client
                 _logger.LogWarning(ex, "Prefetch failed");
                 throw;
             }
-
-            _cachePrefetchCounter.Add(1, GetMetricState(query));
         }
 
         private async Task<DnsAnswer> GetFreshAnswer(DnsHeader query, CancellationToken token)

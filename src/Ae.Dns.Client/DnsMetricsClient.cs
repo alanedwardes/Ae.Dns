@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,7 +65,10 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default)
         {
-            void IncrementCounter(Counter<int> counter) => counter.Add(1, new KeyValuePair<string, object>("Query", query));
+            var sw = Stopwatch.StartNew();
+
+            var queryTag = new KeyValuePair<string, object>("Query", query);
+            var stopwatchTag = new KeyValuePair<string, object>("Stopwatch", sw);
 
             DnsAnswer answer;
             try
@@ -73,23 +77,29 @@ namespace Ae.Dns.Client
             }
             catch
             {
-                IncrementCounter(_exceptionCounter);
+                _exceptionCounter.Add(1, queryTag, stopwatchTag);
                 throw;
             }
+            finally
+            {
+                sw.Stop();
+            }
+
+            var answerTag = new KeyValuePair<string, object>("Answer", answer);
 
             switch (answer.Header.ResponseCode)
             {
                 case DnsResponseCode.NoError:
-                    IncrementCounter(_successCounter);
+                    _successCounter.Add(1, queryTag, answerTag, stopwatchTag);
                     break;
                 case DnsResponseCode.NXDomain:
-                    IncrementCounter(_missingCounter);
+                    _missingCounter.Add(1, queryTag, answerTag, stopwatchTag);
                     break;
                 case DnsResponseCode.Refused:
-                    IncrementCounter(_refusedCounter);
+                    _refusedCounter.Add(1, queryTag, answerTag, stopwatchTag);
                     break;
                 default:
-                    IncrementCounter(_otherErrorCounter);
+                    _otherErrorCounter.Add(1, queryTag, answerTag, stopwatchTag);
                     break;
             }
 

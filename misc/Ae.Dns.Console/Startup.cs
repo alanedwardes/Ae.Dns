@@ -54,28 +54,35 @@ namespace Ae.Dns.Console
                     { "Top Prefetched Domains", _topPrefetchedDomains },
                     { "Top Missing Domains", _topMissingDomains },
                     { "Top Other Error Domains", _topOtherErrorDomains },
-                    { "Top Exception Error Domains", _topExceptionDomains }
+                    { "Top Exception Error Domains", _topExceptionDomains },
+                    { "Top Query Types", _topQueryTypes },
+                    { "Top Record Types", _topRecordTypes }
                 };
 
-                if (_responseTimes.Count > 0)
+                async Task WriteResponseStatistics(string title, IReadOnlyCollection<float> values)
                 {
-                    var responseTimesTitle = $"Query Response Statistics ({_responseTimes.Count})";
-                    await WriteString(responseTimesTitle);
+                    await WriteString(title);
                     await WriteString(Environment.NewLine);
-                    await WriteString(new string('=', responseTimesTitle.Length));
+                    await WriteString(new string('=', title.Length));
                     await WriteString(Environment.NewLine);
-                    await WriteString($"avg = {_responseTimes.Average():n2}s");
-                    await WriteString(Environment.NewLine);
-                    await WriteString($"p90 = {_responseTimes.Percentile(90):n2}s");
-                    await WriteString(Environment.NewLine);
-                    await WriteString($"p99 = {_responseTimes.Percentile(99):n2}s");
-                    await WriteString(Environment.NewLine);
-                    await WriteString($"p75 = {_responseTimes.Percentile(75):n2}s");
-                    await WriteString(Environment.NewLine);
-                    await WriteString($"sdv = {_responseTimes.StandardDeviation():n2}s");
+
+                    if (values.Count > 0)
+                    {
+                        await WriteString($"avg = {values.Average():n2}s, sdv = {values.StandardDeviation():n2}s");
+                        await WriteString(Environment.NewLine);
+                        await WriteString($"p99 = {values.Percentile(99):n2}s, p90 = {values.Percentile(90):n2}s, p75 = {values.Percentile(75):n2}s");
+                    }
+                    else
+                    {
+                        await WriteString("None");
+                    }
+
                     await WriteString(Environment.NewLine);
                     await WriteString(Environment.NewLine);
                 }
+
+                await WriteResponseStatistics($"Query Times ({_responseTimes.Count})", _responseTimes);
+                await WriteResponseStatistics($"Record TTLs ({_responseTimes.Count})", _ttlTimes);
 
                 foreach (var statsSet in statsSets)
                 {
@@ -96,7 +103,7 @@ namespace Ae.Dns.Console
                         _ = int.TryParse(limitValues.ToString(), out limit);
                     }
 
-                    foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value : statsSet.Value.OrderByDescending(x => x.Value).Take(limit))
+                    foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value.OrderBy(x => x.Key) : statsSet.Value.OrderByDescending(x => x.Value).Take(limit))
                     {
                         await WriteString($"{statistic.Key} = {statistic.Value}");
                         await WriteString(Environment.NewLine);
@@ -108,6 +115,7 @@ namespace Ae.Dns.Console
         }
 
         private readonly BlockingCollection<float> _responseTimes = new(sizeof(float) * 10_000_000);
+        private readonly BlockingCollection<float> _ttlTimes = new(sizeof(float) * 10_000_000);
         private readonly ConcurrentDictionary<string, int> _stats = new();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new();
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new();
@@ -115,6 +123,8 @@ namespace Ae.Dns.Console
         private readonly ConcurrentDictionary<string, int> _topMissingDomains = new();
         private readonly ConcurrentDictionary<string, int> _topOtherErrorDomains = new();
         private readonly ConcurrentDictionary<string, int> _topExceptionDomains = new();
+        private readonly ConcurrentDictionary<string, int> _topQueryTypes = new();
+        private readonly ConcurrentDictionary<string, int> _topRecordTypes = new();
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
@@ -135,16 +145,6 @@ namespace Ae.Dns.Console
                 throw new InvalidOperationException();
             }
 
-            if (metricId.StartsWith("Ae.Dns.Client.DnsCachingClient.") && metricId.EndsWith(".Prefetch"))
-            {
-                _topPrefetchedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
-            }
-
-            if (metricId == "Ae.Dns.Server.DnsUdpServer.Response")
-            {
-                _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
-            }
-
             if (instrument.Meter.Name == DnsMetricsClient.MeterName)
             {
                 var meterMap = new Dictionary<string, ConcurrentDictionary<string, int>>
@@ -158,7 +158,31 @@ namespace Ae.Dns.Console
 
                 if (meterMap.TryGetValue(instrument.Name, out var domainCounts))
                 {
-                    domainCounts.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
+                    var query = GetObjectFromTags<DnsHeader>(tags, "Query");
+
+                    if (query.Tags.ContainsKey("IsPrefetch"))
+                    {
+                        _topPrefetchedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
+                    }
+
+                    domainCounts.AddOrUpdate(query.Host, 1, (id, count) => count + 1);
+
+                    if (instrument.Name == DnsMetricsClient.SuccessCounterName)
+                    {
+                        _topQueryTypes.AddOrUpdate(query.QueryType.ToString(), 1, (id, count) => count + 1);
+
+                        var answer = GetObjectFromTags<DnsAnswer>(tags, "Answer");
+                        if (!answer.Header.Tags.ContainsKey("IsCached"))
+                        {
+                            foreach (var record in answer.Answers)
+                            {
+                                _topRecordTypes.AddOrUpdate(record.Type.ToString(), 1, (id, count) => count + 1);
+                                _ttlTimes.Add((float)record.TimeToLive.TotalSeconds);
+                            }
+
+                            _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
+                        }
+                    }
                 }
             }
         }

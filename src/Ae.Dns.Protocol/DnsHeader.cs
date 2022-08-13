@@ -222,5 +222,11 @@ namespace Ae.Dns.Protocol
             yield return DnsByteExtensions.ToBytes(QueryType);
             yield return DnsByteExtensions.ToBytes(QueryClass);
         }
+
+        /// <summary>
+        /// A generic bag of tags associated with this object.
+        /// Will not be serialised and/or passed over the wire.
+        /// </summary>
+        public IDictionary<string, object> Tags { get; } = new Dictionary<string, object>();
     }
 }

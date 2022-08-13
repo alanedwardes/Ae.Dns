@@ -31,7 +31,7 @@ namespace Ae.Dns.Client
             _meter = new Meter($"Ae.Dns.Client.DnsHttpClient.{httpClient.BaseAddress.Host}");
             _successCounter = _meter.CreateCounter<int>("Success");
             _failureCounter = _meter.CreateCounter<int>("Failure");
-    }
+        }
 
         /// <inheritdoc/>
         public void Dispose()
