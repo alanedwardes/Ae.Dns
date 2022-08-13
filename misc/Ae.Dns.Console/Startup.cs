@@ -90,7 +90,13 @@ namespace Ae.Dns.Console
                         await WriteString(Environment.NewLine);
                     }
 
-                    foreach (var statistic in statsSet.Value.OrderByDescending(x => x.Value).Take(25))
+                    var limit = 25;
+                    if (context.Request.Query.TryGetValue("limit", out var limitValues))
+                    {
+                        _ = int.TryParse(limitValues.ToString(), out limit);
+                    }
+
+                    foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value : statsSet.Value.OrderByDescending(x => x.Value).Take(limit))
                     {
                         await WriteString($"{statistic.Key} = {statistic.Value}");
                         await WriteString(Environment.NewLine);

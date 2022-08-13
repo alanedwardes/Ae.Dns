@@ -140,7 +140,12 @@ namespace Ae.Dns.Protocol
         public static TReader FromBytes<TReader>(byte[] bytes) where TReader : IDnsByteArrayReader, new()
         {
             var offset = 0;
-            return FromBytes<TReader>(bytes, ref offset);
+            var result = FromBytes<TReader>(bytes, ref offset);
+            if (offset != bytes.Length)
+            {
+                throw new InvalidOperationException($"Should have read {bytes.Length} bytes, only read {offset} bytes");
+            }
+            return result;
         }
 
         internal static TReader FromBytes<TReader>(byte[] bytes, ref int offset) where TReader : IDnsByteArrayReader, new()
