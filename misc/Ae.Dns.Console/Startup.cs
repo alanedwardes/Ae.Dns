@@ -53,7 +53,8 @@ namespace Ae.Dns.Console
                     { "Top Permitted Domains", _topPermittedDomains },
                     { "Top Prefetched Domains", _topPrefetchedDomains },
                     { "Top Missing Domains", _topMissingDomains },
-                    { "Top Other Error Domains", _topOtherErrorDomains }
+                    { "Top Other Error Domains", _topOtherErrorDomains },
+                    { "Top Exception Error Domains", _topExceptionDomains }
                 };
 
                 if (_responseTimes.Count > 0)
@@ -100,16 +101,14 @@ namespace Ae.Dns.Console
             });
         }
 
-        private readonly ConcurrentDictionary<string, int> _topExceptionDomains = new();
         private readonly BlockingCollection<float> _responseTimes = new(sizeof(float) * 10_000_000);
         private readonly ConcurrentDictionary<string, int> _stats = new();
-        private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new();
+        private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new();
         private readonly ConcurrentDictionary<string, int> _topPrefetchedDomains = new();
         private readonly ConcurrentDictionary<string, int> _topMissingDomains = new();
         private readonly ConcurrentDictionary<string, int> _topOtherErrorDomains = new();
-        private readonly ConcurrentQueue<DnsHeader> _queries = new();
-        private readonly ConcurrentQueue<DnsAnswer> _answers = new();
+        private readonly ConcurrentDictionary<string, int> _topExceptionDomains = new();
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
@@ -135,14 +134,8 @@ namespace Ae.Dns.Console
                 _topPrefetchedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
             }
 
-            if (metricId == "Ae.Dns.Server.DnsUdpServer.Query")
-            {
-                _queries.Enqueue(GetObjectFromTags<DnsHeader>(tags, "Query"));
-            }
-
             if (metricId == "Ae.Dns.Server.DnsUdpServer.Response")
             {
-                _answers.Enqueue(GetObjectFromTags<DnsAnswer>(tags, "Answer"));
                 _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
             }
 
