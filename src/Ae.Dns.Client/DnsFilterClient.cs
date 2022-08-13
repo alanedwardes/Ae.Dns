@@ -3,8 +3,6 @@ using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Collections.Generic;
-using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,10 +13,6 @@ namespace Ae.Dns.Client
     /// </summary>
     public sealed class DnsFilterClient : IDnsClient
     {
-        private static readonly Meter _meter = new Meter("Ae.Dns.Client.DnsFilterClient");
-        private static readonly Counter<int> _blockedCounter = _meter.CreateCounter<int>("Blocked");
-        private static readonly Counter<int> _allowedCounter = _meter.CreateCounter<int>("Allowed");
-
         private readonly ILogger<DnsFilterClient> _logger;
         private readonly IDnsFilter _dnsFilter;
         private readonly IDnsClient _dnsClient;
@@ -62,15 +56,11 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default)
         {
-            var queryMetricState = new KeyValuePair<string, object>("Query", query);
-
             if (_dnsFilter.IsPermitted(query))
             {
-                _allowedCounter.Add(1, queryMetricState);
                 return await _dnsClient.Query(query, token);
             }
 
-            _blockedCounter.Add(1, queryMetricState);
             _logger.LogInformation("DNS query blocked for {Domain}", query.Host);
             return new DnsAnswer { Header = CreateNullHeader(query) };
         }
