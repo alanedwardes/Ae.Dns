@@ -54,9 +54,28 @@ namespace Ae.Dns.Protocol
             return records;
         }
 
+        private void EnsureCorrectCounts()
+        {
+            if (Header.AnswerRecordCount != Answers.Count)
+            {
+                throw new InvalidOperationException($"Header states there are {Header.AnswerRecordCount} answer records, there are {Answers.Count}");
+            }
+
+            if (Header.AdditionalRecordCount != Additional.Count)
+            {
+                throw new InvalidOperationException($"Header states there are {Header.AdditionalRecordCount} additional records, there are {Additional.Count}");
+            }
+
+            if (Header.NameServerRecordCount != Nameservers.Count)
+            {
+                throw new InvalidOperationException($"Header states there are {Header.NameServerRecordCount} nameserver records, there are {Nameservers.Count}");
+            }
+        }
+
         /// <inheritdoc/>
         public void ReadBytes(byte[] bytes, ref int offset)
         {
+            EnsureCorrectCounts();
             Header.ReadBytes(bytes, ref offset);
             Answers = ReadRecords(Header.AnswerRecordCount, bytes, ref offset);
             Nameservers = ReadRecords(Header.NameServerRecordCount, bytes, ref offset);
@@ -69,6 +88,7 @@ namespace Ae.Dns.Protocol
         /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()
         {
+            EnsureCorrectCounts();
             yield return DnsByteExtensions.ToBytes(Header);
             yield return Answers.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
             yield return Nameservers.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);

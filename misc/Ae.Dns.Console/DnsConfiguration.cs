@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Ae.Dns.Console
 {
@@ -9,5 +10,6 @@ namespace Ae.Dns.Console
         public Uri[] RemoteBlocklists { get; set; } = new Uri[0];
         public string[] AllowlistedDomains { get; set; } = new string[0];
         public string[] DisallowedDomainSuffixes { get; set; } = new string[0];
+        public Dictionary<string, string> StaticLookup { get; set; } = new Dictionary<string, string>();
     }
 }

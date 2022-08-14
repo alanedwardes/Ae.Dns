@@ -114,7 +114,17 @@ namespace Ae.Dns.Server
 
             var answerMetricState = new KeyValuePair<string, object>("Answer", answer);
 
-            var answerBytes = DnsByteExtensions.ToBytes(answer).ToArray();
+            byte[] answerBytes;
+            try
+            {
+                answerBytes = DnsByteExtensions.ToBytes(answer).ToArray();
+            }
+            catch (Exception e)
+            {
+                _respondErrorCounter.Add(1);
+                _logger.LogCritical(e, "Unable to serialise {Answer}", answer);
+                return;
+            }
 
             try
             {
@@ -132,7 +142,7 @@ namespace Ae.Dns.Server
             }
 
             _responseCounter.Add(1, queryMetricState, answerMetricState, stopwatchMetricState);
-            _logger.LogTrace("Responded to {Query} from {RemoteEndPoint} in {ResponseTime}", query, request.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogInformation("Responded to {Query} from {RemoteEndPoint} in {ResponseTime}", query, request.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }

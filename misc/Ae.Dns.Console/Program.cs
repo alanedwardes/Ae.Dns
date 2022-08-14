@@ -120,7 +120,9 @@ namespace Ae.Dns.Console
 
             IDnsClient metrics = new DnsMetricsClient(filter);
 
-            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), metrics);
+            IDnsClient staticLookupClient = new DnsStaticLookupClient(dnsConfiguration.StaticLookup.ToDictionary(x => x.Key, x => IPAddress.Parse(x.Value)), metrics);
+
+            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), staticLookupClient);
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
