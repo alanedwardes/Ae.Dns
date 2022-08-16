@@ -3,7 +3,6 @@ using Ae.Dns.Protocol.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Caching;
 using System.Threading;
@@ -21,7 +20,9 @@ namespace Ae.Dns.Client
         {
             public DnsCacheEntry(DnsMessage answer)
             {
-                LowestRecordTimeToLive = TimeSpan.FromSeconds(answer.Answers.Min(x => x.TimeToLive));
+                var allRecords = new[] { answer.Answers, answer.Nameservers, answer.Additional };
+
+                LowestRecordTimeToLive = TimeSpan.FromSeconds(allRecords.SelectMany(x => x).Min(x => x.TimeToLive));
                 Data = DnsByteExtensions.ToBytes(answer);
             }
 
