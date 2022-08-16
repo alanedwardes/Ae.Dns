@@ -149,7 +149,7 @@ namespace Ae.Dns.Client
 
             _logger.LogTrace("Returned fresh DNS result for {Domain}", query.Header.Host);
 
-            if (answer.Header.ResponseCode == DnsResponseCode.NoError)
+            if (answer.Answers.Count + answer.Nameservers.Count + answer.Additional.Count > 0)
             {
                 var cacheEntry = new DnsCacheEntry(answer);
                 _objectCache.Add(GetCacheKey(query), cacheEntry, new CacheItemPolicy { AbsoluteExpiration = cacheEntry.Expiry });
