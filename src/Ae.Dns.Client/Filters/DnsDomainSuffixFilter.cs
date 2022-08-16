@@ -22,11 +22,11 @@ namespace Ae.Dns.Client.Filters
         public void AddSuffixFilters(params string[] suffixes) => _domainSuffixes.AddRange(suffixes);
 
         /// <inheritdoc/>
-        public bool IsPermitted(DnsHeader query)
+        public bool IsPermitted(DnsMessage query)
         {
             foreach (var suffix in _domainSuffixes)
             {
-                if (query.Host.EndsWith(suffix))
+                if (query.Header.Host.EndsWith(suffix))
                 {
                     return false;
                 }

@@ -40,7 +40,7 @@ namespace Ae.Dns.Server.Http
 
             var buffer = ms.Buffer.ToArray();
 
-            var header = DnsByteExtensions.FromBytes<DnsHeader>(buffer);
+            var header = DnsByteExtensions.FromBytes<DnsMessage>(buffer);
 
             var answer = await _dnsClient.Query(header, context.RequestAborted);
 

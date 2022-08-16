@@ -14,7 +14,7 @@ namespace Ae.Dns.Protocol
         /// </summary>
         /// <param name="query">The DNS query to run, see <see cref="DnsQueryFactory"/>.</param>
         /// <param name="token">The <see cref="CancellationToken"/> to use to cancel the operation.</param>
-        /// <returns>The <see cref="DnsAnswer"/> result.</returns>
-        Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default);
+        /// <returns>The <see cref="DnsMessage"/> result.</returns>
+        Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default);
     }
 }

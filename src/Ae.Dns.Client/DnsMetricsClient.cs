@@ -63,14 +63,14 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
             var sw = Stopwatch.StartNew();
 
             var queryTag = new KeyValuePair<string, object>("Query", query);
             var stopwatchTag = new KeyValuePair<string, object>("Stopwatch", sw);
 
-            DnsAnswer answer;
+            DnsMessage answer;
             try
             {
                 answer = await _dnsClient.Query(query, token);

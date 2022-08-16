@@ -10,6 +10,6 @@ namespace Ae.Dns.Client.Filters
         /// <summary>
         /// Returns true if the DNS query is permitted.
         /// </summary>
-        public bool IsPermitted(DnsHeader query);
+        public bool IsPermitted(DnsMessage query);
     }
 }

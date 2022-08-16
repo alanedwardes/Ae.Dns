@@ -97,9 +97,9 @@ namespace Ae.Dns.Client.Filters
         public Task AddRemoteAllowList(Uri hostsFileUri) => AddRemoteList(hostsFileUri, true);
 
         /// <inheritdoc/>
-        public bool IsPermitted(DnsHeader query)
+        public bool IsPermitted(DnsMessage query)
         {
-            if (_domains.TryGetValue(query.Host, out bool allowed))
+            if (_domains.TryGetValue(query.Header.Host, out bool allowed))
             {
                 return allowed;
             }

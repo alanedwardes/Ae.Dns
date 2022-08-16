@@ -46,9 +46,9 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default) => await QueryRecursive(query, 0, token);
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default) => await QueryRecursive(query, 0, token);
 
-        private async Task<DnsAnswer> QueryRecursive(DnsHeader query, int depth, CancellationToken token = default)
+        private async Task<DnsMessage> QueryRecursive(DnsMessage query, int depth, CancellationToken token = default)
         {
             int lookups = 0;
             DnsIpAddressResource lookup = null;
@@ -58,7 +58,7 @@ namespace Ae.Dns.Client
                 using IDnsClient dnsClient = lookup == null ? null : new DnsUdpClient(lookup.IPAddress);
 
                 lookups++;
-                query.Id = DnsQueryFactory.GenerateId();
+                query.Header.Id = DnsQueryFactory.GenerateId();
                 var nameserverAnswer = await (dnsClient ?? Random(_rootServerClients)).Query(query, token);
                 if (nameserverAnswer.Answers.Any())
                 {
@@ -78,10 +78,10 @@ namespace Ae.Dns.Client
                     continue;
                 }
 
-                lookup = await LookupNameserverIpAddress(query.Host, depth, token);
+                lookup = await LookupNameserverIpAddress(query.Header.Host, depth, token);
             }
 
-            throw new DnsClientException($"Too much recursion ({depth}) or too many lookups ({lookups})", query.Host);
+            throw new DnsClientException($"Too much recursion ({depth}) or too many lookups ({lookups})", query.Header.Host);
         }
 
         private async Task<DnsIpAddressResource> LookupNameserverIpAddress(string nameserver, int depth, CancellationToken token)

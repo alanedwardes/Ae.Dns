@@ -9,7 +9,7 @@ namespace Ae.Dns.Tests.Protocol
     {
         [Theory]
         [ClassData(typeof(QueryTheoryData))]
-        public void TestReadQueries(byte[] queryBytes) => DnsByteExtensions.FromBytes<DnsHeader>(queryBytes);
+        public void TestReadQueries(byte[] queryBytes) => DnsByteExtensions.FromBytes<DnsMessage>(queryBytes);
 
         [Fact]
         public void ReadQuery1Packet()

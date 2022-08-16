@@ -85,10 +85,10 @@ namespace Ae.Dns.Server
             var stopwatch = Stopwatch.StartNew();
             var stopwatchMetricState = new KeyValuePair<string, object>("Stopwatch", stopwatch);
 
-            DnsHeader query;
+            DnsMessage query;
             try
             {
-                query = DnsByteExtensions.FromBytes<DnsHeader>(request.Buffer);
+                query = DnsByteExtensions.FromBytes<DnsMessage>(request.Buffer);
             }
             catch (Exception e)
             {
@@ -100,7 +100,7 @@ namespace Ae.Dns.Server
             var queryMetricState = new KeyValuePair<string, object>("Query", query);
             _queryCounter.Add(1, queryMetricState);
 
-            DnsAnswer answer;
+            DnsMessage answer;
             try
             {
                 answer = await _dnsClient.Query(query, token);
@@ -142,7 +142,7 @@ namespace Ae.Dns.Server
             }
 
             _responseCounter.Add(1, queryMetricState, answerMetricState, stopwatchMetricState);
-            _logger.LogInformation("Responded to {Query} from {RemoteEndPoint} in {ResponseTime}", query, request.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogInformation("Responded to {Query} from {RemoteEndPoint} in {ResponseTime}", answer, request.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Ae.Dns.Tests.Client
             var query = DnsQueryFactory.CreateQuery(host, queryType);
             var answer = await client.Query(query);
             Assert.Equal(host, answer.Header.Host);
-            Assert.Equal(query.Id, answer.Header.Id);
+            Assert.Equal(query.Header.Id, answer.Header.Id);
             Assert.Equal(expectedResponseCode, answer.Header.ResponseCode);
 
             if (expectedResponseCode == DnsResponseCode.NoError && !answer.Header.Truncation)

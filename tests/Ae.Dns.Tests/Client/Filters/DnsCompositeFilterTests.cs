@@ -11,7 +11,7 @@ namespace Ae.Dns.Tests.Client.Filters
         {
             var dnsFilter = new DnsCompositeOrFilter();
 
-            Assert.True(dnsFilter.IsPermitted(new DnsHeader()));
+            Assert.True(dnsFilter.IsPermitted(new DnsMessage()));
         }
 
         [Fact]
@@ -22,7 +22,7 @@ namespace Ae.Dns.Tests.Client.Filters
             
             var dnsFilter = new DnsCompositeOrFilter(filter1, filter2);
 
-            Assert.True(dnsFilter.IsPermitted(new DnsHeader()));
+            Assert.True(dnsFilter.IsPermitted(new DnsMessage()));
         }
 
         [Fact]
@@ -33,7 +33,7 @@ namespace Ae.Dns.Tests.Client.Filters
 
             var dnsFilter = new DnsCompositeOrFilter(filter1, filter2);
 
-            Assert.False(dnsFilter.IsPermitted(new DnsHeader()));
+            Assert.False(dnsFilter.IsPermitted(new DnsMessage()));
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace Ae.Dns.Tests.Client.Filters
         {
             var dnsFilter = new DnsCompositeAndFilter();
 
-            Assert.True(dnsFilter.IsPermitted(new DnsHeader()));
+            Assert.True(dnsFilter.IsPermitted(new DnsMessage()));
         }
 
         [Fact]
@@ -52,7 +52,7 @@ namespace Ae.Dns.Tests.Client.Filters
 
             var dnsFilter = new DnsCompositeAndFilter(filter1, filter2);
 
-            Assert.True(dnsFilter.IsPermitted(new DnsHeader()));
+            Assert.True(dnsFilter.IsPermitted(new DnsMessage()));
         }
 
         [Fact]
@@ -63,7 +63,7 @@ namespace Ae.Dns.Tests.Client.Filters
 
             var dnsFilter = new DnsCompositeAndFilter(filter1, filter2);
 
-            Assert.False(dnsFilter.IsPermitted(new DnsHeader()));
+            Assert.False(dnsFilter.IsPermitted(new DnsMessage()));
         }
 
         [Fact]
@@ -74,7 +74,7 @@ namespace Ae.Dns.Tests.Client.Filters
 
             var dnsFilter = new DnsCompositeAndFilter(filter1, filter2);
 
-            Assert.False(dnsFilter.IsPermitted(new DnsHeader()));
+            Assert.False(dnsFilter.IsPermitted(new DnsMessage()));
         }
     }
 }

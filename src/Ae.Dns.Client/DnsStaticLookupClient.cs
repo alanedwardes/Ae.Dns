@@ -47,14 +47,14 @@ namespace Ae.Dns.Client
         {
         }
 
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
-            if (query.QueryType == DnsQueryType.PTR && _reverseLookup.TryGetValue(query.Host, out var foundHost))
+            if (query.Header.QueryType == DnsQueryType.PTR && _reverseLookup.TryGetValue(query.Header.Host, out var foundHost))
             {
                 return ReturnPointer(query, foundHost);
             }
 
-            if ((query.QueryType == DnsQueryType.A || query.QueryType == DnsQueryType.AAAA) && _lookup.TryGetValue(query.Host, out IPAddress address))
+            if ((query.Header.QueryType == DnsQueryType.A || query.Header.QueryType == DnsQueryType.AAAA) && _lookup.TryGetValue(query.Header.Host, out IPAddress address))
             {
                 return ReturnAddress(query, address);
             }
@@ -62,9 +62,9 @@ namespace Ae.Dns.Client
             return await _dnsClient.Query(query, token);
         }
 
-        private DnsAnswer ReturnAddress(DnsHeader query, IPAddress address)
+        private DnsMessage ReturnAddress(DnsMessage query, IPAddress address)
         {
-            return new DnsAnswer
+            return new DnsMessage
             {
                 Header = CreateAnswer(query),
                 Answers = new List<DnsResourceRecord>
@@ -72,18 +72,18 @@ namespace Ae.Dns.Client
                         new DnsResourceRecord
                         {
                             Class = DnsQueryClass.IN,
-                            Host = query.Host,
+                            Host = query.Header.Host,
                             Resource = new DnsIpAddressResource{IPAddress = address},
                             Type = address.AddressFamily == AddressFamily.InterNetworkV6 ? DnsQueryType.AAAA : DnsQueryType.A,
-                            TimeToLive = TimeSpan.FromHours(1)
+                            TimeToLive = 3600
                         }
                     }
             };
         }
 
-        private DnsAnswer ReturnPointer(DnsHeader query, string foundHost)
+        private DnsMessage ReturnPointer(DnsMessage query, string foundHost)
         {
-            return new DnsAnswer
+            return new DnsMessage
             {
                 Header = CreateAnswer(query),
                 Answers = new List<DnsResourceRecord>
@@ -91,27 +91,27 @@ namespace Ae.Dns.Client
                         new DnsResourceRecord
                         {
                             Class = DnsQueryClass.IN,
-                            Host = query.Host,
+                            Host = query.Header.Host,
                             Resource = new DnsTextResource{Text = foundHost},
                             Type = DnsQueryType.PTR,
-                            TimeToLive = TimeSpan.FromHours(1)
+                            TimeToLive = 3600
                         }
                     }
             };
         }
 
-        private DnsHeader CreateAnswer(DnsHeader query) => new DnsHeader
+        private DnsHeader CreateAnswer(DnsMessage query) => new DnsHeader
         {
-            Id = query.Id,
+            Id = query.Header.Id,
             ResponseCode = DnsResponseCode.NoError,
             IsQueryResponse = true,
             RecursionAvailable = true,
             AnswerRecordCount = 1,
-            RecusionDesired = query.RecusionDesired,
-            Host = query.Host,
-            QueryClass = query.QueryClass,
-            QuestionCount = query.QuestionCount,
-            QueryType = query.QueryType
+            RecusionDesired = query.Header.RecusionDesired,
+            Host = query.Header.Host,
+            QueryClass = query.Header.QueryClass,
+            QuestionCount = query.Header.QuestionCount,
+            QueryType = query.Header.QueryType
         };
     }
 }

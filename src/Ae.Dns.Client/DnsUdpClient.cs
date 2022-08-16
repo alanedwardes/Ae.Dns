@@ -28,14 +28,14 @@ namespace Ae.Dns.Client
             public override string ToString() => $"Id: {Id}, Name: {Name}, Type: {Type}, Class: {Class}";
         }
 
-        private static MessageId ToMessageId(DnsHeader message)
+        private static MessageId ToMessageId(DnsMessage message)
         {
             return new MessageId
             {
-                Id = message.Id,
-                Name = message.Host,
-                Type = message.QueryType,
-                Class = message.QueryClass
+                Id = message.Header.Id,
+                Name = message.Header.Host,
+                Type = message.Header.QueryType,
+                Class = message.Header.QueryClass
             };
         }
 
@@ -98,10 +98,10 @@ namespace Ae.Dns.Client
 
         private void Receive(byte[] buffer)
         {
-            DnsAnswer answer;
+            DnsMessage answer;
             try
             {
-                answer = DnsByteExtensions.FromBytes<DnsAnswer>(buffer);
+                answer = DnsByteExtensions.FromBytes<DnsMessage>(buffer);
             }
             catch (Exception e)
             {
@@ -109,7 +109,7 @@ namespace Ae.Dns.Client
                 return;
             }
 
-            if (_pending.TryRemove(ToMessageId(answer.Header), out TaskCompletionSource<byte[]> completionSource))
+            if (_pending.TryRemove(ToMessageId(answer), out TaskCompletionSource<byte[]> completionSource))
             {
                 completionSource.SetResult(buffer);
             }
@@ -145,7 +145,7 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
             var raw = DnsByteExtensions.ToBytes(query).ToArray();
 
@@ -153,10 +153,10 @@ namespace Ae.Dns.Client
 
             var result = await completionSource.Task;
 
-            var answer = DnsByteExtensions.FromBytes<DnsAnswer>(result);
+            var answer = DnsByteExtensions.FromBytes<DnsMessage>(result);
 
             // Copy the same ID from the request
-            answer.Header.Id = query.Id;
+            answer.Header.Id = query.Header.Id;
 
             return answer;
         }

@@ -39,7 +39,7 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
             var queryMetricState = new KeyValuePair<string, object>("Query", query);
             var upstreamMetricState = new KeyValuePair<string, object>("Address", _httpClient.BaseAddress);
@@ -68,7 +68,7 @@ namespace Ae.Dns.Client
                 throw;
             }
 
-            return DnsByteExtensions.FromBytes<DnsAnswer>(await response.Content.ReadAsByteArrayAsync());
+            return DnsByteExtensions.FromBytes<DnsMessage>(await response.Content.ReadAsByteArrayAsync());
         }
     }
 }

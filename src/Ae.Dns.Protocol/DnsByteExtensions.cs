@@ -58,7 +58,7 @@ namespace Ae.Dns.Protocol
                 return "<null>";
             }
 
-            return $"new [] {{{string.Join(", ", bytes)}}}";
+            return $"new byte [] {{{string.Join(",", bytes)}}}";
         }
 
         /// <summary>

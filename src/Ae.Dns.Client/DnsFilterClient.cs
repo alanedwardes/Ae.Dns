@@ -40,29 +40,29 @@ namespace Ae.Dns.Client
         {
         }
 
-        private DnsHeader CreateNullHeader(DnsHeader query) => new DnsHeader
+        private DnsHeader CreateNullHeader(DnsMessage query) => new DnsHeader
         {
-            Id = query.Id,
+            Id = query.Header.Id,
             ResponseCode = DnsResponseCode.Refused,
             IsQueryResponse = true,
             RecursionAvailable = true,
-            RecusionDesired = query.RecusionDesired,
-            Host = query.Host,
-            QueryClass = query.QueryClass,
-            QuestionCount = query.QuestionCount,
-            QueryType = query.QueryType
+            RecusionDesired = query.Header.RecusionDesired,
+            Host = query.Header.Host,
+            QueryClass = query.Header.QueryClass,
+            QuestionCount = query.Header.QuestionCount,
+            QueryType = query.Header.QueryType
         };
 
         /// <inheritdoc/>
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
             if (_dnsFilter.IsPermitted(query))
             {
                 return await _dnsClient.Query(query, token);
             }
 
-            _logger.LogInformation("DNS query blocked for {Domain}", query.Host);
-            return new DnsAnswer { Header = CreateNullHeader(query) };
+            _logger.LogInformation("DNS query blocked for {Domain}", query.Header.Host);
+            return new DnsMessage { Header = CreateNullHeader(query) };
         }
     }
 }

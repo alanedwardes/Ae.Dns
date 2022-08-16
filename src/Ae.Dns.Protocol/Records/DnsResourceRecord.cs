@@ -18,9 +18,9 @@ namespace Ae.Dns.Protocol.Records
         /// </summary>
         public DnsQueryClass Class { get; set; }
         /// <summary>
-        /// The time to live entry for this record.
+        /// The time to live entry for this record, in seconds.
         /// </summary>
-        public TimeSpan TimeToLive { get; set; }
+        public uint TimeToLive { get; set; }
 
         /// <summary>
         /// The host name associated with this record.
@@ -33,7 +33,7 @@ namespace Ae.Dns.Protocol.Records
 
         private string[] Name { get; set; }
 
-        private static IReadOnlyDictionary<DnsQueryType, Func<IDnsResource>> _recordTypeFactories = new Dictionary<DnsQueryType, Func<IDnsResource>>
+        private static readonly IReadOnlyDictionary<DnsQueryType, Func<IDnsResource>> _recordTypeFactories = new Dictionary<DnsQueryType, Func<IDnsResource>>
         {
             { DnsQueryType.A, () => new DnsIpAddressResource() },
             { DnsQueryType.AAAA, () => new DnsIpAddressResource() },
@@ -62,7 +62,11 @@ namespace Ae.Dns.Protocol.Records
         public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {TimeToLive} Resource: {Resource}";
 
         /// <inheritdoc/>
-        public bool Equals(DnsResourceRecord other) => Host == other.Host && Type == other.Type && Class == other.Class && TimeToLive == other.TimeToLive && Resource.Equals(other.Resource);
+        public bool Equals(DnsResourceRecord other) => Host == other.Host &&
+                                                       Type == other.Type &&
+                                                       Class == other.Class &&
+                                                       TimeToLive == other.TimeToLive &&
+                                                       Resource.Equals(other.Resource);
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is DnsResourceRecord record ? Equals(record) : base.Equals(obj);
@@ -76,7 +80,7 @@ namespace Ae.Dns.Protocol.Records
             Name = DnsByteExtensions.ReadString(bytes, ref offset);
             Type = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             Class = (DnsQueryClass)DnsByteExtensions.ReadUInt16(bytes, ref offset);
-            TimeToLive = TimeSpan.FromSeconds(DnsByteExtensions.ReadUInt32(bytes, ref offset));
+            TimeToLive = DnsByteExtensions.ReadUInt32(bytes, ref offset);
             Resource = CreateResourceRecord(Type);
             var dataLength = DnsByteExtensions.ReadUInt16(bytes, ref offset);
             FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
@@ -98,7 +102,7 @@ namespace Ae.Dns.Protocol.Records
             yield return DnsByteExtensions.ToBytes(Name);
             yield return DnsByteExtensions.ToBytes(Type);
             yield return DnsByteExtensions.ToBytes(Class);
-            yield return DnsByteExtensions.ToBytes((uint)TimeToLive.TotalSeconds);
+            yield return DnsByteExtensions.ToBytes(TimeToLive);
             var data = DnsByteExtensions.ToBytes(Resource);
             yield return DnsByteExtensions.ToBytes((ushort)data.Length);
             yield return data;

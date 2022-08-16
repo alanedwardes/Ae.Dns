@@ -11,13 +11,12 @@ namespace Ae.Dns.Tests.Protocol
         {
             foreach (var answer in SampleDnsPackets.Answers)
             {
-                Assert.True(DnsByteExtensions.FromBytes<DnsAnswer>(answer).Header.IsQueryResponse);
+                Assert.True(DnsByteExtensions.FromBytes<DnsMessage>(answer).Header.IsQueryResponse);
             }
 
             foreach (var query in SampleDnsPackets.Queries)
             {
-                var header = DnsByteExtensions.FromBytes<DnsHeader>(query);
-                Assert.False(header.IsQueryResponse);
+                Assert.False(DnsByteExtensions.FromBytes<DnsMessage>(query).Header.IsQueryResponse);
             }
         }
 

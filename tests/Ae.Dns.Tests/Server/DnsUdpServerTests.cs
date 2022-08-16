@@ -49,8 +49,8 @@ namespace Ae.Dns.Tests.Server
                 // Send a DNS request to the server, verify the results
                 var response = await client.Query(query, tokenSource.Token);
 
-                Assert.Equal(query.Id, response.Header.Id);
-                Assert.Equal(query.Host, response.Header.Host);
+                Assert.Equal(query.Header.Id, response.Header.Id);
+                Assert.Equal(query.Header.Host, response.Header.Host);
                 Assert.True(response.Answers.Count > 0);
             }
             finally

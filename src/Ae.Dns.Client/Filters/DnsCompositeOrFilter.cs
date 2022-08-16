@@ -23,6 +23,6 @@ namespace Ae.Dns.Client.Filters
         public DnsCompositeOrFilter(params IDnsFilter[] dnsFilters) => _dnsFilters = dnsFilters;
 
         /// <inheritdoc/>
-        public bool IsPermitted(DnsHeader query) => !_dnsFilters.Any() || _dnsFilters.Any(x => x.IsPermitted(query));
+        public bool IsPermitted(DnsMessage query) => !_dnsFilters.Any() || _dnsFilters.Any(x => x.IsPermitted(query));
     }
 }

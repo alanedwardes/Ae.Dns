@@ -42,7 +42,7 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token = default)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
             var answer = await _dnsClient.Query(query, token);
 
@@ -54,7 +54,7 @@ namespace Ae.Dns.Client
             if (ipAddressResponses.Any(IsPrivate))
             {
                 _logger.LogWarning("DNS rebind attack mitigated for {query}", query);
-                return new DnsAnswer { Header = CreateNullHeader(query) };
+                return CreateNullHeader(query);
             }
 
             return answer;
@@ -111,17 +111,20 @@ namespace Ae.Dns.Client
             return IsLinkLocal() || IsClassA() || IsClassC() || IsClassB();
         }
 
-        private DnsHeader CreateNullHeader(DnsHeader query) => new DnsHeader
+        private DnsMessage CreateNullHeader(DnsMessage query) => new DnsMessage
         {
-            Id = query.Id,
-            ResponseCode = DnsResponseCode.Refused,
-            IsQueryResponse = true,
-            RecursionAvailable = true,
-            RecusionDesired = query.RecusionDesired,
-            Host = query.Host,
-            QueryClass = query.QueryClass,
-            QuestionCount = query.QuestionCount,
-            QueryType = query.QueryType
+            Header = new DnsHeader
+            {
+                Id = query.Header.Id,
+                ResponseCode = DnsResponseCode.Refused,
+                IsQueryResponse = true,
+                RecursionAvailable = true,
+                RecusionDesired = query.Header.RecusionDesired,
+                Host = query.Header.Host,
+                QueryClass = query.Header.QueryClass,
+                QuestionCount = query.Header.QuestionCount,
+                QueryType = query.Header.QueryType
+            }
         };
     }
 }

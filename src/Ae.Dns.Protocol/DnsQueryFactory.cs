@@ -7,7 +7,7 @@ using System.Net.Sockets;
 namespace Ae.Dns.Protocol
 {
     /// <summary>
-    /// Provides extension methods around <see cref="DnsHeader"/>.
+    /// Provides extension methods around <see cref="DnsMessage"/>.
     /// </summary>
     public static class DnsQueryFactory
     {
@@ -23,17 +23,20 @@ namespace Ae.Dns.Protocol
         /// <param name="host">The DNS host to request in the query.</param>
         /// <param name="type">The type of DNS query to request.</param>
         /// <returns>The complete DNS query.</returns>
-        public static DnsHeader CreateQuery(string host, DnsQueryType type = DnsQueryType.A)
+        public static DnsMessage CreateQuery(string host, DnsQueryType type = DnsQueryType.A)
         {
-            return new DnsHeader
+            return new DnsMessage
             {
-                Id = GenerateId(),
-                Host = host,
-                QueryType = type,
-                QueryClass = DnsQueryClass.IN,
-                OperationCode = DnsOperationCode.QUERY,
-                QuestionCount = 1,
-                RecusionDesired = true
+                Header = new DnsHeader
+                {
+                    Id = GenerateId(),
+                    Host = host,
+                    QueryType = type,
+                    QueryClass = DnsQueryClass.IN,
+                    OperationCode = DnsOperationCode.QUERY,
+                    QuestionCount = 1,
+                    RecusionDesired = true
+                }
             };
         }
 
@@ -42,7 +45,7 @@ namespace Ae.Dns.Protocol
         /// </summary>
         /// <param name="ipAddress">The IPv4 or IPv6 address to resolve.</param>
         /// <returns>The correctly formatted <see cref="DnsQueryType.PTR"/> DNS query.</returns>
-        public static DnsHeader CreateReverseQuery(IPAddress ipAddress)
+        public static DnsMessage CreateReverseQuery(IPAddress ipAddress)
         {
             return CreateQuery(GetReverseLookupHostForIpAddress(ipAddress), DnsQueryType.PTR);
         }

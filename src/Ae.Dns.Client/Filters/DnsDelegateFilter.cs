@@ -8,14 +8,14 @@ namespace Ae.Dns.Client.Filters
     /// </summary>
     public sealed class DnsDelegateFilter : IDnsFilter
     {
-        private readonly Func<DnsHeader, bool> _shouldAllow;
+        private readonly Func<DnsMessage, bool> _shouldAllow;
 
         /// <summary>
         /// Create a new instance using the specified delegate to filter DNS queries.
         /// </summary>
-        public DnsDelegateFilter(Func<DnsHeader, bool> shouldAllow) => _shouldAllow = shouldAllow;
+        public DnsDelegateFilter(Func<DnsMessage, bool> shouldAllow) => _shouldAllow = shouldAllow;
 
         /// <inheritdoc/>
-        public bool IsPermitted(DnsHeader query) => _shouldAllow(query);
+        public bool IsPermitted(DnsMessage query) => _shouldAllow(query);
     }
 }

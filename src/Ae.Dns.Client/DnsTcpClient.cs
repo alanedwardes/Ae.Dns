@@ -31,7 +31,7 @@ namespace Ae.Dns.Client
             _socket.Dispose();
         }
 
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
             var raw = DnsByteExtensions.ToBytes(query).ToArray();
 
@@ -55,7 +55,7 @@ namespace Ae.Dns.Client
                 throw new InvalidOperationException();
             }
 
-            return DnsByteExtensions.FromBytes<DnsAnswer>(response);
+            return DnsByteExtensions.FromBytes<DnsMessage>(response);
         }
     }
 }

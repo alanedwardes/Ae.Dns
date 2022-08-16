@@ -1,4 +1,5 @@
 ﻿using Ae.Dns.Protocol;
+using Ae.Dns.Protocol.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
@@ -18,9 +19,9 @@ namespace Ae.Dns.Client
     {
         private class DnsCacheEntry
         {
-            public DnsCacheEntry(DnsAnswer answer)
+            public DnsCacheEntry(DnsMessage answer)
             {
-                LowestRecordTimeToLive = answer.Answers.Min(x => x.TimeToLive);
+                LowestRecordTimeToLive = TimeSpan.FromSeconds(answer.Answers.Min(x => x.TimeToLive));
                 Data = DnsByteExtensions.ToBytes(answer);
             }
 
@@ -61,12 +62,10 @@ namespace Ae.Dns.Client
             _objectCache = objectCache;
         }
 
-        private string GetCacheKey(DnsHeader header) => $"{header.Host}~{header.QueryType}~{header.QueryClass}";
-
-        private KeyValuePair<string, object> GetMetricState(DnsHeader query) => new KeyValuePair<string, object>("Query", query);
+        private string GetCacheKey(DnsMessage header) => $"{header.Header.Host}~{header.Header.QueryType}~{header.Header.QueryClass}";
 
         /// <inheritdoc/>
-        public async Task<DnsAnswer> Query(DnsHeader query, CancellationToken token)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
             var cachedAnswer = GetCachedAnswer(query);
             if (cachedAnswer != null)
@@ -78,7 +77,7 @@ namespace Ae.Dns.Client
             return await GetFreshAnswer(query, token);
         }
 
-        private DnsAnswer GetCachedAnswer(DnsHeader query)
+        private DnsMessage GetCachedAnswer(DnsMessage query)
         {
             var cacheEntry = (DnsCacheEntry)_objectCache.Get(GetCacheKey(query));
             if (cacheEntry == null)
@@ -86,19 +85,20 @@ namespace Ae.Dns.Client
                 return null;
             }
 
-            _logger.LogTrace("Returned cached DNS result for {Domain} (expires in: {ExpiryTime})", query.Host, cacheEntry.Expires);
+            _logger.LogTrace("Returned cached DNS result for {Domain} (expires in: {ExpiryTime})", query.Header.Host, cacheEntry.Expires);
 
-            var answer = DnsByteExtensions.FromBytes<DnsAnswer>(cacheEntry.Data);
+            var answer = DnsByteExtensions.FromBytes<DnsMessage>(cacheEntry.Data);
 
             // Replace the ID
-            answer.Header.Id = query.Id;
+            answer.Header.Id = query.Header.Id;
 
             // Adjust the TTLs to be correct
             foreach (var record in answer.Answers)
             {
-                var newTtl = record.TimeToLive - cacheEntry.Age;
+                var recordTtl = TimeSpan.FromSeconds(record.TimeToLive);
+                var newTtl = recordTtl - cacheEntry.Age;
 
-                var entryHasFairlyLongTtl = record.TimeToLive > TimeSpan.FromMinutes(5);
+                var entryHasFairlyLongTtl = recordTtl > TimeSpan.FromMinutes(5);
                 var newTtlExpiresSoon = newTtl < TimeSpan.FromMinutes(5);
 
                 if (entryHasFairlyLongTtl && newTtlExpiresSoon)
@@ -107,17 +107,17 @@ namespace Ae.Dns.Client
                     _ = PrefetchAnswer(query);
                 }
 
-                record.TimeToLive = newTtl;
+                record.TimeToLive = (uint)newTtl.TotalSeconds;
             }
 
             return answer;
         }
 
-        private async Task PrefetchAnswer(DnsHeader query)
+        private async Task PrefetchAnswer(DnsMessage query)
         {
             using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
-            query.Tags.Add("IsPrefetch", true);
+            query.Header.Tags.Add("IsPrefetch", true);
 
             try
             {
@@ -130,22 +130,25 @@ namespace Ae.Dns.Client
             }
         }
 
-        private async Task<DnsAnswer> GetFreshAnswer(DnsHeader query, CancellationToken token)
+        private async Task<DnsMessage> GetFreshAnswer(DnsMessage query, CancellationToken token)
         {
-            var answer = await _dnsClient.Query(new DnsHeader
+            var answer = await _dnsClient.Query(new DnsMessage
             {
-                Id = query.Id,
-                Host = query.Host,
-                IsQueryResponse = false,
-                RecusionDesired = query.RecusionDesired,
-                QueryClass = query.QueryClass,
-                QueryType = query.QueryType,
-                QuestionCount = query.QuestionCount
+                Header = new DnsHeader
+                {
+                    Id = query.Header.Id,
+                    Host = query.Header.Host,
+                    IsQueryResponse = false,
+                    RecusionDesired = query.Header.RecusionDesired,
+                    QueryClass = query.Header.QueryClass,
+                    QueryType = query.Header.QueryType,
+                    QuestionCount = query.Header.QuestionCount
+                }
             }, token);
 
-            _logger.LogTrace("Returned fresh DNS result for {Domain}", query.Host);
+            _logger.LogTrace("Returned fresh DNS result for {Domain}", query.Header.Host);
 
-            if (answer.Answers.Count > 0)
+            if (answer.Header.ResponseCode == DnsResponseCode.NoError)
             {
                 var cacheEntry = new DnsCacheEntry(answer);
                 _objectCache.Add(GetCacheKey(query), cacheEntry, new CacheItemPolicy { AbsoluteExpiration = cacheEntry.Expiry });

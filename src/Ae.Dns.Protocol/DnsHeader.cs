@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Ae.Dns.Protocol
 {
     /// <summary>
-    /// Represents a DNS header, used to represent a DNS query and a DNS query result.
+    /// Represents a DNS header, the first entry in a <see cref="DnsMessage"/>.
     /// See <see cref="DnsQueryFactory"/> for methods to create DNS headers for specific purposes.
     /// </summary>
     public sealed class DnsHeader : IEquatable<DnsHeader>, IDnsByteArrayReader, IDnsByteArrayWriter
@@ -38,7 +38,7 @@ namespace Ae.Dns.Protocol
         public short QuestionCount { get; set; }
 
         /// <summary>
-        /// The number of <see cref="DnsAnswer"/> records in this header.
+        /// The number of <see cref="DnsMessage"/> records in this header.
         /// </summary>
         /// <value>
         /// A count of the number of answers contained within this DNS message.
@@ -163,7 +163,7 @@ namespace Ae.Dns.Protocol
 
 
         /// <inheritdoc/>
-        public override string ToString() => $"QRY: {Id} Domain: {Host} Type: {QueryType} Class: {QueryClass}";
+        public override string ToString() => $"{(IsQueryResponse ? "RES" : "QRY")}: {Id} Domain: {Host} Type: {QueryType} Class: {QueryClass}";
 
         /// <inheritdoc/>
         public bool Equals(DnsHeader other)

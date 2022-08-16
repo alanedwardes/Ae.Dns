@@ -158,26 +158,26 @@ namespace Ae.Dns.Console
 
                 if (meterMap.TryGetValue(instrument.Name, out var domainCounts))
                 {
-                    var query = GetObjectFromTags<DnsHeader>(tags, "Query");
+                    var query = GetObjectFromTags<DnsMessage>(tags, "Query");
 
-                    if (query.Tags.ContainsKey("IsPrefetch"))
+                    if (query.Header.Tags.ContainsKey("IsPrefetch"))
                     {
-                        _topPrefetchedDomains.AddOrUpdate(GetObjectFromTags<DnsHeader>(tags, "Query").Host, 1, (id, count) => count + 1);
+                        _topPrefetchedDomains.AddOrUpdate(GetObjectFromTags<DnsMessage>(tags, "Query").Header.Host, 1, (id, count) => count + 1);
                     }
 
-                    domainCounts.AddOrUpdate(query.Host, 1, (id, count) => count + 1);
+                    domainCounts.AddOrUpdate(query.Header.Host, 1, (id, count) => count + 1);
 
                     if (instrument.Name == DnsMetricsClient.SuccessCounterName)
                     {
-                        _topQueryTypes.AddOrUpdate(query.QueryType.ToString(), 1, (id, count) => count + 1);
+                        _topQueryTypes.AddOrUpdate(query.Header.QueryType.ToString(), 1, (id, count) => count + 1);
 
-                        var answer = GetObjectFromTags<DnsAnswer>(tags, "Answer");
+                        var answer = GetObjectFromTags<DnsMessage>(tags, "Answer");
                         if (!answer.Header.Tags.ContainsKey("IsCached"))
                         {
                             foreach (var record in answer.Answers)
                             {
                                 _topRecordTypes.AddOrUpdate(record.Type.ToString(), 1, (id, count) => count + 1);
-                                _ttlTimes.Add((float)record.TimeToLive.TotalSeconds);
+                                _ttlTimes.Add(record.TimeToLive);
                             }
 
                             _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
