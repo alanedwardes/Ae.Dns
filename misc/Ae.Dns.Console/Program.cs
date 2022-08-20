@@ -118,11 +118,11 @@ namespace Ae.Dns.Console
 
             IDnsClient filter = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), compositeFilter, cache);
 
-            IDnsClient metrics = new DnsMetricsClient(filter);
+            IDnsClient staticLookup = new DnsStaticLookupClient(dnsConfiguration.StaticLookup.ToDictionary(x => x.Key, x => IPAddress.Parse(x.Value)), filter);
 
-            IDnsClient staticLookupClient = new DnsStaticLookupClient(dnsConfiguration.StaticLookup.ToDictionary(x => x.Key, x => IPAddress.Parse(x.Value)), metrics);
+            IDnsClient metrics = new DnsMetricsClient(staticLookup);
 
-            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), staticLookupClient);
+            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), metrics);
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
