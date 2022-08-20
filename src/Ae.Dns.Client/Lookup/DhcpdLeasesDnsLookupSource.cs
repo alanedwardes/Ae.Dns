@@ -20,6 +20,7 @@ namespace Ae.Dns.Client.Lookup
         /// </summary>
         public DhcpdLeasesDnsLookupSource(ILogger<DhcpdLeasesDnsLookupSource> logger, FileInfo file, string hostnameSuffix = null) : base(logger, file) => _hostnameSuffix = hostnameSuffix;
 
+        /// <inheritdoc/>
         protected override IEnumerable<(string hostname, IPAddress address)> LoadLookup(StreamReader sr)
         {
             IPAddress address = null;
