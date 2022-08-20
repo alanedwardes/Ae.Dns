@@ -18,8 +18,8 @@ namespace Ae.Dns.Client.Lookup
         {
             foreach (var kvp in lookup)
             {
-                _hostsToAddresses[kvp.Key] = kvp.Value;
-                _addressesToHosts[kvp.Value] = kvp.Key;
+                _hostsToAddresses[kvp.Key.ToLowerInvariant()] = kvp.Value;
+                _addressesToHosts[kvp.Value] = kvp.Key.ToLowerInvariant();
             }
         }
 

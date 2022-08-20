@@ -68,8 +68,8 @@ namespace Ae.Dns.Client.Lookup
 
             foreach (var (hostname, address) in LoadLookup(sr))
             {
-                hostsToAddresses[hostname] = address;
-                addressesToHosts[address] = hostname;
+                hostsToAddresses[hostname.ToLowerInvariant()] = address;
+                addressesToHosts[address] = hostname.ToLowerInvariant();
             }
 
             lock (_hostsToAddresses)
