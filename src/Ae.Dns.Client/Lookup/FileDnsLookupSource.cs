@@ -37,17 +37,10 @@ namespace Ae.Dns.Client.Lookup
             _watcher.Changed += OnFilechanged;
             _logger = logger;
             _file = file;
-            Rebuild();
+            Rebuild().GetAwaiter().GetResult();
         }
 
-        private void OnFilechanged(object sender, FileSystemEventArgs e) => RebuildWrapped();
-
-        /// <summary>
-        /// Load the lookup from the file.
-        /// </summary>
-        protected abstract IEnumerable<(string hostname, IPAddress address)> LoadLookup(StreamReader sr);
-
-        private async Task RebuildWrapped()
+        private async void OnFilechanged(object sender, FileSystemEventArgs e)
         {
             try
             {
@@ -58,6 +51,11 @@ namespace Ae.Dns.Client.Lookup
                 _logger.LogCritical(exception, "Unable to rebuild lookup in response to file change event from {File}", _file);
             }
         }
+
+        /// <summary>
+        /// Load the lookup from the file.
+        /// </summary>
+        protected abstract IEnumerable<(string hostname, IPAddress address)> LoadLookup(StreamReader sr);
 
         private async Task Rebuild()
         {

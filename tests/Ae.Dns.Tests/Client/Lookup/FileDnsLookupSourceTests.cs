@@ -34,7 +34,7 @@ namespace Ae.Dns.Tests.Client.Lookup
             }
 
             // Allow the file write event to fire
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(TimeSpan.FromSeconds(2));
 
             Assert.Equal("onetwo", source.Contents);
         }
