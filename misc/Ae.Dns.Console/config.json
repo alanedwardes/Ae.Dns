@@ -23,8 +23,8 @@
         // Adding google.com means google.com is explicitly allowed regardless of the blocklists
         // It doesn't mean *.google.com is allowed, this is an exact match only
     ],
-    "staticLookup": {
-        // Works the same way as a hosts file. The key must be a host, the value must an IP address
-        "router.local": "192.168.178.1"
-    }
+    "hostFiles": [
+        // Host files to monitor for changes and incorporate into DNS lookups
+        // For example: "C:\\Windows\\System32\\drivers\\etc\\hosts"
+    ]
 }

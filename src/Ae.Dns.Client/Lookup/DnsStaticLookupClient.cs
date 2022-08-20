@@ -9,7 +9,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Ae.Dns.Client
+namespace Ae.Dns.Client.Lookup
 {
     /// <summary>
     /// A DNS client providing a static lookup (similar to a hosts file).
@@ -17,46 +17,51 @@ namespace Ae.Dns.Client
     /// </summary>
     public sealed class DnsStaticLookupClient : IDnsClient
     {
-        private readonly IReadOnlyDictionary<string, IPAddress> _lookup;
-        private readonly IReadOnlyDictionary<string, string> _reverseLookup;
+        private readonly IEnumerable<IDnsLookupSource> _sources;
         private readonly IDnsClient _dnsClient;
 
         /// <summary>
         /// Construct a new <see cref="DnsStaticLookupClient"/> using the specified lookup map.
         /// </summary>
-        public DnsStaticLookupClient(IReadOnlyDictionary<string, IPAddress> lookup, IDnsClient dnsClient)
+        public DnsStaticLookupClient(IDnsClient dnsClient, params IDnsLookupSource[] sources)
         {
-            _lookup = lookup;
-            _reverseLookup = BuildReverseLookup(lookup);
+            _sources = sources;
             _dnsClient = dnsClient;
         }
 
-        private IReadOnlyDictionary<string, string> BuildReverseLookup(IReadOnlyDictionary<string, IPAddress> lookup)
-        {
-            static string CreateReverseQuery(IPAddress address)
-            {
-                // 192.168.1.1 becomes 1.1.168.192.in-addr.arpa
-                return string.Join(".", address.ToString().Split('.').Reverse()) + ".in-addr.arpa";
-            }
-
-            // Only the first found hostname is used if an address is bound to multiple host names
-            return lookup.GroupBy(x => x.Value).ToDictionary(x => CreateReverseQuery(x.Key), x => x.First().Key);
-        }
-
+        /// <inheritdoc/>
         public void Dispose()
         {
+            foreach (var source in _sources)
+            {
+                source.Dispose();
+            }
         }
 
+        /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
-            if (query.Header.QueryType == DnsQueryType.PTR && _reverseLookup.TryGetValue(query.Header.Host, out var foundHost))
+            if (query.Header.QueryType == DnsQueryType.PTR)
             {
-                return ReturnPointer(query, foundHost);
+                foreach (var source in _sources)
+                {
+                    var addressStringFromHost = string.Join(".", query.Header.Host.Split('.').Take(4).Reverse());
+                    if (IPAddress.TryParse(addressStringFromHost, out var address) && source.TryReverseLookup(address, out var foundHost))
+                    {
+                        return ReturnPointer(query, foundHost);
+                    }
+                }
             }
 
-            if ((query.Header.QueryType == DnsQueryType.A || query.Header.QueryType == DnsQueryType.AAAA) && _lookup.TryGetValue(query.Header.Host, out IPAddress address))
+            if (query.Header.QueryType == DnsQueryType.A || query.Header.QueryType == DnsQueryType.AAAA)
             {
-                return ReturnAddress(query, address);
+                foreach (var source in _sources)
+                {
+                    if (source.TryForwardLookup(query.Header.Host, out IPAddress address))
+                    {
+                        return ReturnAddress(query, address);
+                    }
+                }
             }
 
             return await _dnsClient.Query(query, token);
@@ -68,16 +73,16 @@ namespace Ae.Dns.Client
             {
                 Header = CreateAnswer(query),
                 Answers = new List<DnsResourceRecord>
+                {
+                    new DnsResourceRecord
                     {
-                        new DnsResourceRecord
-                        {
-                            Class = DnsQueryClass.IN,
-                            Host = query.Header.Host,
-                            Resource = new DnsIpAddressResource{IPAddress = address},
-                            Type = address.AddressFamily == AddressFamily.InterNetworkV6 ? DnsQueryType.AAAA : DnsQueryType.A,
-                            TimeToLive = 3600
-                        }
+                        Class = DnsQueryClass.IN,
+                        Host = query.Header.Host,
+                        Resource = new DnsIpAddressResource{IPAddress = address},
+                        Type = address.AddressFamily == AddressFamily.InterNetworkV6 ? DnsQueryType.AAAA : DnsQueryType.A,
+                        TimeToLive = 3600
                     }
+                }
             };
         }
 
@@ -87,16 +92,16 @@ namespace Ae.Dns.Client
             {
                 Header = CreateAnswer(query),
                 Answers = new List<DnsResourceRecord>
+                {
+                    new DnsResourceRecord
                     {
-                        new DnsResourceRecord
-                        {
-                            Class = DnsQueryClass.IN,
-                            Host = query.Header.Host,
-                            Resource = new DnsTextResource{Text = foundHost},
-                            Type = DnsQueryType.PTR,
-                            TimeToLive = 3600
-                        }
+                        Class = DnsQueryClass.IN,
+                        Host = query.Header.Host,
+                        Resource = new DnsTextResource{Text = foundHost},
+                        Type = DnsQueryType.PTR,
+                        TimeToLive = 3600
                     }
+                }
             };
         }
 

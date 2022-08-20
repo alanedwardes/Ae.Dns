@@ -1,5 +1,6 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Client.Filters;
+using Ae.Dns.Client.Lookup;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server;
 using Microsoft.AspNetCore.Hosting;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Polly;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -96,11 +98,11 @@ namespace Ae.Dns.Console
 
             selfLogger.LogInformation("Using {UpstreamCount} DNS upstreams", upstreams.Length);
 
-            IDnsClient combinedDnsClient = new DnsRoundRobinClient(upstreams);
+            IDnsClient dnsClient = new DnsRoundRobinClient(upstreams);
 
-            IDnsClient protectedDnsClient = new DnsRebindMitigationClient(provider.GetRequiredService<ILogger<DnsRebindMitigationClient>>(), combinedDnsClient);
+            dnsClient = new DnsRebindMitigationClient(provider.GetRequiredService<ILogger<DnsRebindMitigationClient>>(), dnsClient);
 
-            IDnsClient cache = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), protectedDnsClient, new MemoryCache("MainCache"));
+            dnsClient = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), dnsClient, new MemoryCache("MainCache"));
 
             selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 
@@ -116,13 +118,28 @@ namespace Ae.Dns.Console
             // The domain must pass one of these filters to be allowed
             var compositeFilter = new DnsCompositeOrFilter(denyFilter, allowListFilter);
 
-            IDnsClient filter = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), compositeFilter, cache);
+            dnsClient = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), compositeFilter, dnsClient);
 
-            IDnsClient staticLookup = new DnsStaticLookupClient(dnsConfiguration.StaticLookup.ToDictionary(x => x.Key, x => IPAddress.Parse(x.Value)), filter);
+            var staticLookupSources = new List<IDnsLookupSource>();
 
-            IDnsClient metrics = new DnsMetricsClient(staticLookup);
+            foreach (var hostFile in dnsConfiguration.HostFiles)
+            {
+                staticLookupSources.Add(new HostsFileDnsLookupSource(provider.GetRequiredService<ILogger<HostsFileDnsLookupSource>>(), new FileInfo(hostFile)));
+            }
 
-            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), metrics);
+            if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdLeasesFile))
+            {
+                staticLookupSources.Add(new DhcpdLeasesDnsLookupSource(provider.GetRequiredService<ILogger<DhcpdLeasesDnsLookupSource>>(), new FileInfo(dnsConfiguration.DhcpdLeasesFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
+            }
+
+            if (staticLookupSources.Count > 0)
+            {
+                dnsClient = new DnsStaticLookupClient(dnsClient, staticLookupSources.ToArray());
+            }
+
+            dnsClient = new DnsMetricsClient(dnsClient);
+
+            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), dnsClient);
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
