@@ -3,13 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Ae.Dns.Client.Lookup
 {
     /// <summary>
     /// An abstract implementation of <see cref="IDnsLookupSource"/> which watches the specified
-    /// file for changes, and calls <see cref="Rebuild"/>.
+    /// file for changes, and calls <see cref="ReloadFile"/>.
     /// </summary>
     public abstract class FileDnsLookupSource : IDnsLookupSource
     {
@@ -37,14 +37,13 @@ namespace Ae.Dns.Client.Lookup
             _watcher.Changed += OnFilechanged;
             _logger = logger;
             _file = file;
-            Rebuild().GetAwaiter().GetResult();
         }
 
-        private async void OnFilechanged(object sender, FileSystemEventArgs e)
+        private void OnFilechanged(object sender, FileSystemEventArgs e)
         {
             try
             {
-                await Rebuild();
+                ReloadFile();
             }
             catch (Exception exception)
             {
@@ -57,9 +56,12 @@ namespace Ae.Dns.Client.Lookup
         /// </summary>
         protected abstract IEnumerable<(string hostname, IPAddress address)> LoadLookup(StreamReader sr);
 
-        private async Task Rebuild()
+        /// <summary>
+        /// Reload the lookup from the file.
+        /// </summary>
+        protected void ReloadFile()
         {
-            using var sr = await ReadFileWithRetries();
+            using var sr = ReadFileWithRetries();
 
             var hostsToAddresses = new Dictionary<string, IPAddress>();
             var addressesToHosts = new Dictionary<IPAddress, string>();
@@ -80,12 +82,10 @@ namespace Ae.Dns.Client.Lookup
             _logger.LogInformation("Updated lookup tables with {ItemCount} items", _hostsToAddresses.Count);
         }
 
-        private async Task<StreamReader> ReadFileWithRetries()
+        private StreamReader ReadFileWithRetries()
         {
             for (int attempt = 1; attempt < 5; attempt++)
             {
-                await Task.Delay(TimeSpan.FromSeconds(attempt));
-
                 try
                 {
                     return _file.OpenText();
@@ -94,6 +94,8 @@ namespace Ae.Dns.Client.Lookup
                 {
                     _logger.LogWarning(ex, "Unable to open file {File}, attempt {Attempt}", _file, attempt);
                 }
+
+                Thread.Sleep(TimeSpan.FromSeconds(attempt));
             }
 
             throw new IOException($"Unable to access file {_file} after 5 attempts");

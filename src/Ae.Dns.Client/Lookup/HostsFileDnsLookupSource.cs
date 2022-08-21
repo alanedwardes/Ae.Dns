@@ -16,6 +16,7 @@ namespace Ae.Dns.Client.Lookup
         /// </summary>
         public HostsFileDnsLookupSource(ILogger<HostsFileDnsLookupSource> logger, FileInfo file) : base(logger, file)
         {
+            ReloadFile();
         }
 
         /// <inheritdoc/>

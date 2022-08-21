@@ -43,6 +43,7 @@ namespace Ae.Dns.Tests.Client.Lookup
         {
             public TestFileDnsLookupSource(FileInfo file) : base(NullLogger<FileDnsLookupSource>.Instance, file)
             {
+                ReloadFile();
             }
 
             public string Contents { get; private set; }

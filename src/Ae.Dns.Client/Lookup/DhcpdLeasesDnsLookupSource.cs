@@ -18,7 +18,11 @@ namespace Ae.Dns.Client.Lookup
         /// <summary>
         /// Construct a new <see cref="DhcpdLeasesDnsLookupSource"/> using the specified <see cref="FileInfo"/> and suffix string (for example, local).
         /// </summary>
-        public DhcpdLeasesDnsLookupSource(ILogger<DhcpdLeasesDnsLookupSource> logger, FileInfo file, string hostnameSuffix = null) : base(logger, file) => _hostnameSuffix = hostnameSuffix;
+        public DhcpdLeasesDnsLookupSource(ILogger<DhcpdLeasesDnsLookupSource> logger, FileInfo file, string hostnameSuffix = null) : base(logger, file)
+        {
+            _hostnameSuffix = hostnameSuffix;
+            ReloadFile();
+        }
 
         /// <inheritdoc/>
         protected override IEnumerable<(string hostname, IPAddress address)> LoadLookup(StreamReader sr)
