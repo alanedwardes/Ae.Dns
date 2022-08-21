@@ -25,6 +25,7 @@ namespace Ae.Dns.Client
             _socket.Connect(address, 53);
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             _socket.Close();
@@ -55,7 +56,12 @@ namespace Ae.Dns.Client
                 throw new InvalidOperationException();
             }
 
-            return DnsByteExtensions.FromBytes<DnsMessage>(response);
+            var answer = DnsByteExtensions.FromBytes<DnsMessage>(response);
+            answer.Header.Tags.Add("Resolver", this);
+            return answer;
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"tcp://{_socket.Client.RemoteEndPoint}/";
     }
 }

@@ -6,9 +6,10 @@ using Ae.Dns.Server;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using Polly;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -61,8 +62,7 @@ namespace Ae.Dns.Console
             {
                 services.AddHttpClient<IDnsClient, DnsHttpClient>(Guid.NewGuid().ToString(), x => x.BaseAddress = httpsUpstream)
                         .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
-                        .AddHttpMessageHandler(CreateDnsDelegatingHandler)
-                        .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+                        .AddHttpMessageHandler(CreateDnsDelegatingHandler);
             }
 
             foreach (IPAddress udpUpstream in dnsConfiguration.UdpUpstreams.Select(IPAddress.Parse))
@@ -72,8 +72,9 @@ namespace Ae.Dns.Console
 
             services.AddHttpClient<DnsRemoteSetFilter>()
                     .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
-                    .AddHttpMessageHandler(CreateDnsDelegatingHandler)
-                    .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+                    .AddHttpMessageHandler(CreateDnsDelegatingHandler);
+
+            services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
 
             IServiceProvider provider = services.BuildServiceProvider();
 
@@ -98,7 +99,7 @@ namespace Ae.Dns.Console
 
             selfLogger.LogInformation("Using {UpstreamCount} DNS upstreams", upstreams.Length);
 
-            IDnsClient dnsClient = new DnsRoundRobinClient(upstreams);
+            IDnsClient dnsClient = new DnsRacerClient(provider.GetRequiredService<ILogger<DnsRacerClient>>(), upstreams);
 
             dnsClient = new DnsRebindMitigationClient(provider.GetRequiredService<ILogger<DnsRebindMitigationClient>>(), dnsClient);
 

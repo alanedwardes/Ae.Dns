@@ -157,7 +157,7 @@ namespace Ae.Dns.Client
 
             // Copy the same ID from the request
             answer.Header.Id = query.Header.Id;
-
+            answer.Header.Tags.Add("Resolver", this);
             return answer;
         }
 
@@ -169,5 +169,8 @@ namespace Ae.Dns.Client
             _task.GetAwaiter().GetResult();
             _socket.Dispose();
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"udp://{_socket.Client.RemoteEndPoint}/";
     }
 }

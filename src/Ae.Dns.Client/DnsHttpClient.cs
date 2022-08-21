@@ -50,7 +50,12 @@ namespace Ae.Dns.Client
                 throw;
             }
 
-            return DnsByteExtensions.FromBytes<DnsMessage>(await response.Content.ReadAsByteArrayAsync());
+            var answer = DnsByteExtensions.FromBytes<DnsMessage>(await response.Content.ReadAsByteArrayAsync());
+            answer.Header.Tags.Add("Resolver", this);
+            return answer;
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => _httpClient.BaseAddress.ToString();
     }
 }

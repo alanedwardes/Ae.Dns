@@ -49,6 +49,7 @@ namespace Ae.Dns.Console
                 var statsSets = new Dictionary<string, IDictionary<string, int>>
                 {
                     { "Statistics", _stats },
+                    { "Top Used Resolvers", _topResolvers },
                     { "Top Blocked Domains", _topBlockedDomains },
                     { "Top Permitted Domains", _topPermittedDomains },
                     { "Top Prefetched Domains", _topPrefetchedDomains },
@@ -117,6 +118,7 @@ namespace Ae.Dns.Console
         private readonly BlockingCollection<float> _responseTimes = new(sizeof(float) * 10_000_000);
         private readonly BlockingCollection<float> _ttlTimes = new(sizeof(float) * 10_000_000);
         private readonly ConcurrentDictionary<string, int> _stats = new();
+        private readonly ConcurrentDictionary<string, int> _topResolvers = new();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new();
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new();
         private readonly ConcurrentDictionary<string, int> _topPrefetchedDomains = new();
@@ -181,6 +183,11 @@ namespace Ae.Dns.Console
                             }
 
                             _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
+                        }
+
+                        if (answer.Header.Tags.TryGetValue("Resolver", out var resolver) && resolver is IDnsClient dnsClient)
+                        {
+                            _topResolvers.AddOrUpdate(dnsClient.ToString(), 1, (id, count) => count + 1);
                         }
                     }
                 }
