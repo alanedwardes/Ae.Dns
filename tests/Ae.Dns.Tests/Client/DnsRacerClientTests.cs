@@ -43,10 +43,10 @@ namespace Ae.Dns.Tests.Client
         {
             var expectedAnswer = new DnsMessage();
 
-            using var fastClient = new DnsTestClient(() => Task.FromResult(expectedAnswer));
-            using var slowClient = new DnsTestClient(async () => throw new InvalidOperationException());
+            using var successClient = new DnsTestClient(() => Task.FromResult(expectedAnswer));
+            using var errorClient = new DnsTestClient(async () => throw new InvalidOperationException());
 
-            var racer = new DnsRacerClient(new[] { fastClient, slowClient });
+            var racer = new DnsRacerClient(new[] { successClient, errorClient });
 
             for (int i = 0; i < 20; i++)
             {
@@ -55,6 +55,13 @@ namespace Ae.Dns.Tests.Client
         }
 
         [Fact]
-        public async Task
+        public async Task TestAllFaultedResults()
+        {
+            using var errorClient = new DnsTestClient(async () => throw new InvalidOperationException());
+
+            var racer = new DnsRacerClient(new[] { errorClient, errorClient });
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => racer.Query(new DnsMessage(), CancellationToken.None));
+        }
     }
 }
