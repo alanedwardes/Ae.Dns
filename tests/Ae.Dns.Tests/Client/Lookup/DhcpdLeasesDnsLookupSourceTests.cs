@@ -54,7 +54,7 @@ namespace Ae.Dns.Tests.Client.Lookup
             Assert.False(source.TryReverseLookup(IPAddress.Parse("192.168.178.249"), out var _));
             Assert.False(source.TryReverseLookup(IPAddress.Broadcast, out var _));
             Assert.True(source.TryReverseLookup(IPAddress.Parse("192.168.178.254"), out var actualHostname));
-            Assert.Equal("oneplus5", actualHostname);
+            Assert.Equal("OnePlus5", actualHostname);
 
             Assert.False(source.TryForwardLookup("wibble", out var _));
             Assert.True(source.TryForwardLookup("oneplus5", out var actualAddress));

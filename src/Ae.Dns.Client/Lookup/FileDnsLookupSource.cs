@@ -64,13 +64,13 @@ namespace Ae.Dns.Client.Lookup
         {
             using var sr = ReadFileWithRetries();
 
-            var hostsToAddresses = new Dictionary<string, IPAddress>();
+            var hostsToAddresses = new Dictionary<string, IPAddress>(StringComparer.InvariantCultureIgnoreCase);
             var addressesToHosts = new Dictionary<IPAddress, string>();
 
             foreach (var (hostname, address) in LoadLookup(sr))
             {
-                hostsToAddresses[hostname.ToLowerInvariant()] = address;
-                addressesToHosts[address] = hostname.ToLowerInvariant();
+                hostsToAddresses[hostname] = address;
+                addressesToHosts[address] = hostname;
             }
 
             lock (_swapLock)

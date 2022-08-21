@@ -57,7 +57,7 @@ namespace Ae.Dns.Client.Lookup
             {
                 foreach (var source in _sources)
                 {
-                    if (source.TryForwardLookup(query.Header.Host.ToLowerInvariant(), out IPAddress address))
+                    if (source.TryForwardLookup(query.Header.Host, out IPAddress address))
                     {
                         return ReturnAddress(query, address);
                     }

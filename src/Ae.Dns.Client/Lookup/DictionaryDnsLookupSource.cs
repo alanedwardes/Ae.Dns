@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace Ae.Dns.Client.Lookup
@@ -8,7 +9,7 @@ namespace Ae.Dns.Client.Lookup
     /// </summary>
     public sealed class DictionaryDnsLookupSource : IDnsLookupSource
     {
-        private readonly IDictionary<string, IPAddress> _hostsToAddresses = new Dictionary<string, IPAddress>();
+        private readonly IDictionary<string, IPAddress> _hostsToAddresses = new Dictionary<string, IPAddress>(StringComparer.InvariantCultureIgnoreCase);
         private readonly IDictionary<IPAddress, string> _addressesToHosts = new Dictionary<IPAddress, string>();
 
         /// <summary>
@@ -18,8 +19,8 @@ namespace Ae.Dns.Client.Lookup
         {
             foreach (var kvp in lookup)
             {
-                _hostsToAddresses[kvp.Key.ToLowerInvariant()] = kvp.Value;
-                _addressesToHosts[kvp.Value] = kvp.Key.ToLowerInvariant();
+                _hostsToAddresses[kvp.Key] = kvp.Value;
+                _addressesToHosts[kvp.Value] = kvp.Key;
             }
         }
 
