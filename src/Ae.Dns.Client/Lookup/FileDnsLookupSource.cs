@@ -13,6 +13,7 @@ namespace Ae.Dns.Client.Lookup
     /// </summary>
     public abstract class FileDnsLookupSource : IDnsLookupSource
     {
+        private readonly object _swapLock = new object();
         private IDictionary<string, IPAddress> _hostsToAddresses = new Dictionary<string, IPAddress>();
         private IDictionary<IPAddress, string> _addressesToHosts = new Dictionary<IPAddress, string>();
         private readonly FileSystemWatcher _watcher;
@@ -72,8 +73,7 @@ namespace Ae.Dns.Client.Lookup
                 addressesToHosts[address] = hostname.ToLowerInvariant();
             }
 
-            lock (_hostsToAddresses)
-            lock (_addressesToHosts)
+            lock (_swapLock)
             {
                 _hostsToAddresses = hostsToAddresses;
                 _addressesToHosts = addressesToHosts;
