@@ -69,9 +69,9 @@ namespace Ae.Dns.Console
 
                     if (values.Count > 0)
                     {
-                        await WriteString($"avg = {values.Average():n2}s, sdv = {values.StandardDeviation():n2}s");
+                        await WriteString($"avg = {values.Average():n4}s, sdv = {values.StandardDeviation():n4}s");
                         await WriteString(Environment.NewLine);
-                        await WriteString($"p99 = {values.Percentile(99):n2}s, p90 = {values.Percentile(90):n2}s, p75 = {values.Percentile(75):n2}s");
+                        await WriteString($"p99 = {values.Percentile(99):n4}s, p90 = {values.Percentile(90):n4}s, p75 = {values.Percentile(75):n4}ms p50 = {values.Percentile(50):n4}ms");
                     }
                     else
                     {
