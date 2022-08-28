@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
+using Humanizer;
 using MathNet.Numerics.Statistics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -69,9 +70,20 @@ namespace Ae.Dns.Console
 
                     if (values.Count > 0)
                     {
-                        await WriteString($"avg = {values.Average():n4}s, sdv = {values.StandardDeviation():n4}s");
+                        var average = TimeSpan.FromSeconds(values.Average());
+                        var stdev = TimeSpan.FromSeconds(values.StandardDeviation());
+                        var p99 = TimeSpan.FromSeconds(values.Percentile(99));
+                        var p95 = TimeSpan.FromSeconds(values.Percentile(95));
+                        var p90 = TimeSpan.FromSeconds(values.Percentile(90));
+                        var p75 = TimeSpan.FromSeconds(values.Percentile(75));
+                        var p50 = TimeSpan.FromSeconds(values.Percentile(50));
+                        var p25 = TimeSpan.FromSeconds(values.Percentile(25));
+
+                        await WriteString($"avg = {average.Humanize()}, sdv = {stdev.Humanize()}");
                         await WriteString(Environment.NewLine);
-                        await WriteString($"p99 = {values.Percentile(99):n4}s, p90 = {values.Percentile(90):n4}s, p75 = {values.Percentile(75):n4}ms p50 = {values.Percentile(50):n4}ms");
+                        await WriteString($"p99 = {p99.Humanize()}, p95 = {p95.Humanize()}, p90 = {p90.Humanize()}");
+                        await WriteString(Environment.NewLine);
+                        await WriteString($"p75 = {p75.Humanize()} p50 = {p50.Humanize()}, p25 = {p25.Humanize()}");
                     }
                     else
                     {
