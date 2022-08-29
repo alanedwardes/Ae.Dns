@@ -113,8 +113,10 @@ namespace Ae.Dns.Console
 
             var suffixFilter = new DnsDomainSuffixFilter(dnsConfiguration.DisallowedDomainSuffixes);
 
+            var networkFilter = new DnsLocalNetworkQueryFilter();
+
             // The domain must pass all of these filters to be allowed
-            var denyFilter = new DnsCompositeAndFilter(remoteFilter, suffixFilter);
+            var denyFilter = new DnsCompositeAndFilter(remoteFilter, suffixFilter, networkFilter);
 
             // The domain must pass one of these filters to be allowed
             var compositeFilter = new DnsCompositeOrFilter(denyFilter, allowListFilter);
