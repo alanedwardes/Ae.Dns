@@ -12,5 +12,6 @@ namespace Ae.Dns.Console
         public string[] HostFiles { get; set; } = new string[0];
         public string DhcpdLeasesFile { get; set; }
         public string DhcpdLeasesHostnameSuffix { get; set; }
+        public DnsInfluxDbConfiguration InfluxDbMetrics { get; set; }
     }
 }

@@ -1,8 +1,10 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Client.Filters;
 using Ae.Dns.Client.Lookup;
+using Ae.Dns.Metrics.InfluxDb;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server;
+using App.Metrics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -123,8 +125,39 @@ namespace Ae.Dns.Console
 
             dnsClient = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), compositeFilter, dnsClient);
 
+            var metricsBuilder = new MetricsBuilder();
+
+            if (dnsConfiguration.InfluxDbMetrics != null)
+            {
+                metricsBuilder.Report.ToInfluxDb(options =>
+                {
+                    options.InfluxDb.BaseUri = dnsConfiguration.InfluxDbMetrics.BaseUri;
+                    options.InfluxDb.Organization = dnsConfiguration.InfluxDbMetrics.Organization;
+                    options.InfluxDb.Bucket = dnsConfiguration.InfluxDbMetrics.Bucket;
+                    options.InfluxDb.Token = dnsConfiguration.InfluxDbMetrics.Token;
+                });
+            }
+
+            var metrics = metricsBuilder.Build();
+
+            async Task ReportStats(CancellationToken token)
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await Task.WhenAll(metrics.ReportRunner.RunAllAsync(token));
+                    }
+                    catch (Exception ex)
+                    {
+                        selfLogger.LogWarning(ex, "Unable to report statistics");
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(10), token);
+                }
+            }
+
             // Add upstream metrics (everything below is local resolution so instant)
-            dnsClient = new DnsMetricsClient(dnsClient);
+            dnsClient = new DnsInfluxDbMetricsClient(metrics, dnsClient);
 
             var staticLookupSources = new List<IDnsLookupSource>();
 
@@ -152,6 +185,7 @@ namespace Ae.Dns.Console
 
             await Task.WhenAll(
                 builder.Build().RunAsync(CancellationToken.None),
+                ReportStats(CancellationToken.None),
                 server.Listen(CancellationToken.None)
             );
         }

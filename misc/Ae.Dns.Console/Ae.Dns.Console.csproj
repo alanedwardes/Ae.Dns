@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AK.App.Metrics.Reporting.InfluxDB2" Version="4.2.0" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
@@ -19,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Ae.Dns.AppMetrics\Ae.Dns.AppMetrics.csproj" />
     <ProjectReference Include="..\..\src\Ae.Dns.Client\Ae.Dns.Client.csproj" />
     <ProjectReference Include="..\..\src\Ae.Dns.Server\Ae.Dns.Server.csproj" />
   </ItemGroup>
