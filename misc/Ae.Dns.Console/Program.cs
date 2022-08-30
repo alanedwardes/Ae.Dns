@@ -158,6 +158,7 @@ namespace Ae.Dns.Console
 
             // Add upstream metrics (everything below is local resolution so instant)
             dnsClient = new DnsInfluxDbMetricsClient(metrics, dnsClient);
+            dnsClient = new DnsMetricsClient(dnsClient);
 
             var staticLookupSources = new List<IDnsLookupSource>();
 
