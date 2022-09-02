@@ -52,7 +52,6 @@ namespace Ae.Dns.Metrics.InfluxDb
                 {
                     Name = "Exceptions",
                     MeasurementUnit = Unit.Errors,
-                    ResetOnReporting = true,
                     Tags = MetricTags.Concat(MetricTags.Empty, tags)
                 });
                 throw;
@@ -79,7 +78,6 @@ namespace Ae.Dns.Metrics.InfluxDb
                 DurationUnit = TimeUnit.Milliseconds,
                 MeasurementUnit = Unit.Calls,
                 RateUnit = TimeUnit.Milliseconds,
-                ResetOnReporting = true,
                 Tags = MetricTags.Concat(MetricTags.Empty, tags)
             }, sw.ElapsedMilliseconds);
 
@@ -87,7 +85,6 @@ namespace Ae.Dns.Metrics.InfluxDb
             {
                 Name = "AnswerResult",
                 MeasurementUnit = Unit.Results,
-                ResetOnReporting = true,
                 Tags = MetricTags.Concat(MetricTags.Empty, tags)
             });
 
