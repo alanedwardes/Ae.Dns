@@ -64,20 +64,14 @@ namespace Ae.Dns.Metrics.InfluxDb
 
             tags.Add("ResponseCode", answer.Header.ResponseCode.ToString());
 
-            if (answer.Header.Tags.TryGetValue("IsCached", out var isCachedObject) && isCachedObject is bool isCached)
-            {
-                tags.Add("IsCached", isCached.ToString());
-            }
+            bool isCached = answer.Header.Tags.TryGetValue("IsCached", out var isCachedObject) && isCachedObject is bool isCachedResult && isCachedResult;
+            tags.Add("IsCached", isCached.ToString());
 
-            if (answer.Header.Tags.TryGetValue("IsPrefetch", out var isPrefetchObject) && isPrefetchObject is bool isPrefetch)
-            {
-                tags.Add("IsPrefetch", isPrefetch.ToString());
-            }
+            bool isPrefetch = answer.Header.Tags.TryGetValue("IsPrefetch", out var isPrefetchObject) && isPrefetchObject is bool isPrefetchResult && isPrefetchResult;
+            tags.Add("IsPrefetch", isPrefetch.ToString());
 
-            if (answer.Header.Tags.TryGetValue("Resolver", out var resolverObject) && resolverObject is IDnsClient dnsClient)
-            {
-                tags.Add("Resolver", dnsClient.ToString());
-            }
+            string resolver = answer.Header.Tags.TryGetValue("Resolver", out var resolverObject) && resolverObject is IDnsClient dnsClient ? dnsClient.ToString() : "Unknown";
+            tags.Add("Resolver", resolver);
 
             _metrics.Measure.Timer.Time(new TimerOptions
             {
