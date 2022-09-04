@@ -36,11 +36,6 @@ namespace Ae.Dns.Metrics.InfluxDb
         {
             var sw = Stopwatch.StartNew();
 
-            var tags = new Dictionary<string, string>
-            {
-                { "Host", query.Header.Host}
-            };
-
             DnsMessage answer;
             try
             {
@@ -51,8 +46,7 @@ namespace Ae.Dns.Metrics.InfluxDb
                 _metrics.Measure.Counter.Increment(new CounterOptions
                 {
                     Name = "Exceptions",
-                    MeasurementUnit = Unit.Errors,
-                    Tags = MetricTags.Concat(MetricTags.Empty, tags)
+                    MeasurementUnit = Unit.Errors
                 });
                 throw;
             }
@@ -60,14 +54,13 @@ namespace Ae.Dns.Metrics.InfluxDb
             {
                 sw.Stop();
             }
+            
+            var tags = new Dictionary<string, string>();
 
             tags.Add("ResponseCode", answer.Header.ResponseCode.ToString());
 
             bool isCached = answer.Header.Tags.TryGetValue("IsCached", out var isCachedObject) && isCachedObject is bool isCachedResult && isCachedResult;
             tags.Add("IsCached", isCached.ToString());
-
-            bool isPrefetch = answer.Header.Tags.TryGetValue("IsPrefetch", out var isPrefetchObject) && isPrefetchObject is bool isPrefetchResult && isPrefetchResult;
-            tags.Add("IsPrefetch", isPrefetch.ToString());
 
             string resolver = answer.Header.Tags.TryGetValue("Resolver", out var resolverObject) && resolverObject is IDnsClient dnsClient ? dnsClient.ToString() : "Unknown";
             tags.Add("Resolver", resolver);
