@@ -12,15 +12,15 @@ namespace Ae.Dns.Metrics.InfluxDb
     /// <summary>
     /// A client which logs metrics aganst DNS responses.
     /// </summary>
-    public sealed class DnsInfluxDbMetricsClient : IDnsClient
+    public sealed class DnsAppMetricsClient : IDnsClient
     {
         private readonly IMetrics _metrics;
         private readonly IDnsClient _dnsClient;
 
         /// <summary>
-        /// Construct a new <see cref="DnsInfluxDbMetricsClient"/> using the specified <see cref="IDnsClient"/>.
+        /// Construct a new <see cref="DnsAppMetricsClient"/> using the specified <see cref="IDnsClient"/>.
         /// </summary>
-        public DnsInfluxDbMetricsClient(IMetrics metrics, IDnsClient dnsClient)
+        public DnsAppMetricsClient(IMetrics metrics, IDnsClient dnsClient)
         {
             _metrics = metrics;
             _dnsClient = dnsClient;

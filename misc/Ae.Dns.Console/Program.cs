@@ -157,7 +157,6 @@ namespace Ae.Dns.Console
             }
 
             // Add upstream metrics (everything below is local resolution so instant)
-            dnsClient = new DnsInfluxDbMetricsClient(metrics, dnsClient);
             dnsClient = new DnsMetricsClient(dnsClient);
 
             var staticLookupSources = new List<IDnsLookupSource>();
@@ -176,6 +175,9 @@ namespace Ae.Dns.Console
             {
                 dnsClient = new DnsStaticLookupClient(dnsClient, staticLookupSources.ToArray());
             }
+
+            // Track metrics last
+            dnsClient = new DnsAppMetricsClient(metrics, dnsClient);
 
             IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), dnsClient);
 
