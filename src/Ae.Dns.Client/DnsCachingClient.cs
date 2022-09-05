@@ -70,11 +70,14 @@ namespace Ae.Dns.Client
             var cachedAnswer = GetCachedAnswer(query);
             if (cachedAnswer != null)
             {
+                cachedAnswer.Header.Tags.Add("Resolver", this);
                 cachedAnswer.Header.Tags.Add("IsCached", true);
                 return cachedAnswer;
             }
 
-            return await GetFreshAnswer(query, token);
+            var freshAnswer = await GetFreshAnswer(query, token);
+            freshAnswer.Header.Tags.Add("IsCached", false);
+            return freshAnswer;
         }
 
         private DnsMessage GetCachedAnswer(DnsMessage query)
@@ -91,7 +94,6 @@ namespace Ae.Dns.Client
 
             // Replace the ID
             answer.Header.Id = query.Header.Id;
-            answer.Header.Tags.Add("Resolver", this);
 
             // Adjust the TTLs to be correct
             foreach (var record in answer.Answers)
