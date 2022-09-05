@@ -116,7 +116,8 @@ namespace Ae.Dns.Client.Lookup
             Host = query.Header.Host,
             QueryClass = query.Header.QueryClass,
             QuestionCount = query.Header.QuestionCount,
-            QueryType = query.Header.QueryType
+            QueryType = query.Header.QueryType,
+            Tags = { { "Resolver", this } }
         };
 
         /// <inheritdoc/>
