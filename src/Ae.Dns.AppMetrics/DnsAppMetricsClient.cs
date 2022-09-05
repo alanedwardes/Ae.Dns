@@ -54,13 +54,17 @@ namespace Ae.Dns.Metrics.InfluxDb
             {
                 sw.Stop();
             }
-            
-            var tags = new Dictionary<string, string>();
 
-            tags.Add("ResponseCode", answer.Header.ResponseCode.ToString());
+            var tags = new Dictionary<string, string>
+            {
+                { "ResponseCode", answer.Header.ResponseCode.ToString() },
+                { "QueryType", answer.Header.QueryType.ToString() }
+            };
 
-            bool isCached = answer.Header.Tags.TryGetValue("IsCached", out var isCachedObject) && isCachedObject is bool isCachedResult && isCachedResult;
-            tags.Add("IsCached", isCached.ToString());
+            if (answer.Header.Tags.TryGetValue("IsCached", out var isCached))
+            {
+                tags.Add("IsCached", isCached.ToString());
+            }
 
             string resolver = answer.Header.Tags.TryGetValue("Resolver", out var resolverObject) && resolverObject is IDnsClient dnsClient ? dnsClient.ToString() : "Unknown";
             tags.Add("Resolver", resolver);

@@ -118,5 +118,8 @@ namespace Ae.Dns.Client.Lookup
             QuestionCount = query.Header.QuestionCount,
             QueryType = query.Header.QueryType
         };
+
+        /// <inheritdoc/>
+        public override string ToString() => nameof(DnsStaticLookupClient);
     }
 }

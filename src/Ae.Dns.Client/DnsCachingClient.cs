@@ -91,6 +91,7 @@ namespace Ae.Dns.Client
 
             // Replace the ID
             answer.Header.Id = query.Header.Id;
+            answer.Header.Tags.Add("Resolver", this);
 
             // Adjust the TTLs to be correct
             foreach (var record in answer.Answers)
@@ -161,5 +162,8 @@ namespace Ae.Dns.Client
         public void Dispose()
         {
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"{nameof(DnsCachingClient)}({_objectCache.Name})";
     }
 }

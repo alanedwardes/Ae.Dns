@@ -50,7 +50,8 @@ namespace Ae.Dns.Client
             Host = query.Header.Host,
             QueryClass = query.Header.QueryClass,
             QuestionCount = query.Header.QuestionCount,
-            QueryType = query.Header.QueryType
+            QueryType = query.Header.QueryType,
+            Tags = { { "Resolver", this } }
         };
 
         /// <inheritdoc/>
@@ -64,5 +65,8 @@ namespace Ae.Dns.Client
             _logger.LogInformation("DNS query blocked for {Domain}", query.Header.Host);
             return new DnsMessage { Header = CreateNullHeader(query) };
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => nameof(DnsFilterClient);
     }
 }

@@ -123,8 +123,12 @@ namespace Ae.Dns.Client
                 Host = query.Header.Host,
                 QueryClass = query.Header.QueryClass,
                 QuestionCount = query.Header.QuestionCount,
-                QueryType = query.Header.QueryType
+                QueryType = query.Header.QueryType,
+                Tags = { { "Resolver", this } }
             }
         };
+
+        /// <inheritdoc/>
+        public override string ToString() => nameof(DnsRebindMitigationClient);
     }
 }
