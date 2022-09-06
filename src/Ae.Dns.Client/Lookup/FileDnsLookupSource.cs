@@ -109,5 +109,8 @@ namespace Ae.Dns.Client.Lookup
 
         /// <inheritdoc/>
         public bool TryReverseLookup(IPAddress address, out string hostname) => _addressesToHosts.TryGetValue(address, out hostname);
+
+        /// <inheritdoc/>
+        public override string ToString() => _file.Name;
     }
 }

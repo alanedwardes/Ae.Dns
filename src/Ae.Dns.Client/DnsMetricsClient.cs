@@ -68,7 +68,6 @@ namespace Ae.Dns.Client
             var sw = Stopwatch.StartNew();
 
             var queryTag = new KeyValuePair<string, object>("Query", query);
-            var stopwatchTag = new KeyValuePair<string, object>("Stopwatch", sw);
 
             DnsMessage answer;
             try
@@ -77,7 +76,7 @@ namespace Ae.Dns.Client
             }
             catch
             {
-                _exceptionCounter.Add(1, queryTag, stopwatchTag);
+                _exceptionCounter.Add(1, queryTag);
                 throw;
             }
             finally
@@ -85,21 +84,19 @@ namespace Ae.Dns.Client
                 sw.Stop();
             }
 
-            var answerTag = new KeyValuePair<string, object>("Answer", answer);
-
             switch (answer.Header.ResponseCode)
             {
                 case DnsResponseCode.NoError:
-                    _successCounter.Add(1, queryTag, answerTag, stopwatchTag);
+                    _successCounter.Add(1, queryTag);
                     break;
                 case DnsResponseCode.NXDomain:
-                    _missingCounter.Add(1, queryTag, answerTag, stopwatchTag);
+                    _missingCounter.Add(1, queryTag);
                     break;
                 case DnsResponseCode.Refused:
-                    _refusedCounter.Add(1, queryTag, answerTag, stopwatchTag);
+                    _refusedCounter.Add(1, queryTag);
                     break;
                 default:
-                    _otherErrorCounter.Add(1, queryTag, answerTag, stopwatchTag);
+                    _otherErrorCounter.Add(1, queryTag);
                     break;
             }
 

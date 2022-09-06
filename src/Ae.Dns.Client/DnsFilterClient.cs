@@ -51,7 +51,7 @@ namespace Ae.Dns.Client
             QueryClass = query.Header.QueryClass,
             QuestionCount = query.Header.QuestionCount,
             QueryType = query.Header.QueryType,
-            Tags = { { "Resolver", this } }
+            Tags = { { "Resolver", ToString() } }
         };
 
         /// <inheritdoc/>

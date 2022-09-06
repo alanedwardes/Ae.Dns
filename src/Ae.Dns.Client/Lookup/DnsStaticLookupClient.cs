@@ -48,7 +48,7 @@ namespace Ae.Dns.Client.Lookup
                     var addressStringFromHost = string.Join(".", query.Header.Host.Split('.').Take(4).Reverse());
                     if (IPAddress.TryParse(addressStringFromHost, out var address) && source.TryReverseLookup(address, out var foundHost))
                     {
-                        return ReturnPointer(query, foundHost);
+                        return ReturnPointer(query, foundHost, source);
                     }
                 }
             }
@@ -59,7 +59,7 @@ namespace Ae.Dns.Client.Lookup
                 {
                     if (source.TryForwardLookup(query.Header.Host, out IPAddress address))
                     {
-                        return ReturnAddress(query, address);
+                        return ReturnAddress(query, address, source);
                     }
                 }
             }
@@ -67,11 +67,11 @@ namespace Ae.Dns.Client.Lookup
             return await _dnsClient.Query(query, token);
         }
 
-        private DnsMessage ReturnAddress(DnsMessage query, IPAddress address)
+        private DnsMessage ReturnAddress(DnsMessage query, IPAddress address, IDnsLookupSource lookupSource)
         {
             return new DnsMessage
             {
-                Header = CreateAnswer(query),
+                Header = CreateAnswer(query, lookupSource),
                 Answers = new List<DnsResourceRecord>
                 {
                     new DnsResourceRecord
@@ -86,11 +86,11 @@ namespace Ae.Dns.Client.Lookup
             };
         }
 
-        private DnsMessage ReturnPointer(DnsMessage query, string foundHost)
+        private DnsMessage ReturnPointer(DnsMessage query, string foundHost, IDnsLookupSource lookupSource)
         {
             return new DnsMessage
             {
-                Header = CreateAnswer(query),
+                Header = CreateAnswer(query, lookupSource),
                 Answers = new List<DnsResourceRecord>
                 {
                     new DnsResourceRecord
@@ -105,7 +105,7 @@ namespace Ae.Dns.Client.Lookup
             };
         }
 
-        private DnsHeader CreateAnswer(DnsMessage query) => new DnsHeader
+        private DnsHeader CreateAnswer(DnsMessage query, IDnsLookupSource lookupSource) => new DnsHeader
         {
             Id = query.Header.Id,
             ResponseCode = DnsResponseCode.NoError,
@@ -117,7 +117,7 @@ namespace Ae.Dns.Client.Lookup
             QueryClass = query.Header.QueryClass,
             QuestionCount = query.Header.QuestionCount,
             QueryType = query.Header.QueryType,
-            Tags = { { "Resolver", this } }
+            Tags = { { "Resolver", $"{nameof(DnsStaticLookupClient)}({lookupSource})" } }
         };
 
         /// <inheritdoc/>

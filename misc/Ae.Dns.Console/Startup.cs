@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
-using Humanizer;
-using MathNet.Numerics.Statistics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -49,53 +46,12 @@ namespace Ae.Dns.Console
 
                 var statsSets = new Dictionary<string, IDictionary<string, int>>
                 {
-                    { "Statistics", _stats },
-                    { "Top Used Resolvers", _topResolvers },
                     { "Top Blocked Domains", _topBlockedDomains },
                     { "Top Permitted Domains", _topPermittedDomains },
-                    { "Top Prefetched Domains", _topPrefetchedDomains },
                     { "Top Missing Domains", _topMissingDomains },
                     { "Top Other Error Domains", _topOtherErrorDomains },
-                    { "Top Exception Error Domains", _topExceptionDomains },
-                    { "Top Query Types", _topQueryTypes },
-                    { "Top Record Types", _topRecordTypes }
+                    { "Top Exception Error Domains", _topExceptionDomains }
                 };
-
-                async Task WriteResponseStatistics(string title, IReadOnlyCollection<float> values)
-                {
-                    await WriteString(title);
-                    await WriteString(Environment.NewLine);
-                    await WriteString(new string('=', title.Length));
-                    await WriteString(Environment.NewLine);
-
-                    if (values.Count > 0)
-                    {
-                        var average = TimeSpan.FromSeconds(values.Average());
-                        var stdev = TimeSpan.FromSeconds(values.StandardDeviation());
-                        var p99 = TimeSpan.FromSeconds(values.Percentile(99));
-                        var p95 = TimeSpan.FromSeconds(values.Percentile(95));
-                        var p90 = TimeSpan.FromSeconds(values.Percentile(90));
-                        var p75 = TimeSpan.FromSeconds(values.Percentile(75));
-                        var p50 = TimeSpan.FromSeconds(values.Percentile(50));
-                        var p25 = TimeSpan.FromSeconds(values.Percentile(25));
-
-                        await WriteString($"avg = {average.Humanize()}, sdv = {stdev.Humanize()}");
-                        await WriteString(Environment.NewLine);
-                        await WriteString($"p99 = {p99.Humanize()}, p95 = {p95.Humanize()}, p90 = {p90.Humanize()}");
-                        await WriteString(Environment.NewLine);
-                        await WriteString($"p75 = {p75.Humanize()} p50 = {p50.Humanize()}, p25 = {p25.Humanize()}");
-                    }
-                    else
-                    {
-                        await WriteString("None");
-                    }
-
-                    await WriteString(Environment.NewLine);
-                    await WriteString(Environment.NewLine);
-                }
-
-                await WriteResponseStatistics($"Query Times ({_responseTimes.Count})", _responseTimes);
-                await WriteResponseStatistics($"Record TTLs ({_responseTimes.Count})", _ttlTimes);
 
                 foreach (var statsSet in statsSets)
                 {
@@ -110,13 +66,7 @@ namespace Ae.Dns.Console
                         await WriteString(Environment.NewLine);
                     }
 
-                    var limit = 25;
-                    if (context.Request.Query.TryGetValue("limit", out var limitValues))
-                    {
-                        _ = int.TryParse(limitValues.ToString(), out limit);
-                    }
-
-                    foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value.OrderBy(x => x.Key) : statsSet.Value.OrderByDescending(x => x.Value).Take(limit))
+                    foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value.OrderBy(x => x.Key) : statsSet.Value.OrderByDescending(x => x.Value).Take(25))
                     {
                         await WriteString($"{statistic.Key} = {statistic.Value}");
                         await WriteString(Environment.NewLine);
@@ -127,24 +77,15 @@ namespace Ae.Dns.Console
             });
         }
 
-        private readonly BlockingCollection<float> _responseTimes = new(sizeof(float) * 10_000_000);
-        private readonly BlockingCollection<float> _ttlTimes = new(sizeof(float) * 10_000_000);
-        private readonly ConcurrentDictionary<string, int> _stats = new();
-        private readonly ConcurrentDictionary<string, int> _topResolvers = new();
         private readonly ConcurrentDictionary<string, int> _topPermittedDomains = new();
         private readonly ConcurrentDictionary<string, int> _topBlockedDomains = new();
-        private readonly ConcurrentDictionary<string, int> _topPrefetchedDomains = new();
         private readonly ConcurrentDictionary<string, int> _topMissingDomains = new();
         private readonly ConcurrentDictionary<string, int> _topOtherErrorDomains = new();
         private readonly ConcurrentDictionary<string, int> _topExceptionDomains = new();
-        private readonly ConcurrentDictionary<string, int> _topQueryTypes = new();
-        private readonly ConcurrentDictionary<string, int> _topRecordTypes = new();
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
             var metricId = $"{instrument.Meter.Name}.{instrument.Name}";
-
-            _stats.AddOrUpdate(metricId, 1, (id, count) => count + 1);
 
             static TObject GetObjectFromTags<TObject>(ReadOnlySpan<KeyValuePair<string, object>> _tags, string name)
             {
@@ -173,35 +114,7 @@ namespace Ae.Dns.Console
                 if (meterMap.TryGetValue(instrument.Name, out var domainCounts))
                 {
                     var query = GetObjectFromTags<DnsMessage>(tags, "Query");
-
-                    if (query.Header.Tags.ContainsKey("IsPrefetch"))
-                    {
-                        _topPrefetchedDomains.AddOrUpdate(GetObjectFromTags<DnsMessage>(tags, "Query").Header.Host, 1, (id, count) => count + 1);
-                    }
-
                     domainCounts.AddOrUpdate(query.Header.Host, 1, (id, count) => count + 1);
-
-                    if (instrument.Name == DnsMetricsClient.SuccessCounterName)
-                    {
-                        _topQueryTypes.AddOrUpdate(query.Header.QueryType.ToString(), 1, (id, count) => count + 1);
-
-                        var answer = GetObjectFromTags<DnsMessage>(tags, "Answer");
-                        if (!answer.Header.Tags.ContainsKey("IsCached"))
-                        {
-                            foreach (var record in answer.Answers)
-                            {
-                                _topRecordTypes.AddOrUpdate(record.Type.ToString(), 1, (id, count) => count + 1);
-                                _ttlTimes.Add(record.TimeToLive);
-                            }
-
-                            _responseTimes.Add((float)GetObjectFromTags<Stopwatch>(tags, "Stopwatch").Elapsed.TotalSeconds);
-                        }
-
-                        if (answer.Header.Tags.TryGetValue("Resolver", out var resolver) && resolver is IDnsClient dnsClient)
-                        {
-                            _topResolvers.AddOrUpdate(dnsClient.ToString(), 1, (id, count) => count + 1);
-                        }
-                    }
                 }
             }
         }

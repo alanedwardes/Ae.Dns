@@ -66,8 +66,10 @@ namespace Ae.Dns.Metrics.InfluxDb
                 tags.Add("IsCached", isCached.ToString());
             }
 
-            string resolver = answer.Header.Tags.TryGetValue("Resolver", out var resolverObject) && resolverObject is IDnsClient dnsClient ? dnsClient.ToString() : "Unknown";
-            tags.Add("Resolver", resolver);
+            if (answer.Header.Tags.TryGetValue("Resolver", out var resolver))
+            {
+                tags.Add("Resolver", resolver.ToString());
+            }
 
             _metrics.Measure.Timer.Time(new TimerOptions
             {

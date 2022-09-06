@@ -157,7 +157,7 @@ namespace Ae.Dns.Client
 
             // Copy the same ID from the request
             answer.Header.Id = query.Header.Id;
-            answer.Header.Tags.Add("Resolver", this);
+            answer.Header.Tags.Add("Resolver", ToString());
             return answer;
         }
 

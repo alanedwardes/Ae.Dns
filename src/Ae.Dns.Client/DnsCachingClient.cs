@@ -70,7 +70,7 @@ namespace Ae.Dns.Client
             var cachedAnswer = GetCachedAnswer(query);
             if (cachedAnswer != null)
             {
-                cachedAnswer.Header.Tags.Add("Resolver", this);
+                cachedAnswer.Header.Tags.Add("Resolver", $"{nameof(DnsCachingClient)}({_objectCache.Name})");
                 cachedAnswer.Header.Tags.Add("IsCached", true);
                 return cachedAnswer;
             }
@@ -119,8 +119,6 @@ namespace Ae.Dns.Client
         private async Task PrefetchAnswer(DnsMessage query)
         {
             using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-
-            query.Header.Tags.Add("IsPrefetch", true);
 
             try
             {

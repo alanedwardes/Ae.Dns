@@ -57,7 +57,7 @@ namespace Ae.Dns.Client
             }
 
             var answer = DnsByteExtensions.FromBytes<DnsMessage>(response);
-            answer.Header.Tags.Add("Resolver", this);
+            answer.Header.Tags.Add("Resolver", ToString());
             return answer;
         }
 
