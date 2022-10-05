@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.0.13</Version>
+    <Version>0.0.14</Version>
     <WarningsAsErrors>true</WarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Authors>alanedwardes</Authors>
-    <Description>DNS over HTTPS (DoH) client, DNS UDP client and DNS caching client for .NET Core</Description>
+    <Description>AppMetrics support for Ae.Dns.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/alanedwardes/Ae.Dns</PackageProjectUrl>
     <PackageTags>DNS;DoH;DNS Client;DNS UDP;DNS HTTP;DNS HTTPS</PackageTags>

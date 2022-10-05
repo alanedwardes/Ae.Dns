@@ -84,38 +84,41 @@ namespace Ae.Dns.Protocol
             while (offset < bytes.Length && offset < maxOffset)
             {
                 byte currentByte = bytes[offset];
-
-                var bits = new BitArray(new[] { currentByte });
-
-                bool isCompressed = bits[7] && bits[6] && !bits[5] && !bits[4];
+                bool isCompressed = (currentByte & (1 << 6)) != 0 && (currentByte & (1 << 7)) != 0;
                 bool isEnd = currentByte == 0;
 
                 if (isCompressed)
                 {
-                    offset++;
-                    if (!originalOffset.HasValue)
-                    {
-                        originalOffset = offset;
-                    }
+                    var compressedOffset = (ushort)ReadInt16(bytes[offset + 1], (byte)(currentByte & (1 << 6) - 1));
 
-                    offset = (ushort)ReadInt16(bytes[offset], (byte)(currentByte & (1 << 6) - 1));
+                    // Ensure the computed offset isn't outside the buffer
+                    if (compressedOffset < maxOffset)
+                    {
+                        if (!originalOffset.HasValue)
+                        {
+                            originalOffset = ++offset;
+                        }
+
+                        offset = compressedOffset;
+                        continue;
+                    }
                 }
-                else if (isEnd)
+
+                if (isEnd)
                 {
                     if (originalOffset.HasValue)
                     {
                         offset = originalOffset.Value;
                     }
+
                     offset++;
                     break;
                 }
-                else
-                {
-                    offset++;
-                    var str = Encoding.ASCII.GetString(bytes, offset, currentByte);
-                    parts.Add(str);
-                    offset += currentByte;
-                }
+
+                offset++;
+                var str = Encoding.ASCII.GetString(bytes, offset, currentByte);
+                parts.Add(str);
+                offset += currentByte;
             }
 
             return parts.ToArray();

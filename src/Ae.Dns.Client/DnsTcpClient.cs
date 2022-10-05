@@ -44,8 +44,6 @@ namespace Ae.Dns.Client
             var buffer = new byte[4096];
             var receive = await stream.ReadAsync(buffer, 0, buffer.Length, token);
 
-            stream.Close();
-
             var offset = 0;
             var responseLength = DnsByteExtensions.ReadUInt16(buffer, ref offset);
 
