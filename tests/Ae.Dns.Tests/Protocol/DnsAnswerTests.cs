@@ -178,5 +178,28 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(IPAddress.Parse("143.204.191.110"), ((DnsIpAddressResource)record5.Resource).IPAddress);
             Assert.Equal((uint)TimeSpan.Parse("00:01:00").TotalSeconds, record5.TimeToLive);
         }
+
+        [Fact]
+        public void ReadAnswer10()
+        {
+            var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Answer10);
+
+            Assert.Equal(DnsQueryClass.IN, message.Header.QueryClass);
+            Assert.Equal(DnsQueryType.TEXT, message.Header.QueryType);
+            Assert.Equal(1, message.Header.AnswerRecordCount);
+            Assert.Equal(0, message.Header.AdditionalRecordCount);
+            Assert.Equal(1, message.Header.QuestionCount);
+            Assert.Equal(1, message.Answers.Count);
+
+            Assert.Empty(message.Additional);
+            Assert.Empty(message.Nameservers);
+
+            var record1 = message.Answers[0];
+            Assert.Equal(DnsQueryType.TEXT, record1.Type);
+            Assert.Equal(DnsQueryClass.IN, record1.Class);
+            Assert.Equal("_spf.mailgun.org", record1.Host);
+            Assert.Equal("v=spf1 ip4:209.61.151.0/24 ip4:166.78.68.0/22 ip4:198.61.254.0/23 ip4:192.237.158.0/23 ip4:23.253.182.0/23 ip4:104.130.96.0/28 ip4:146.20.113.0/24 ip4:146.20.191.0/24 ip4:159.135.224.0/20 ip4:69.72.32.0/20. ip4:104.130.122.0/23 ip4:146.20.112.0/26 ip4:161.38.192.0/20 ip4:143.55.224.0/21 ip4:143.55.232.0/22 ip4:159.112.240.0/20 ~all", ((DnsTextResource)record1.Resource).Text);
+            Assert.Equal((uint)TimeSpan.Parse("00:00:21").TotalSeconds, record1.TimeToLive);
+        }
     }
 }
