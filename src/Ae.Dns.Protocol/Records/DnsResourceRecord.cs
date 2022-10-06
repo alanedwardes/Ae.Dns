@@ -38,9 +38,9 @@ namespace Ae.Dns.Protocol.Records
             { DnsQueryType.A, () => new DnsIpAddressResource() },
             { DnsQueryType.AAAA, () => new DnsIpAddressResource() },
             { DnsQueryType.TEXT, () => new DnsTextResource() },
-            { DnsQueryType.CNAME, () => new DnsTextResource() },
-            { DnsQueryType.NS, () => new DnsTextResource() },
-            { DnsQueryType.PTR, () => new DnsTextResource() },
+            { DnsQueryType.CNAME, () => new DnsDomainResource() },
+            { DnsQueryType.NS, () => new DnsDomainResource() },
+            { DnsQueryType.PTR, () => new DnsDomainResource() },
             { DnsQueryType.SPF, () => new DnsTextResource() },
             { DnsQueryType.SOA, () => new DnsSoaResource() },
             { DnsQueryType.MX, () => new DnsMxResource() }

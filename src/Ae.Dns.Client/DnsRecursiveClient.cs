@@ -72,7 +72,7 @@ namespace Ae.Dns.Client
 
                 if (nameserverAnswer.Nameservers.Any())
                 {
-                    string nameserver = RandomRecord<DnsTextResource>(nameserverAnswer.Nameservers, DnsQueryType.NS).Text;
+                    string nameserver = RandomRecord<DnsTextResource>(nameserverAnswer.Nameservers, DnsQueryType.NS).ToString();
                     lookup = await LookupNameserverIpAddress(nameserver, depth, token);
                     continue;
                 }
@@ -96,7 +96,7 @@ namespace Ae.Dns.Client
             if (nameserverAddressAnswer.Answers.Any(x => x.Type == DnsQueryType.CNAME))
             {
                 var cname = RandomRecord<DnsTextResource>(nameserverAddressAnswer.Answers, DnsQueryType.CNAME);
-                return await LookupNameserverIpAddress(cname.Text, depth, token);
+                return await LookupNameserverIpAddress(cname.ToString(), depth, token);
             }
 
             throw new DnsClientException($"Unable to process answer {nameserverAddressAnswer}", nameserver);

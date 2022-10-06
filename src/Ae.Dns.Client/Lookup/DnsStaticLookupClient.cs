@@ -97,7 +97,10 @@ namespace Ae.Dns.Client.Lookup
                     {
                         Class = DnsQueryClass.IN,
                         Host = query.Header.Host,
-                        Resource = new DnsTextResource{Text = foundHost},
+                        Resource = new DnsTextResource
+                        {
+                            Entries = new [] { foundHost }
+                        },
                         Type = DnsQueryType.PTR,
                         TimeToLive = 3600
                     }
