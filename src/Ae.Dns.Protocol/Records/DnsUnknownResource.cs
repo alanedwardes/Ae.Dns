@@ -28,9 +28,9 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Raw);
 
         /// <inheritdoc/>
-        public void ReadBytes(byte[] bytes, ref int offset, int length)
+        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
         {
-            Raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset);
+            Raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset).ToArray();
         }
 
         /// <inheritdoc/>

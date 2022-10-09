@@ -69,7 +69,7 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(MName, RName, Serial, Refresh, Retry, Expire, Minimum);
 
         /// <inheritdoc/>
-        public void ReadBytes(byte[] bytes, ref int offset, int length)
+        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
         {
             MName = string.Join(".", DnsByteExtensions.ReadString(bytes, ref offset));
             RName = string.Join(".", DnsByteExtensions.ReadString(bytes, ref offset));

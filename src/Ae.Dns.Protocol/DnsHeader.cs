@@ -61,7 +61,7 @@ namespace Ae.Dns.Protocol
         /// </value>
         public short AdditionalRecordCount { get; set; }
 
-        internal string[] Labels { get; set; }
+        internal IList<string> Labels { get; set; }
 
         /// <summary>
         /// The <see cref="DnsQueryType"/> of this header.
@@ -196,7 +196,7 @@ namespace Ae.Dns.Protocol
         }
 
         /// <inheritdoc/>
-        public void ReadBytes(byte[] bytes, ref int offset)
+        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset)
         {
             Id = DnsByteExtensions.ReadUInt16(bytes, ref offset);
             Flags = DnsByteExtensions.ReadUInt16(bytes, ref offset);

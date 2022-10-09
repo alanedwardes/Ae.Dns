@@ -15,7 +15,7 @@ namespace Ae.Dns.Protocol.Records
         /// <value>
         /// The text values of this resource as an array of strings.
         /// </value>
-        public string[] Entries { get; set; } = Array.Empty<string>();
+        public IList<string> Entries { get; set; } = Array.Empty<string>();
 
         /// <inheritdoc/>
         public bool Equals(DnsStringResource other) => Entries.SequenceEqual(other.Entries);
@@ -27,7 +27,7 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Entries);
 
         /// <inheritdoc/>
-        public void ReadBytes(byte[] bytes, ref int offset, int length)
+        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
         {
             Entries = DnsByteExtensions.ReadString(bytes, ref offset, offset + length);
         }

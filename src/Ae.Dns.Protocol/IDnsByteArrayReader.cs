@@ -1,4 +1,6 @@
-﻿namespace Ae.Dns.Protocol
+﻿using System;
+
+namespace Ae.Dns.Protocol
 {
     /// <summary>
     /// Represents a class which can read from the specified byte array.
@@ -10,6 +12,6 @@
         /// </summary>
         /// <param name="bytes">The byte array to read from.</param>
         /// <param name="offset">The offset to start at.</param>
-        void ReadBytes(byte[] bytes, ref int offset);
+        void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset);
     }
 }

@@ -18,6 +18,8 @@ namespace Ae.Dns.Tests
 
     public static class SampleDnsPackets
     {
+        public static IEnumerable<byte[]> AllPackets => Queries.Concat(Answers);
+
         public static byte[][] Queries => new[] { Query1,Query2,Query3,Query4,Query5,Query6,Query7 };
 
         public static readonly byte[] Query1 = new byte[]

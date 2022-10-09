@@ -46,12 +46,12 @@ namespace Ae.Dns.Protocol
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Header, Answers, Nameservers, Additional);
 
-        private IList<DnsResourceRecord> ReadRecords(int count, byte[] bytes, ref int offset)
+        private IList<DnsResourceRecord> ReadRecords(int count, ReadOnlySpan<byte> bytes, ref int offset)
         {
-            var records = new List<DnsResourceRecord>();
+            var records = new DnsResourceRecord[count];
             for (var i = 0; i < count; i++)
             {
-                records.Add(DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset));
+                records[i] = DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset);
             }
 
             return records;
@@ -76,7 +76,7 @@ namespace Ae.Dns.Protocol
         }
 
         /// <inheritdoc/>
-        public void ReadBytes(byte[] bytes, ref int offset)
+        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset)
         {
             EnsureCorrectCounts();
             Header.ReadBytes(bytes, ref offset);

@@ -47,14 +47,7 @@ namespace Ae.Dns.Client
             var offset = 0;
             var responseLength = DnsByteExtensions.ReadUInt16(buffer, ref offset);
 
-            var response = DnsByteExtensions.ReadBytes(buffer, responseLength, ref offset);
-
-            if (response.Length != responseLength)
-            {
-                throw new InvalidOperationException();
-            }
-
-            var answer = DnsByteExtensions.FromBytes<DnsMessage>(response);
+            var answer = DnsByteExtensions.FromBytes<DnsMessage>(DnsByteExtensions.ReadBytes(buffer, responseLength, ref offset));
             answer.Header.Tags.Add("Resolver", ToString());
             return answer;
         }

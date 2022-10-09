@@ -40,7 +40,7 @@ namespace Ae.Dns.Tests.Protocol
         public void ReadARecordTests(int example, int offset, byte[] expected)
         {
             var value = DnsByteExtensions.ReadBytes(SampleDnsPackets.Answers[example - 1], 4, ref offset);
-            Assert.Equal(expected, value);
+            Assert.Equal(expected, value.ToArray());
         }
     }
 }

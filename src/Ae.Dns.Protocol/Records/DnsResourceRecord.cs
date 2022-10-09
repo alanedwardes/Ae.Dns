@@ -31,20 +31,7 @@ namespace Ae.Dns.Protocol.Records
             set => Name = value.Split('.');
         }
 
-        private string[] Name { get; set; }
-
-        private static readonly IReadOnlyDictionary<DnsQueryType, Func<IDnsResource>> _recordTypeFactories = new Dictionary<DnsQueryType, Func<IDnsResource>>
-        {
-            { DnsQueryType.A, () => new DnsIpAddressResource() },
-            { DnsQueryType.AAAA, () => new DnsIpAddressResource() },
-            { DnsQueryType.TEXT, () => new DnsTextResource() },
-            { DnsQueryType.CNAME, () => new DnsDomainResource() },
-            { DnsQueryType.NS, () => new DnsDomainResource() },
-            { DnsQueryType.PTR, () => new DnsDomainResource() },
-            { DnsQueryType.SPF, () => new DnsTextResource() },
-            { DnsQueryType.SOA, () => new DnsSoaResource() },
-            { DnsQueryType.MX, () => new DnsMxResource() }
-        };
+        private IList<string> Name { get; set; }
 
         /// <summary>
         /// The value of this DNS record, which should be
@@ -55,7 +42,19 @@ namespace Ae.Dns.Protocol.Records
 
         private IDnsResource CreateResourceRecord(DnsQueryType recordType)
         {
-            return _recordTypeFactories.TryGetValue(recordType, out var factory) ? factory() : new DnsUnknownResource();
+            return recordType switch
+            {
+                DnsQueryType.A => new DnsIpAddressResource(),
+                DnsQueryType.AAAA => new DnsIpAddressResource(),
+                DnsQueryType.TEXT => new DnsTextResource(),
+                DnsQueryType.CNAME => new DnsDomainResource(),
+                DnsQueryType.NS => new DnsDomainResource(),
+                DnsQueryType.PTR => new DnsDomainResource(),
+                DnsQueryType.SPF => new DnsTextResource(),
+                DnsQueryType.SOA => new DnsSoaResource(),
+                DnsQueryType.MX => new DnsMxResource(),
+                _ => new DnsUnknownResource(),
+            };
         }
 
         /// <inheritdoc/>
@@ -75,7 +74,7 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Name, Type, Class, TimeToLive, Host, Resource);
 
         /// <inheritdoc/>
-        public void ReadBytes(byte[] bytes, ref int offset)
+        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset)
         {
             Name = DnsByteExtensions.ReadString(bytes, ref offset);
             Type = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
@@ -86,7 +85,7 @@ namespace Ae.Dns.Protocol.Records
             FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
         }
 
-        private static void FromBytesKnownLength(IDnsResource resource, byte[] bytes, ref int offset, int length)
+        private static void FromBytesKnownLength(IDnsResource resource, ReadOnlySpan<byte> bytes, ref int offset, int length)
         {
             var expectedOffset = offset + length;
             resource.ReadBytes(bytes, ref offset, length);
