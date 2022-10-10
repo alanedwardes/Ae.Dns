@@ -114,7 +114,7 @@ namespace Ae.Dns.Console
                 if (meterMap.TryGetValue(instrument.Name, out var domainCounts))
                 {
                     var query = GetObjectFromTags<DnsMessage>(tags, "Query");
-                    domainCounts.AddOrUpdate(query.Header.Host, 1, (id, count) => count + 1);
+                    domainCounts.AddOrUpdate(query.Header.QueryType.ToString() + ' ' + query.Header.Host, 1, (id, count) => count + 1);
                 }
             }
         }
