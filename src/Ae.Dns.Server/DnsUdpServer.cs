@@ -24,8 +24,9 @@ namespace Ae.Dns.Server
         private static readonly Counter<int> _requestCounter = _meter.CreateCounter<int>("Request");
         private static readonly Counter<int> _queryCounter = _meter.CreateCounter<int>("Query");
 
+        private static readonly EndPoint _anyEndpoint = new IPEndPoint(IPAddress.Any, 0);
+        private readonly Socket _socket;
         private readonly ILogger<DnsUdpServer> _logger;
-        private readonly UdpClient _listener;
         private readonly IDnsClient _dnsClient;
 
         public DnsUdpServer(IPEndPoint endpoint, IDnsClient dnsClient)
@@ -35,8 +36,9 @@ namespace Ae.Dns.Server
 
         public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsClient dnsClient)
         {
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _socket.Bind(endpoint);
             _logger = logger;
-            _listener = new UdpClient(endpoint);
             _dnsClient = dnsClient;
         }
 
@@ -44,8 +46,8 @@ namespace Ae.Dns.Server
         {
             try
             {
-                _listener.Close();
-                _listener.Dispose();
+                _socket.Close();
+                _socket.Dispose();
             }
             catch (Exception)
             {
@@ -55,17 +57,19 @@ namespace Ae.Dns.Server
         /// <inheritdoc/>
         public async Task Listen(CancellationToken token)
         {
-            token.Register(() => _listener.Close());
+            token.Register(() => _socket.Close());
 
             _logger.LogInformation("Server now listening");
 
             while (!token.IsCancellationRequested)
             {
+                ArraySegment<byte> buffer = new byte[65527];
+
                 try
                 {
-                    var result = await _listener.ReceiveAsync();
+                    var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint);
                     _requestCounter.Add(1);
-                    Respond(result, token);
+                    Respond(result.RemoteEndPoint, buffer, result.ReceivedBytes, token);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -80,7 +84,7 @@ namespace Ae.Dns.Server
             }
         }
 
-        private async void Respond(UdpReceiveResult request, CancellationToken token)
+        private async void Respond(EndPoint sender, ArraySegment<byte> buffer, int length, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
             var stopwatchMetricState = new KeyValuePair<string, object>("Stopwatch", stopwatch);
@@ -88,12 +92,12 @@ namespace Ae.Dns.Server
             DnsMessage query;
             try
             {
-                query = DnsByteExtensions.FromBytes<DnsMessage>(request.Buffer);
+                query = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, length));
             }
             catch (Exception e)
             {
                 _packetParseErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to parse incoming packet {PacketBytes}", DnsByteExtensions.ToDebugString(request.Buffer));
+                _logger.LogCritical(e, "Unable to parse incoming packet {PacketBytes}", DnsByteExtensions.ToDebugString(buffer));
                 return;
             }
 
@@ -128,12 +132,12 @@ namespace Ae.Dns.Server
 
             try
             {
-                await _listener.SendAsync(answerBytes, answerBytes.Length, request.RemoteEndPoint);
+                await _socket.SendToAsync(answerBytes, SocketFlags.None, sender);
             }
             catch (Exception e)
             {
                 _respondErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to send back response to {RemoteEndPoint}", request.RemoteEndPoint);
+                _logger.LogCritical(e, "Unable to send back response to {RemoteEndPoint}", sender);
                 return;
             }
             finally
@@ -142,7 +146,7 @@ namespace Ae.Dns.Server
             }
 
             _responseCounter.Add(1, queryMetricState, answerMetricState, stopwatchMetricState);
-            _logger.LogInformation("Responded to {Query} from {RemoteEndPoint} in {ResponseTime}", answer, request.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogInformation("Responded to {Query} from {RemoteEndPoint} in {ResponseTime}", answer, sender, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }
