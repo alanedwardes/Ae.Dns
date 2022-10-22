@@ -1,6 +1,5 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using System;
-using System.Collections.Generic;
 
 namespace Ae.Dns.Protocol.Records
 {
