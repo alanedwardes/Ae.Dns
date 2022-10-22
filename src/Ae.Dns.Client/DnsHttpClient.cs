@@ -28,9 +28,9 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
-            var buffer = DnsByteExtensions.ToBytes(query).ToArray();
+            var raw = DnsByteExtensions.ToBytes(query).ToArray();
 
-            var content = new ByteArrayContent(buffer);
+            var content = new ByteArrayContent(raw);
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);
 
             var request = new HttpRequestMessage(HttpMethod.Post, "/dns-query")
