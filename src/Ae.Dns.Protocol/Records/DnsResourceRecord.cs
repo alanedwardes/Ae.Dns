@@ -51,6 +51,7 @@ namespace Ae.Dns.Protocol.Records
                 DnsQueryType.NS => new DnsDomainResource(),
                 DnsQueryType.PTR => new DnsDomainResource(),
                 DnsQueryType.SPF => new DnsTextResource(),
+                DnsQueryType.HTTPS => new DnsTextResource(),
                 DnsQueryType.SOA => new DnsSoaResource(),
                 DnsQueryType.MX => new DnsMxResource(),
                 _ => new DnsUnknownResource(),
