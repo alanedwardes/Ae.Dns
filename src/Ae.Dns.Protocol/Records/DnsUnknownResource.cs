@@ -34,12 +34,13 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IEnumerable<byte>> WriteBytes()
-        {
-            yield return Raw;
-        }
+        public override string ToString() => $"Raw {Raw.Length} bytes";
 
         /// <inheritdoc/>
-        public override string ToString() => $"Raw {Raw.Length} bytes";
+        public void WriteBytes(Span<byte> bytes, ref int offset)
+        {
+            Raw.CopyTo(bytes.Slice(offset));
+            offset += Raw.Length;
+        }
     }
 }

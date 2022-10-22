@@ -215,17 +215,17 @@ namespace Ae.Dns.Protocol
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IEnumerable<byte>> WriteBytes()
+        public void WriteBytes(Span<byte> bytes, ref int offset)
         {
-            yield return DnsByteExtensions.ToBytes(Id);
-            yield return DnsByteExtensions.ToBytes(Flags);
-            yield return DnsByteExtensions.ToBytes(QuestionCount);
-            yield return DnsByteExtensions.ToBytes(AnswerRecordCount);
-            yield return DnsByteExtensions.ToBytes(NameServerRecordCount);
-            yield return DnsByteExtensions.ToBytes(AdditionalRecordCount);
-            yield return DnsByteExtensions.ToBytes(Labels);
-            yield return DnsByteExtensions.ToBytes(QueryType);
-            yield return DnsByteExtensions.ToBytes(QueryClass);
+            DnsByteExtensions.ToBytes(Id, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Flags, bytes, ref offset);
+            DnsByteExtensions.ToBytes(QuestionCount, bytes, ref offset);
+            DnsByteExtensions.ToBytes(AnswerRecordCount, bytes, ref offset);
+            DnsByteExtensions.ToBytes(NameServerRecordCount, bytes, ref offset);
+            DnsByteExtensions.ToBytes(AdditionalRecordCount, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Labels, bytes, ref offset);
+            DnsByteExtensions.ToBytes(QueryType, bytes, ref offset);
+            DnsByteExtensions.ToBytes(QueryClass, bytes, ref offset);
         }
 
         /// <summary>

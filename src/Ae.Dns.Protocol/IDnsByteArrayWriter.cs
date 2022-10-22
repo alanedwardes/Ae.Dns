@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 
 namespace Ae.Dns.Protocol
 {
@@ -8,9 +8,11 @@ namespace Ae.Dns.Protocol
     public interface IDnsByteArrayWriter
     {
         /// <summary>
-        /// Writes the contents of this class to the specified nested <see cref="IEnumerable{T}"/> of <see cref="byte"/>.
+        /// Write to the the specified byte array.
         /// </summary>
-        /// <returns>A nested <see cref="IEnumerable{T}"/> of <see cref="byte"/>.</returns>
-        IEnumerable<IEnumerable<byte>> WriteBytes();
+        /// <param name="bytes">The byte array to read from.</param>
+        /// <param name="offset">The offset to start at.</param>
+        /// <summary>
+        void WriteBytes(Span<byte> bytes, ref int offset);
     }
 }

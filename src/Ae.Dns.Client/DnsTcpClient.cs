@@ -36,10 +36,10 @@ namespace Ae.Dns.Client
         {
             var raw = DnsByteExtensions.ToBytes(query).ToArray();
 
-            var payload = DnsByteExtensions.ToBytes((ushort)raw.Length).Concat(raw).ToArray();
+            //var payload = DnsByteExtensions.ToBytes((ushort)raw.Length).Concat(raw).ToArray();
             var stream = _socket.GetStream();
 
-            await stream.WriteAsync(payload, 0, payload.Length, token);
+            //await stream.WriteAsync(payload, 0, payload.Length, token);
 
             var buffer = new byte[4096];
             var receive = await stream.ReadAsync(buffer, 0, buffer.Length, token);

@@ -96,15 +96,22 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IEnumerable<byte>> WriteBytes()
+        public void WriteBytes(Span<byte> bytes, ref int offset)
         {
-            yield return DnsByteExtensions.ToBytes(Name);
-            yield return DnsByteExtensions.ToBytes(Type);
-            yield return DnsByteExtensions.ToBytes(Class);
-            yield return DnsByteExtensions.ToBytes(TimeToLive);
-            var data = DnsByteExtensions.ToBytes(Resource);
-            yield return DnsByteExtensions.ToBytes((ushort)data.Length);
-            yield return data;
+            DnsByteExtensions.ToBytes(Name, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Type, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Class, bytes, ref offset);
+            DnsByteExtensions.ToBytes(TimeToLive, bytes, ref offset);
+
+            var buffer = new byte[2048]; // TODO FIX ME
+
+            var fakeOffset = 0;
+            DnsByteExtensions.ToBytes(Resource, buffer, ref fakeOffset);
+            DnsByteExtensions.ToBytes(Name, bytes, ref offset);
+
+            DnsByteExtensions.ToBytes((ushort)fakeOffset, bytes, ref offset);
+            buffer.CopyTo(bytes.Slice(offset));
+            offset += fakeOffset;
         }
     }
 }

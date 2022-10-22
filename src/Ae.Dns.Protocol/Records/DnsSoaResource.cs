@@ -81,18 +81,18 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IEnumerable<byte>> WriteBytes()
-        {
-            yield return DnsByteExtensions.ToBytes(MName.Split('.'));
-            yield return DnsByteExtensions.ToBytes(RName.Split('.'));
-            yield return DnsByteExtensions.ToBytes(Serial);
-            yield return DnsByteExtensions.ToBytes((int)Refresh.TotalSeconds);
-            yield return DnsByteExtensions.ToBytes((int)Retry.TotalSeconds);
-            yield return DnsByteExtensions.ToBytes((int)Expire.TotalSeconds);
-            yield return DnsByteExtensions.ToBytes((uint)Minimum.TotalSeconds);
-        }
+        public override string ToString() => MName;
 
         /// <inheritdoc/>
-        public override string ToString() => MName;
+        public void WriteBytes(Span<byte> bytes, ref int offset)
+        {
+            DnsByteExtensions.ToBytes(MName.Split('.'), bytes, ref offset);
+            DnsByteExtensions.ToBytes(RName.Split('.'), bytes, ref offset);
+            DnsByteExtensions.ToBytes(Serial, bytes, ref offset);
+            DnsByteExtensions.ToBytes((int)Refresh.TotalSeconds, bytes, ref offset);
+            DnsByteExtensions.ToBytes((int)Retry.TotalSeconds, bytes, ref offset);
+            DnsByteExtensions.ToBytes((int)Expire.TotalSeconds, bytes, ref offset);
+            DnsByteExtensions.ToBytes((uint)Minimum.TotalSeconds, bytes, ref offset);
+        }
     }
 }

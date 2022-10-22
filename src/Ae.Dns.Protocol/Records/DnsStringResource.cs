@@ -33,9 +33,9 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IEnumerable<byte>> WriteBytes()
+        public void WriteBytes(Span<byte> bytes, ref int offset)
         {
-            yield return DnsByteExtensions.ToBytes(Entries);
+            DnsByteExtensions.ToBytes(Entries, bytes, ref offset);
         }
     }
 }

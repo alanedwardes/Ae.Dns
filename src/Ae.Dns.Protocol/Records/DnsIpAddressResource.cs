@@ -39,5 +39,14 @@ namespace Ae.Dns.Protocol.Records
 
         /// <inheritdoc/>
         public override string ToString() => IPAddress.ToString();
+
+        /// <inheritdoc/>
+        public void WriteBytes(Span<byte> bytes, ref int offset)
+        {
+            var address = IPAddress.GetAddressBytes();
+
+            address.CopyTo(address, offset);
+            offset += address.Length;
+        }
     }
 }

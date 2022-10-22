@@ -127,9 +127,19 @@ namespace Ae.Dns.Protocol
         /// </summary>
         /// <param name="writer">The instance to serialise to bytes.</param>
         /// <returns>The serialised byte array.</returns>
-        public static byte[] ToBytes(IDnsByteArrayWriter writer)
+        public static void ToBytes(IDnsByteArrayWriter writer, Span<byte> buffer, ref int offset)
         {
-            return writer.WriteBytes().SelectMany(x => x).ToArray();
+            writer.WriteBytes(buffer, ref offset);
+        }
+
+        public static ReadOnlySpan<byte> ToBytes(IDnsByteArrayWriter writer)
+        {
+            Span<byte> buffer = new byte[65527];
+            var offset = 0;
+
+            writer.WriteBytes(buffer, ref offset);
+
+            return buffer.Slice(0, offset);
         }
 
         /// <summary>
@@ -161,53 +171,55 @@ namespace Ae.Dns.Protocol
         /// </summary>
         /// <param name="strings">The specified strings to serialise.</param>
         /// <returns>An enumerable of bytes representing the supplied strings.</returns>
-        public static IEnumerable<byte> ToBytes(IEnumerable<string> strings)
+        public static void ToBytes(IEnumerable<string> strings, Span<byte> buffer, ref int offset)
         {
             foreach (var str in strings)
             {
-                yield return (byte)str.Length;
+                buffer[offset++] = (byte)str.Length;
                 foreach (var c in str)
                 {
-                    yield return (byte)c;
+                    buffer[offset++] = (byte)c;
                 }
             }
 
-            yield return 0;
+            buffer[offset++] = 0;
         }
 
         /// <summary>
         /// Serialise the specified <see cref="IConvertible"/> value to a byte array.
         /// </summary>
         /// <param name="value">The specified value to convert to a byte array.</param>
+        /// <param name="buffer">The buffer to write into.</param>
+        /// <param name="offset">The offset into the buffer.</param>
         /// <returns>An enumerable of bytes representing the supplied <see cref="IConvertible"/> value.</returns>
-        public static IEnumerable<byte> ToBytes(IConvertible value)
+        public static void ToBytes(IConvertible value, Span<byte> buffer, ref int offset)
         {
             var typeCode = Type.GetTypeCode(value.GetType());
             switch (typeCode)
             {
                 case TypeCode.Int32:
                     var int32 = (int)value;
-                    yield return (byte)(int32 >> 24);
-                    yield return (byte)(int32 >> 16);
-                    yield return (byte)(int32 >> 8);
-                    yield return (byte)(int32 >> 0);
+                    buffer[offset++] = (byte)(int32 >> 24);
+                    buffer[offset++] = (byte)(int32 >> 16);
+                    buffer[offset++] = (byte)(int32 >> 8);
+                    buffer[offset++] = (byte)(int32 >> 0);
                     break;
                 case TypeCode.UInt32:
                     var uint32 = (uint)value;
-                    yield return (byte)(uint32 >> 24);
-                    yield return (byte)(uint32 >> 16);
-                    yield return (byte)(uint32 >> 8);
-                    yield return (byte)(uint32 >> 0);
+                    buffer[offset++] = (byte)(uint32 >> 24);
+                    buffer[offset++] = (byte)(uint32 >> 16);
+                    buffer[offset++] = (byte)(uint32 >> 8);
+                    buffer[offset++] = (byte)(uint32 >> 0);
                     break;
                 case TypeCode.Int16:
                     var uint16 = (short)value;
-                    yield return (byte)(uint16 >> 8);
-                    yield return (byte)(uint16 >> 0);
+                    buffer[offset++] = (byte)(uint16 >> 8);
+                    buffer[offset++] = (byte)(uint16 >> 0);
                     break;
                 case TypeCode.UInt16:
                     var int16 = (ushort)value;
-                    yield return (byte)(int16 >> 8);
-                    yield return (byte)(int16 >> 0);
+                    buffer[offset++] = (byte)(int16 >> 8);
+                    buffer[offset++] = (byte)(int16 >> 0);
                     break;
                 default:
                     throw new NotImplementedException($"Unable to process type {typeCode} ({value})");

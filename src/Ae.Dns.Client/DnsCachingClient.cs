@@ -22,7 +22,7 @@ namespace Ae.Dns.Client
                 var allRecords = new[] { answer.Answers, answer.Nameservers, answer.Additional };
 
                 LowestRecordTimeToLive = TimeSpan.FromSeconds(allRecords.SelectMany(x => x).Min(x => x.TimeToLive));
-                Data = DnsByteExtensions.ToBytes(answer);
+                Data = DnsByteExtensions.ToBytes(answer).ToArray();
             }
 
             public DateTimeOffset Time { get; } = DateTimeOffset.UtcNow;

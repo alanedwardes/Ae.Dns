@@ -43,13 +43,13 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public IEnumerable<IEnumerable<byte>> WriteBytes()
-        {
-            yield return DnsByteExtensions.ToBytes(Preference);
-            yield return DnsByteExtensions.ToBytes(Exchange.Split('.'));
-        }
+        public override string ToString() => Exchange.ToString();
 
         /// <inheritdoc/>
-        public override string ToString() => Exchange.ToString();
+        public void WriteBytes(Span<byte> bytes, ref int offset)
+        {
+            DnsByteExtensions.ToBytes(Preference, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Exchange.Split('.'), bytes, ref offset);
+        }
     }
 }

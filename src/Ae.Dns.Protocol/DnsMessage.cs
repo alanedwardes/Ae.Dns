@@ -89,13 +89,25 @@ namespace Ae.Dns.Protocol
         public override string ToString() => $"{Header} Response: {Header.ResponseCode} Answers: {Answers.Count}" + string.Concat(Answers.Select(x => $"{Environment.NewLine} * {x}"));
 
         /// <inheritdoc/>
-        public IEnumerable<IEnumerable<byte>> WriteBytes()
+        public void WriteBytes(Span<byte> bytes, ref int offset)
         {
             EnsureCorrectCounts();
-            yield return DnsByteExtensions.ToBytes(Header);
-            yield return Answers.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
-            yield return Nameservers.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
-            yield return Additional.Select(DnsByteExtensions.ToBytes).SelectMany(x => x);
+            DnsByteExtensions.ToBytes(Header, bytes, ref offset);
+
+            foreach (var answer in Answers)
+            {
+                DnsByteExtensions.ToBytes(answer, bytes, ref offset);
+            }
+
+            foreach (var nameserver in Nameservers)
+            {
+                DnsByteExtensions.ToBytes(nameserver, bytes, ref offset);
+            }
+
+            foreach (var additional in Additional)
+            {
+                DnsByteExtensions.ToBytes(additional, bytes, ref offset);
+            }
         }
     }
 }
