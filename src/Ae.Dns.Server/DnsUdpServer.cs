@@ -62,11 +62,13 @@ namespace Ae.Dns.Server
 
             while (!token.IsCancellationRequested)
             {
-                ArraySegment<byte> buffer = new byte[65527];
+                // Allocate a buffer which will be used for the incoming query, and re-used to send the answer.
+                // Also make it pinned, see https://enclave.io/high-performance-udp-sockets-net6/
+                Memory<byte> buffer = GC.AllocateArray<byte>(65527, true);
 
                 try
                 {
-                    var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint);
+                    var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint, token);
                     _requestCounter.Add(1);
                     Respond(result.RemoteEndPoint, buffer, result.ReceivedBytes, token);
                 }
@@ -83,7 +85,7 @@ namespace Ae.Dns.Server
             }
         }
 
-        private async void Respond(EndPoint sender, ArraySegment<byte> buffer, int length, CancellationToken token)
+        private async void Respond(EndPoint sender, Memory<byte> buffer, int queryLength, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
             var stopwatchMetricState = new KeyValuePair<string, object>("Stopwatch", stopwatch);
@@ -91,12 +93,12 @@ namespace Ae.Dns.Server
             DnsMessage query;
             try
             {
-                query = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, length));
+                query = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Span.Slice(0, queryLength));
             }
             catch (Exception e)
             {
                 _packetParseErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to parse incoming packet {PacketBytes}", DnsByteExtensions.ToDebugString(buffer));
+                _logger.LogCritical(e, "Unable to parse incoming packet {PacketBytes}", DnsByteExtensions.ToDebugString(buffer.Slice(0, queryLength).ToArray()));
                 return;
             }
 
@@ -117,10 +119,11 @@ namespace Ae.Dns.Server
 
             var answerMetricState = new KeyValuePair<string, object>("Answer", answer);
 
-            byte[] answerBytes;
+            var answerLength = 0;
             try
             {
-                answerBytes = DnsByteExtensions.AllocateAndWrite(answer).ToArray();
+                // Write data to our existing buffer (write over the query)
+                answer.WriteBytes(buffer.Span, ref answerLength);
             }
             catch (Exception e)
             {
@@ -131,7 +134,8 @@ namespace Ae.Dns.Server
 
             try
             {
-                await _socket.SendToAsync(answerBytes, SocketFlags.None, sender);
+                // Send the part of the buffer containing the answer
+                await _socket.SendToAsync(buffer.Slice(0, answerLength), SocketFlags.None, sender, token);
             }
             catch (Exception e)
             {
