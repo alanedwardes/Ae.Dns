@@ -43,9 +43,9 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void WriteBytes(Span<byte> bytes, ref int offset)
         {
-            var address = IPAddress.GetAddressBytes();
+            Span<byte> address = IPAddress.GetAddressBytes();
 
-            address.CopyTo(address, offset);
+            address.CopyTo(bytes.Slice(offset));
             offset += address.Length;
         }
     }

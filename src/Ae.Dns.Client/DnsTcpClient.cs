@@ -34,12 +34,17 @@ namespace Ae.Dns.Client
 
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
-            var raw = DnsByteExtensions.ToBytes(query).ToArray();
+            var sendBuffer = new byte[65527];
 
-            //var payload = DnsByteExtensions.ToBytes((ushort)raw.Length).Concat(raw).ToArray();
+            var sendOffset = sizeof(ushort);
+            DnsByteExtensions.ToBytes(query, sendBuffer, ref sendOffset);
+
+            var fakeOffset = 0;
+            DnsByteExtensions.ToBytes((ushort)(sendOffset - sizeof(ushort)), sendBuffer, ref fakeOffset);
+
             var stream = _socket.GetStream();
 
-            //await stream.WriteAsync(payload, 0, payload.Length, token);
+            await stream.WriteAsync(sendBuffer, 0, sendOffset, token);
 
             var buffer = new byte[4096];
             var receive = await stream.ReadAsync(buffer, 0, buffer.Length, token);

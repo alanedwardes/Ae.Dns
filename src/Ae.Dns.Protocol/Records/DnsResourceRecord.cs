@@ -103,15 +103,15 @@ namespace Ae.Dns.Protocol.Records
             DnsByteExtensions.ToBytes(Class, bytes, ref offset);
             DnsByteExtensions.ToBytes(TimeToLive, bytes, ref offset);
 
-            var buffer = new byte[2048]; // TODO FIX ME
+            // First, write the resource, but save two bytes for the size (and do not advance the offset)
+            var resourceSize = 0;
+            DnsByteExtensions.ToBytes(Resource, bytes.Slice(offset + sizeof(ushort)), ref resourceSize);
 
-            var fakeOffset = 0;
-            DnsByteExtensions.ToBytes(Resource, buffer, ref fakeOffset);
-            DnsByteExtensions.ToBytes(Name, bytes, ref offset);
+            // Write the size of the resource in the two bytes preceeding (current offset)
+            DnsByteExtensions.ToBytes((ushort)resourceSize, bytes, ref offset);
 
-            DnsByteExtensions.ToBytes((ushort)fakeOffset, bytes, ref offset);
-            buffer.CopyTo(bytes.Slice(offset));
-            offset += fakeOffset;
+            // Advance the offset with the size of the resource
+            offset += resourceSize;
         }
     }
 }
