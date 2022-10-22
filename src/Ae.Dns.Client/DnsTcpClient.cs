@@ -1,7 +1,6 @@
 ﻿using Ae.Dns.Protocol;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -37,7 +36,7 @@ namespace Ae.Dns.Client
             var sendBuffer = new byte[65527];
 
             var sendOffset = sizeof(ushort);
-            DnsByteExtensions.ToBytes(query, sendBuffer, ref sendOffset);
+            query.WriteBytes(sendBuffer, ref sendOffset);
 
             var fakeOffset = 0;
             DnsByteExtensions.ToBytes((ushort)(sendOffset - sizeof(ushort)), sendBuffer, ref fakeOffset);

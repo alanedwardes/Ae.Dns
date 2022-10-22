@@ -1,6 +1,5 @@
 ﻿using Xunit;
 using Ae.Dns.Protocol;
-using System.Linq;
 
 namespace Ae.Dns.Tests.Protocol
 {
@@ -11,7 +10,7 @@ namespace Ae.Dns.Tests.Protocol
         public void TestRoundTripQueries(byte[] queryBytes)
         {
             var query = DnsByteExtensions.FromBytes<DnsMessage>(queryBytes);
-            Assert.Equal(query, DnsByteExtensions.FromBytes<DnsMessage>(DnsByteExtensions.ToBytes(query).ToArray()));
+            Assert.Equal(query, DnsByteExtensions.FromBytes<DnsMessage>(DnsByteExtensions.AllocateAndWrite(query).ToArray()));
         }
 
         [Theory]
@@ -19,7 +18,7 @@ namespace Ae.Dns.Tests.Protocol
         public void TestRoundTripAnswers(byte[] answerBytes)
         {
             var answer = DnsByteExtensions.FromBytes<DnsMessage>(answerBytes);
-            Assert.Equal(answer, DnsByteExtensions.FromBytes<DnsMessage>(DnsByteExtensions.ToBytes(answer).ToArray()));
+            Assert.Equal(answer, DnsByteExtensions.FromBytes<DnsMessage>(DnsByteExtensions.AllocateAndWrite(answer).ToArray()));
         }
     }
 }

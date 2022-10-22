@@ -6,7 +6,7 @@ namespace Ae.Dns.Protocol.Records
     /// <summary>
     /// Represents a mail server DNS record. See <see cref="DnsQueryType.MX"/>.
     /// </summary>
-    public sealed class DnsMxResource : IDnsResource, IEquatable<DnsMxResource>
+    public sealed class DnsMxResource : DnsStringResource, IEquatable<DnsMxResource>
     {
         /// <summary>
         /// The priority or preference field identifies which mailserver should be preferred.
@@ -23,7 +23,7 @@ namespace Ae.Dns.Protocol.Records
         /// <value>
         /// The host name must map directly to one or more address records (A, or AAAA) in the DNS, and must not point to any CNAME records.
         /// </value>
-        public string Exchange { get; set; }
+        public string Exchange => string.Join(".", Entries);
 
         /// <inheritdoc/>
         public bool Equals(DnsMxResource other) => Preference == other.Preference && Exchange == other.Exchange;
@@ -35,20 +35,20 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Preference, Exchange);
 
         /// <inheritdoc/>
-        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
+        public override void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
         {
             Preference = DnsByteExtensions.ReadUInt16(bytes, ref offset);
-            Exchange = string.Join(".", DnsByteExtensions.ReadString(bytes, ref offset));
+            base.ReadBytes(bytes, ref offset, length);
         }
 
         /// <inheritdoc/>
-        public override string ToString() => Exchange.ToString();
+        public override string ToString() => Exchange;
 
         /// <inheritdoc/>
-        public void WriteBytes(Span<byte> bytes, ref int offset)
+        public override void WriteBytes(Span<byte> bytes, ref int offset)
         {
             DnsByteExtensions.ToBytes(Preference, bytes, ref offset);
-            DnsByteExtensions.ToBytes(Exchange.Split('.'), bytes, ref offset);
+            base.WriteBytes(bytes, ref offset);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
@@ -15,7 +14,7 @@ namespace Ae.Dns.Protocol.Records
         /// <value>
         /// The text values of this resource as an array of strings.
         /// </value>
-        public IList<string> Entries { get; set; } = Array.Empty<string>();
+        public string[] Entries { get; set; } = Array.Empty<string>();
 
         /// <inheritdoc/>
         public bool Equals(DnsStringResource other) => Entries.SequenceEqual(other.Entries);
@@ -27,13 +26,13 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Entries);
 
         /// <inheritdoc/>
-        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
+        public virtual void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
         {
             Entries = DnsByteExtensions.ReadString(bytes, ref offset, offset + length);
         }
 
         /// <inheritdoc/>
-        public void WriteBytes(Span<byte> bytes, ref int offset)
+        public virtual void WriteBytes(Span<byte> bytes, ref int offset)
         {
             DnsByteExtensions.ToBytes(Entries, bytes, ref offset);
         }

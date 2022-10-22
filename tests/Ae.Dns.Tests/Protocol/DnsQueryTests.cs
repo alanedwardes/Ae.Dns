@@ -1,6 +1,5 @@
 ﻿using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
-using System.Linq;
 using Xunit;
 
 namespace Ae.Dns.Tests.Protocol
@@ -39,7 +38,7 @@ namespace Ae.Dns.Tests.Protocol
                 QuestionCount = 1,
             };
 
-            var bytes = DnsByteExtensions.ToBytes(header2).ToArray();
+            var bytes = DnsByteExtensions.AllocateAndWrite(header2).ToArray();
 
             Assert.Equal(SampleDnsPackets.Query1, bytes);
         }

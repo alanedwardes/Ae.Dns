@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -121,7 +120,7 @@ namespace Ae.Dns.Server
             byte[] answerBytes;
             try
             {
-                answerBytes = DnsByteExtensions.ToBytes(answer).ToArray();
+                answerBytes = DnsByteExtensions.AllocateAndWrite(answer).ToArray();
             }
             catch (Exception e)
             {

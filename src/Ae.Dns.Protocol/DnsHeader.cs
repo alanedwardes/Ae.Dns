@@ -61,7 +61,7 @@ namespace Ae.Dns.Protocol
         /// </value>
         public short AdditionalRecordCount { get; set; }
 
-        internal IList<string> Labels { get; set; }
+        internal string[] Labels { get; set; }
 
         /// <summary>
         /// The <see cref="DnsQueryType"/> of this header.
@@ -224,8 +224,8 @@ namespace Ae.Dns.Protocol
             DnsByteExtensions.ToBytes(NameServerRecordCount, bytes, ref offset);
             DnsByteExtensions.ToBytes(AdditionalRecordCount, bytes, ref offset);
             DnsByteExtensions.ToBytes(Labels, bytes, ref offset);
-            DnsByteExtensions.ToBytes(QueryType, bytes, ref offset);
-            DnsByteExtensions.ToBytes(QueryClass, bytes, ref offset);
+            DnsByteExtensions.ToBytes((ushort)QueryType, bytes, ref offset);
+            DnsByteExtensions.ToBytes((ushort)QueryClass, bytes, ref offset);
         }
 
         /// <summary>

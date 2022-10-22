@@ -51,7 +51,9 @@ namespace Ae.Dns.Protocol
             var records = new DnsResourceRecord[count];
             for (var i = 0; i < count; i++)
             {
-                records[i] = DnsByteExtensions.FromBytes<DnsResourceRecord>(bytes, ref offset);
+                var record = new DnsResourceRecord();
+                record.ReadBytes(bytes, ref offset);
+                records[i] = record;
             }
 
             return records;
@@ -92,21 +94,21 @@ namespace Ae.Dns.Protocol
         public void WriteBytes(Span<byte> bytes, ref int offset)
         {
             EnsureCorrectCounts();
-            DnsByteExtensions.ToBytes(Header, bytes, ref offset);
+            Header.WriteBytes(bytes, ref offset);
 
             foreach (var answer in Answers)
             {
-                DnsByteExtensions.ToBytes(answer, bytes, ref offset);
+                answer.WriteBytes(bytes, ref offset);
             }
 
             foreach (var nameserver in Nameservers)
             {
-                DnsByteExtensions.ToBytes(nameserver, bytes, ref offset);
+                nameserver.WriteBytes(bytes, ref offset);
             }
 
             foreach (var additional in Additional)
             {
-                DnsByteExtensions.ToBytes(additional, bytes, ref offset);
+                additional.WriteBytes(bytes, ref offset);
             }
         }
     }

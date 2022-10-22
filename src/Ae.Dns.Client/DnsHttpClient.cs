@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Protocol;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -28,7 +27,7 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
-            var raw = DnsByteExtensions.ToBytes(query).ToArray();
+            var raw = DnsByteExtensions.AllocateAndWrite(query).ToArray();
 
             var content = new ByteArrayContent(raw);
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);

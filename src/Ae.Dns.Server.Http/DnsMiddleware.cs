@@ -46,7 +46,7 @@ namespace Ae.Dns.Server.Http
 
             context.Response.Headers.Add("Content-Type", new StringValues(DnsMessageType));
 
-            await context.Response.BodyWriter.WriteAsync(DnsByteExtensions.ToBytes(answer).ToArray(), context.RequestAborted);
+            await context.Response.BodyWriter.WriteAsync(DnsByteExtensions.AllocateAndWrite(answer).ToArray(), context.RequestAborted);
         }
     }
 }

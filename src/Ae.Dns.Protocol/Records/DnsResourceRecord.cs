@@ -1,6 +1,5 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using System;
-using System.Collections.Generic;
 
 namespace Ae.Dns.Protocol.Records
 {
@@ -31,7 +30,7 @@ namespace Ae.Dns.Protocol.Records
             set => Name = value.Split('.');
         }
 
-        private IList<string> Name { get; set; }
+        private string[] Name { get; set; }
 
         /// <summary>
         /// The value of this DNS record, which should be
@@ -99,13 +98,13 @@ namespace Ae.Dns.Protocol.Records
         public void WriteBytes(Span<byte> bytes, ref int offset)
         {
             DnsByteExtensions.ToBytes(Name, bytes, ref offset);
-            DnsByteExtensions.ToBytes(Type, bytes, ref offset);
-            DnsByteExtensions.ToBytes(Class, bytes, ref offset);
+            DnsByteExtensions.ToBytes((ushort)Type, bytes, ref offset);
+            DnsByteExtensions.ToBytes((ushort)Class, bytes, ref offset);
             DnsByteExtensions.ToBytes(TimeToLive, bytes, ref offset);
 
             // First, write the resource, but save two bytes for the size (and do not advance the offset)
             var resourceSize = 0;
-            DnsByteExtensions.ToBytes(Resource, bytes.Slice(offset + sizeof(ushort)), ref resourceSize);
+            Resource.WriteBytes(bytes.Slice(offset + sizeof(ushort)), ref resourceSize);
 
             // Write the size of the resource in the two bytes preceeding (current offset)
             DnsByteExtensions.ToBytes((ushort)resourceSize, bytes, ref offset);

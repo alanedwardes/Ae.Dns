@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -147,7 +146,7 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
-            var raw = DnsByteExtensions.ToBytes(query).ToArray();
+            var raw = DnsByteExtensions.AllocateAndWrite(query).ToArray();
 
             var completionSource = _pending.GetOrAdd(ToMessageId(query), key => SendQueryInternal(key, raw, token));
 
