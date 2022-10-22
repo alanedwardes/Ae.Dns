@@ -34,7 +34,7 @@ namespace Ae.Dns.Tests.Server
             using var upstream = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
             // Create a loopback server
-            using var server = new DnsUdpServer(endpoint, upstream);
+            using var server = new DnsUdpServer(endpoint, new DnsSingleBufferClient(upstream));
 
             // Start recieving
             using var receiveTask = server.Listen(tokenSource.Token);

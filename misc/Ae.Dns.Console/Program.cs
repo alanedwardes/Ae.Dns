@@ -177,7 +177,7 @@ namespace Ae.Dns.Console
             dnsClient = new DnsMetricsClient(dnsClient);
             dnsClient = new DnsAppMetricsClient(metrics, dnsClient);
 
-            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), dnsClient);
+            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsSingleBufferClient(dnsClient));
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()

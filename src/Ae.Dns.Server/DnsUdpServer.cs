@@ -7,33 +7,22 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics.Metrics;
-using System.Collections.Generic;
 
 namespace Ae.Dns.Server
 {
     public sealed class DnsUdpServer : IDnsServer
     {
-        private static readonly Meter _meter = new Meter("Ae.Dns.Server.DnsUdpServer");
-        private static readonly Counter<int> _incomingErrorCounter = _meter.CreateCounter<int>("IncomingReadError");
-        private static readonly Counter<int> _packetParseErrorCounter = _meter.CreateCounter<int>("RequestParseError");
-        private static readonly Counter<int> _lookupErrorCounter = _meter.CreateCounter<int>("LookupError");
-        private static readonly Counter<int> _respondErrorCounter = _meter.CreateCounter<int>("RespondError");
-        private static readonly Counter<int> _responseCounter = _meter.CreateCounter<int>("Response");
-        private static readonly Counter<int> _requestCounter = _meter.CreateCounter<int>("Request");
-        private static readonly Counter<int> _queryCounter = _meter.CreateCounter<int>("Query");
-
         private static readonly EndPoint _anyEndpoint = new IPEndPoint(IPAddress.Any, 0);
         private readonly Socket _socket;
         private readonly ILogger<DnsUdpServer> _logger;
-        private readonly IDnsClient _dnsClient;
+        private readonly IDnsSingleBufferClient _dnsClient;
 
-        public DnsUdpServer(IPEndPoint endpoint, IDnsClient dnsClient)
+        public DnsUdpServer(IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
             : this(new NullLogger<DnsUdpServer>(), endpoint, dnsClient)
         {
         }
 
-        public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsClient dnsClient)
+        public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             _socket.Bind(endpoint);
@@ -69,7 +58,6 @@ namespace Ae.Dns.Server
                 try
                 {
                     var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint, token);
-                    _requestCounter.Add(1);
                     Respond(result.RemoteEndPoint, buffer, result.ReceivedBytes, token);
                 }
                 catch (ObjectDisposedException)
@@ -79,7 +67,6 @@ namespace Ae.Dns.Server
                 }
                 catch (Exception e)
                 {
-                    _incomingErrorCounter.Add(1);
                     _logger.LogWarning(e, "Error with incoming connection");
                 }
             }
@@ -88,48 +75,15 @@ namespace Ae.Dns.Server
         private async void Respond(EndPoint sender, Memory<byte> buffer, int queryLength, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
-            var stopwatchMetricState = new KeyValuePair<string, object>("Stopwatch", stopwatch);
-
-            DnsMessage query;
-            try
-            {
-                query = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Span.Slice(0, queryLength));
-            }
-            catch (Exception e)
-            {
-                _packetParseErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to parse incoming packet {PacketBytes}", DnsByteExtensions.ToDebugString(buffer.Slice(0, queryLength).ToArray()));
-                return;
-            }
-
-            var queryMetricState = new KeyValuePair<string, object>("Query", query);
-            _queryCounter.Add(1, queryMetricState);
-
-            DnsMessage answer;
-            try
-            {
-                answer = await _dnsClient.Query(query, token);
-            }
-            catch (Exception e)
-            {
-                _lookupErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to resolve {Query}", query);
-                return;
-            }
-
-            var answerMetricState = new KeyValuePair<string, object>("Answer", answer);
 
             var answerLength = 0;
             try
             {
-                // Write data to our existing buffer (write over the query)
-                answer.WriteBytes(buffer.Span, ref answerLength);
+                answerLength = await _dnsClient.Query(buffer, queryLength, token);
             }
             catch (Exception e)
             {
-                _respondErrorCounter.Add(1);
-                _logger.LogCritical(e, "Unable to serialise {Answer}", answer);
-                return;
+                _logger.LogCritical(e, "Unable to run query for {RemoteEndPoint}", sender);
             }
 
             try
@@ -139,17 +93,11 @@ namespace Ae.Dns.Server
             }
             catch (Exception e)
             {
-                _respondErrorCounter.Add(1);
                 _logger.LogCritical(e, "Unable to send back response to {RemoteEndPoint}", sender);
                 return;
             }
-            finally
-            {
-                stopwatch.Stop();
-            }
 
-            _responseCounter.Add(1, queryMetricState, answerMetricState, stopwatchMetricState);
-            _logger.LogInformation("Responded to {Query} from {RemoteEndPoint} in {ResponseTime}", answer, sender, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogInformation("Responded to query from {RemoteEndPoint} in {ResponseTime}", sender, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }
