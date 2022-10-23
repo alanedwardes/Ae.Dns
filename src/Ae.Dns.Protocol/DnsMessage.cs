@@ -20,19 +20,19 @@ namespace Ae.Dns.Protocol
         /// The list of DNS resources returned by the server.
         /// </summary>
         /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
-        public IList<DnsResourceRecord> Answers { get; set; } = new List<DnsResourceRecord>();
+        public IList<DnsResourceRecord> Answers { get; set; } = Array.Empty<DnsResourceRecord>();
 
         /// <summary>
         /// The list of name server DNS resources returned by the server.
         /// </summary>
         /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
-        public IList<DnsResourceRecord> Nameservers { get; set; } = new List<DnsResourceRecord>();
+        public IList<DnsResourceRecord> Nameservers { get; set; } = Array.Empty<DnsResourceRecord>();
 
         /// <summary>
         /// The list of additional DNS resources returned by the server.
         /// </summary>
         /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
-        public IList<DnsResourceRecord> Additional { get; set; } = new List<DnsResourceRecord>();
+        public IList<DnsResourceRecord> Additional { get; set; } = Array.Empty<DnsResourceRecord>();
 
         /// <inheritdoc/>
         public bool Equals(DnsMessage other) => Header.Equals(other.Header) &&

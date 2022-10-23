@@ -11,14 +11,6 @@ namespace Ae.Dns.Protocol
     public sealed class DnsHeader : IEquatable<DnsHeader>, IDnsByteArrayReader, IDnsByteArrayWriter
     {
         /// <summary>
-        /// Create a from-scratch DNS header.
-        /// See <see cref="DnsQueryFactory"/> for methods to create DNS headers for specific purposes.
-        /// </summary>
-        public DnsHeader()
-        {
-        }
-
-        /// <summary>
         /// Gets or sets the unique ID of this DNS query.
         /// </summary>
         /// <value>
