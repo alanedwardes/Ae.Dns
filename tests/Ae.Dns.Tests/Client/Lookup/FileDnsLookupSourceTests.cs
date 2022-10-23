@@ -12,7 +12,7 @@ namespace Ae.Dns.Tests.Client.Lookup
 {
     public sealed class FileDnsLookupSourceTests : IDisposable
     {
-        private readonly FileInfo _file = new(Path.GetTempFileName());
+        private readonly FileInfo _file = new FileInfo(Path.GetTempFileName());
 
         public void Dispose() => _file.Delete();
 

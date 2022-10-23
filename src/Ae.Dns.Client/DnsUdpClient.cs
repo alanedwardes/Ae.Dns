@@ -84,7 +84,7 @@ namespace Ae.Dns.Client
                 }
                 catch (Exception e)
                 {
-                    _logger.LogCritical(e, "Received bad network response from {0}: {1}", recieve.RemoteEndPoint, DnsByteExtensions.ToDebugString(recieve.Buffer));
+                    _logger.LogCritical(e, "Received bad network response");
                     continue;
                 }
 

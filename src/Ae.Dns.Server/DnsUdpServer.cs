@@ -51,13 +51,21 @@ namespace Ae.Dns.Server
 
             while (!token.IsCancellationRequested)
             {
+#if NETSTANDARD2_1
+                ArraySegment<byte> buffer = new byte[65527];
+#else
                 // Allocate a buffer which will be used for the incoming query, and re-used to send the answer.
                 // Also make it pinned, see https://enclave.io/high-performance-udp-sockets-net6/
                 Memory<byte> buffer = GC.AllocateArray<byte>(65527, true);
+#endif
 
                 try
                 {
+#if NETSTANDARD2_1
+                    var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint);
+#else
                     var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint, token);
+#endif
                     Respond(result.RemoteEndPoint, buffer, result.ReceivedBytes, token);
                 }
                 catch (ObjectDisposedException)
@@ -72,7 +80,11 @@ namespace Ae.Dns.Server
             }
         }
 
+#if NETSTANDARD2_1
+        private async void Respond(EndPoint sender, ArraySegment<byte> buffer, int queryLength, CancellationToken token)
+#else
         private async void Respond(EndPoint sender, Memory<byte> buffer, int queryLength, CancellationToken token)
+#endif
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -89,7 +101,11 @@ namespace Ae.Dns.Server
             try
             {
                 // Send the part of the buffer containing the answer
+#if NETSTANDARD2_1
+                await _socket.SendToAsync(buffer.Slice(0, answerLength), SocketFlags.None, sender);
+#else
                 await _socket.SendToAsync(buffer.Slice(0, answerLength), SocketFlags.None, sender, token);
+#endif
             }
             catch (Exception e)
             {

@@ -1,4 +1,5 @@
 ﻿using Ae.Dns.Protocol;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -27,29 +28,31 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
-            var raw = DnsByteExtensions.AllocateAndWrite(query).ToArray();
+#if NETSTANDARD2_1
+            Memory<byte> queryBuffer = new byte[65527];
+#else
+            Memory<byte> queryBuffer = GC.AllocateArray<byte>(65527, true);
+#endif
 
-            var content = new ByteArrayContent(raw);
+            var queryBufferLength = 0;
+            query.WriteBytes(queryBuffer.Span, ref queryBufferLength);
+
+            var content = new ReadOnlyMemoryContent(queryBuffer.Slice(0, queryBufferLength));
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, "/dns-query")
-            {
-                Content = content
-            };
+            var request = new HttpRequestMessage(HttpMethod.Post, "/dns-query") { Content = content };
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(DnsMessageType));
 
-            HttpResponseMessage response;
-            try
-            {
-                response = await _httpClient.SendAsync(request, token);
-                response.EnsureSuccessStatusCode();
-            }
-            catch
-            {
-                throw;
-            }
+            var response = await _httpClient.SendAsync(request, token);
+            response.EnsureSuccessStatusCode();
 
-            var answer = DnsByteExtensions.FromBytes<DnsMessage>(await response.Content.ReadAsByteArrayAsync());
+#if NETSTANDARD2_1
+            var buffer = await response.Content.ReadAsByteArrayAsync();
+#else
+            var buffer = await response.Content.ReadAsByteArrayAsync(token);
+#endif
+
+            var answer = DnsByteExtensions.FromBytes<DnsMessage>(buffer);
             answer.Header.Tags.Add("Resolver", ToString());
             return answer;
         }
