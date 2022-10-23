@@ -177,7 +177,9 @@ namespace Ae.Dns.Console
             dnsClient = new DnsMetricsClient(dnsClient);
             dnsClient = new DnsAppMetricsClient(metrics, dnsClient);
 
-            IDnsServer server = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsSingleBufferClient(dnsClient));
+            IDnsServer tcpServer = new DnsTcpServer(provider.GetRequiredService<ILogger<DnsTcpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsSingleBufferClient(dnsClient));
+
+            IDnsServer udpServer = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsSingleBufferClient(dnsClient));
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
@@ -187,7 +189,8 @@ namespace Ae.Dns.Console
             await Task.WhenAll(
                 builder.Build().RunAsync(CancellationToken.None),
                 ReportStats(CancellationToken.None),
-                server.Listen(CancellationToken.None)
+                udpServer.Listen(CancellationToken.None),
+                tcpServer.Listen(CancellationToken.None)
             );
         }
     }
