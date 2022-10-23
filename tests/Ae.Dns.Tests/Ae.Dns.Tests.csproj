@@ -22,4 +22,10 @@
     <ProjectReference Include="..\..\src\Ae.Dns.Server\Ae.Dns.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Files\answers1.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -20,5 +20,15 @@ namespace Ae.Dns.Tests.Protocol
             var answer = DnsByteExtensions.FromBytes<DnsMessage>(answerBytes);
             Assert.Equal(answer, DnsByteExtensions.FromBytes<DnsMessage>(DnsByteExtensions.AllocateAndWrite(answer).ToArray()));
         }
+
+        [Fact]
+        public void TestRoundTripAnswerBatch1()
+        {
+            foreach (var answerBytes in SampleDnsPackets.AnswerBatch1)
+            {
+                var answer = DnsByteExtensions.FromBytes<DnsMessage>(answerBytes);
+                Assert.Equal(answer, DnsByteExtensions.FromBytes<DnsMessage>(DnsByteExtensions.AllocateAndWrite(answer).ToArray()));
+            }
+        }
     }
 }

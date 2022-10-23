@@ -1,7 +1,6 @@
 ﻿using Ae.Dns.Protocol;
 using Ae.Dns.Tests;
 using System;
-using System.Linq;
 
 namespace Ae.Dns.Benchmarks
 {
@@ -9,18 +8,18 @@ namespace Ae.Dns.Benchmarks
     {
         public static void Main(string[] args)
         {
-            //var summary = BenchmarkRunner.Run(typeof(Program).Assembly);
-
             Span<byte> buffer = new byte[65527];
 
-            for (var i = 0; i < 100_000; i++)
+            var answers = SampleDnsPackets.AnswerBatch1;
+
+            for (var i = 0; i < 10_000; i++)
             {
-                foreach (var message in SampleDnsPackets.AllPackets.ToArray())
+                foreach (var answer in answers)
                 {
                     var reader = new DnsMessage();
 
                     var offset = 0;
-                    reader.ReadBytes(message, ref offset);
+                    reader.ReadBytes(answer, ref offset);
 
                     offset = 0;
                     reader.WriteBytes(buffer, ref offset);

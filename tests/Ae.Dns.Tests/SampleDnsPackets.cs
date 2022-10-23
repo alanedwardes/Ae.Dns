@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Ae.Dns.Tests
@@ -20,7 +21,7 @@ namespace Ae.Dns.Tests
     {
         public static IEnumerable<byte[]> AllPackets => Queries.Concat(Answers);
 
-        public static byte[][] Queries => new[] { Query1,Query2,Query3,Query4,Query5,Query6,Query7 };
+        public static byte[][] Queries => new[] { Query1, Query2, Query3, Query4, Query5, Query6, Query7 };
 
         public static readonly byte[] Query1 = new byte[]
         {
@@ -64,7 +65,7 @@ namespace Ae.Dns.Tests
             118,242,1,0,0,1,0,0,0,0,0,1,3,97,112,105,9,115,110,97,112,99,114,97,102,116,2,105,111,0,0,28,0,1,0,0,41,5,192,0,0,0,0,0,0
         };
 
-        public static byte[][] Answers => new[] { Answer1,Answer2,Answer3,Answer4,Answer5,Answer6,Answer7,Answer8,Answer9,Answer10 };
+        public static byte[][] Answers => new[] { Answer1, Answer2, Answer3, Answer4, Answer5, Answer6, Answer7, Answer8, Answer9, Answer10 };
 
         public static readonly byte[] Answer1 = new byte[]
         {
@@ -126,10 +127,35 @@ namespace Ae.Dns.Tests
             0,4,129,128,0,1,0,1,0,0,0,0,4,95,115,112,102,7,109,97,105,108,103,117,110,3,111,114,103,0,0,16,0,1,192,12,0,16,0,1,0,0,0,21,1,78,205,118,61,115,112,102,49,32,105,112,52,58,50,48,57,46,54,49,46,49,53,49,46,48,47,50,52,32,105,112,52,58,49,54,54,46,55,56,46,54,56,46,48,47,50,50,32,105,112,52,58,49,57,56,46,54,49,46,50,53,52,46,48,47,50,51,32,105,112,52,58,49,57,50,46,50,51,55,46,49,53,56,46,48,47,50,51,32,105,112,52,58,50,51,46,50,53,51,46,49,56,50,46,48,47,50,51,32,105,112,52,58,49,48,52,46,49,51,48,46,57,54,46,48,47,50,56,32,105,112,52,58,49,52,54,46,50,48,46,49,49,51,46,48,47,50,52,32,105,112,52,58,49,52,54,46,50,48,46,49,57,49,46,48,47,50,52,32,105,112,52,58,49,53,57,46,49,51,53,46,50,50,52,46,48,47,50,48,32,105,112,52,58,54,57,46,55,50,46,51,50,46,48,47,50,48,127,32,105,112,52,58,49,48,52,46,49,51,48,46,49,50,50,46,48,47,50,51,32,105,112,52,58,49,52,54,46,50,48,46,49,49,50,46,48,47,50,54,32,105,112,52,58,49,54,49,46,51,56,46,49,57,50,46,48,47,50,48,32,105,112,52,58,49,52,51,46,53,53,46,50,50,52,46,48,47,50,49,32,105,112,52,58,49,52,51,46,53,53,46,50,51,50,46,48,47,50,50,32,105,112,52,58,49,53,57,46,49,49,50,46,50,52,48,46,48,47,50,48,32,126,97,108,108
         };
 
-        public static readonly byte[] Answer11 = new byte []
+        public static readonly byte[] Answer11 = new byte[]
         {
             // google.com NS
             0,16,129,128,0,1,0,4,0,0,0,0,6,103,111,111,103,108,101,3,99,111,109,0,0,2,0,1,192,12,0,2,0,1,0,0,82,250,0,6,3,110,115,52,192,12,192,12,0,2,0,1,0,0,82,250,0,6,3,110,115,51,192,12,192,12,0,2,0,1,0,0,82,250,0,6,3,110,115,49,192,12,192,12,0,2,0,1,0,0,82,250,0,6,3,110,115,50,192,12
         };
+
+        private static IList<byte[]> ReadBatch(FileInfo fileInfo)
+        {
+            var answers = new List<byte[]>();
+
+            using (var fs = fileInfo.OpenRead())
+            using (var br = new BinaryReader(fs))
+            {
+                while (fs.Position < fs.Length)
+                {
+                    var bufferLength = br.ReadInt32();
+                    answers.Add(br.ReadBytes(bufferLength));
+                }
+            }
+
+            return answers;
+        }
+
+        private static FileInfo GetTestFile(string name)
+        {
+            var assemblyFileInfo = new FileInfo(typeof(SampleDnsPackets).Assembly.Location);
+            return new FileInfo(Path.Combine(assemblyFileInfo.Directory.FullName, "Files", name));
+        }
+
+        public static IList<byte[]> AnswerBatch1 => ReadBatch(GetTestFile("answers1.bin"));
     }
 }
