@@ -35,20 +35,5 @@ namespace Ae.Dns.Tests.Client
             using var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("192.88.99.0"));
             await Assert.ThrowsAsync<DnsClientTimeoutException>(() => client.Query(DnsQueryFactory.CreateQuery("alanedwardes.com"), CancellationToken.None));
         }
-
-        [Theory]
-        [InlineData("https://news.ycombinator.com/news?p=1")]
-        [InlineData("https://news.ycombinator.com/news?p=2")]
-        [InlineData("https://www.reddit.com/")]
-        public async Task TestLookupFromAggregators(string page)
-        {
-            var domains = await SampleDataRetriever.GetDomainsOnPage(page);
-            using var client = new DnsUdpClient(new NullLogger<DnsUdpClient>(), IPAddress.Parse("8.8.8.8"));
-
-            foreach (var domain in domains)
-            {
-                await client.RunQuery(domain, DnsQueryType.ANY);
-            }
-        }
     }
 }

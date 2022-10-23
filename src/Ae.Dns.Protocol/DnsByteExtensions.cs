@@ -69,7 +69,8 @@ namespace Ae.Dns.Protocol
 
         public static string[] ReadString(ReadOnlySpan<byte> bytes, ref int offset, int? maxOffset = int.MaxValue)
         {
-            var parts = new List<string>();
+            // Assume most labels consist of 3 parts
+            var parts = new List<string>(3);
 
             int? originalOffset = null;
             while (offset < bytes.Length && offset < maxOffset)
