@@ -28,7 +28,9 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public virtual void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
         {
-            Entries = DnsByteExtensions.ReadString(bytes, ref offset, offset + length);
+            // Provide the ReadString method with a sliced buffer, which ends when this resource ends
+            // It must start where the packet starts, since there are often pointers back to the beginning
+            Entries = DnsByteExtensions.ReadString(bytes.Slice(0, offset + length), ref offset);
         }
 
         /// <inheritdoc/>

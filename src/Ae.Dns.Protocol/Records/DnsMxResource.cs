@@ -38,7 +38,7 @@ namespace Ae.Dns.Protocol.Records
         public override void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
         {
             Preference = DnsByteExtensions.ReadUInt16(bytes, ref offset);
-            base.ReadBytes(bytes, ref offset, length);
+            base.ReadBytes(bytes, ref offset, length - sizeof(ushort));
         }
 
         /// <inheritdoc/>

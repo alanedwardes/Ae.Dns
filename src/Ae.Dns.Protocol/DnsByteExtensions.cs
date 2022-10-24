@@ -67,13 +67,13 @@ namespace Ae.Dns.Protocol
             return data;
         }
 
-        public static string[] ReadString(ReadOnlySpan<byte> bytes, ref int offset, int? maxOffset = int.MaxValue)
+        public static string[] ReadString(ReadOnlySpan<byte> bytes, ref int offset)
         {
             // Assume most labels consist of 3 parts
             var parts = new List<string>(3);
 
             int? originalOffset = null;
-            while (offset < bytes.Length && offset < maxOffset)
+            while (offset < bytes.Length)
             {
                 byte currentByte = bytes[offset];
                 bool isCompressed = (currentByte & (1 << 6)) != 0 && (currentByte & (1 << 7)) != 0;
@@ -84,7 +84,7 @@ namespace Ae.Dns.Protocol
                     var compressedOffset = (ushort)ReadInt16(bytes[offset + 1], (byte)(currentByte & (1 << 6) - 1));
 
                     // Ensure the computed offset isn't outside the buffer
-                    if (compressedOffset < maxOffset)
+                    if (compressedOffset < bytes.Length)
                     {
                         if (!originalOffset.HasValue)
                         {
