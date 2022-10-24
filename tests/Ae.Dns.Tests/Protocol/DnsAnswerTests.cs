@@ -249,5 +249,23 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal("ns2.google.com", ((DnsDomainResource)record4.Resource).Domain);
             Assert.Equal(21242u, record4.TimeToLive);
         }
+
+        [Fact]
+        public void ReadAnswer12()
+        {
+            var value = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Answer12);
+
+            Assert.Equal("MS=6BF03E6AF5CB689E315FB6199603BABF2C88D805", Assert.Single(((DnsTextResource)value.Answers[0].Resource).Entries));
+            Assert.Equal("MS=ms44452932", Assert.Single(((DnsTextResource)value.Answers[1].Resource).Entries));
+            Assert.Equal("MS=ms58704441", Assert.Single(((DnsTextResource)value.Answers[2].Resource).Entries));
+            Assert.Equal("adobe-idp-site-verification=b92c9e999aef825edc36e0a3d847d2dbad5b2fc0e05c79ddd7a16139b48ecf4b", Assert.Single(((DnsTextResource)value.Answers[3].Resource).Entries));
+            Assert.Equal("apple-domain-verification=RyQhdzTl6Z6x8ZP4", Assert.Single(((DnsTextResource)value.Answers[4].Resource).Entries));
+            Assert.Equal("atlassian-domain-verification=jjgw98AKv2aeoYFxiL/VFaoyPkn3undEssTRuMg6C/3Fp/iqhkV4HVV7WjYlVeF8", Assert.Single(((DnsTextResource)value.Answers[5].Resource).Entries));
+            Assert.Equal("docusign=087098e3-3d46-47b7-9b4e-8a23028154cd", Assert.Single(((DnsTextResource)value.Answers[6].Resource).Entries));
+            Assert.Equal("google-site-verification=UTM-3akMgubp6tQtgEuAkYNYLyYAvpTnnSrDMWoDR3o", Assert.Single(((DnsTextResource)value.Answers[7].Resource).Entries));
+            Assert.Equal("stripe-verification=f88ef17321660a01bab1660454192e014defa29ba7b8de9633c69d6b4912217f", Assert.Single(((DnsTextResource)value.Answers[8].Resource).Entries));
+            Assert.Equal("v=spf1 ip4:192.30.252.0/22 include:_netblocks.google.com include:_netblocks2.google.com include:_netblocks3.google.com include:spf.protection.outlook.com include:mail.zendesk.com include:_spf.salesforce.com include:servers.mcsv.net ip4:166.78.69.169 ip4:1", ((DnsTextResource)value.Answers[9].Resource).Entries[0]);
+            Assert.Equal("66.78.69.170 ip4:166.78.71.131 ip4:167.89.101.2 ip4:167.89.101.192/28 ip4:192.254.112.60 ip4:192.254.112.98/31 ip4:192.254.113.10 ip4:192.254.113.101 ip4:192.254.114.176 ip4:62.253.227.114 ~all", ((DnsTextResource)value.Answers[9].Resource).Entries[1]);
+        }
     }
 }

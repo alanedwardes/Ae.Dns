@@ -20,6 +20,7 @@ namespace Ae.Dns.Tests.Client
             yield return new object[] { "gov.uk", DnsQueryType.A };
             yield return new object[] { "gov.uk", DnsQueryType.AAAA };
             yield return new object[] { "gov.uk", DnsQueryType.ANY };
+            yield return new object[] { "github.com", DnsQueryType.TEXT };
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
