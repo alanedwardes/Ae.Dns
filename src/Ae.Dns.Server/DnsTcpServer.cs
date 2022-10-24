@@ -80,11 +80,7 @@ namespace Ae.Dns.Server
 
                     try
                     {
-#if NETSTANDARD2_1
-                        var queryLength = await socket.ReceiveAsync(buffer, SocketFlags.None, receiveToken.Token);
-#else
-                        var queryLength = await socket.ReceiveAsync(buffer, SocketFlags.None, receiveToken.Token);
-#endif
+                        var queryLength = await Receive(socket, buffer, token);
                         await Respond(socket, buffer, queryLength, token);
                     }
                     catch (ObjectDisposedException)
@@ -107,34 +103,58 @@ namespace Ae.Dns.Server
         }
 
 #if NETSTANDARD2_1
+        private async Task<int> Receive(Socket socket, ArraySegment<byte> buffer, CancellationToken token)
+#else
+        private async Task<int> Receive(Socket socket, Memory<byte> buffer, CancellationToken token)
+#endif
+        {
+#if NETSTANDARD2_1
+            async Task<int> DoReceive(ArraySegment<byte> bufferPart)
+#else
+            async Task<int> DoReceive(Memory<byte> bufferPart)
+#endif
+            {
+                var receivedBytes = await socket.ReceiveAsync(bufferPart, SocketFlags.None, token);
+                if (receivedBytes == 0)
+                {
+                    socket.Close();
+                }
+
+                return receivedBytes;
+            }
+
+            // Perform an initial receive to obtain the first
+            // chunk and query length, but may need more data
+            var bufferOffset = await DoReceive(buffer);
+
+            var queryHeaderLength = 0;
+#if NETSTANDARD2_1
+            var queryLength = DnsByteExtensions.ReadUInt16(buffer, ref queryHeaderLength);
+#else
+            var queryLength = DnsByteExtensions.ReadUInt16(buffer.Span, ref queryHeaderLength);
+#endif
+
+            // Keep receiving until we have enough data
+            while (socket.Connected && bufferOffset - queryHeaderLength < queryLength)
+            {
+                bufferOffset += await DoReceive(buffer.Slice(bufferOffset));
+            }
+
+            return queryLength;
+        }
+
+#if NETSTANDARD2_1
         private async Task Respond(Socket socket, ArraySegment<byte> buffer, int queryLength, CancellationToken token)
 #else
         private async Task Respond(Socket socket, Memory<byte> buffer, int queryLength, CancellationToken token)
 #endif
         {
-            if (queryLength == 0)
-            {
-                socket.Close();
-            }
-
-            var queryHeaderLength = 0;
-#if NETSTANDARD2_1
-            var queryLengthCheck = DnsByteExtensions.ReadUInt16(buffer, ref queryHeaderLength);
-#else
-            var queryLengthCheck = DnsByteExtensions.ReadUInt16(buffer.Span, ref queryHeaderLength);
-#endif
-
-            if (queryLength - queryHeaderLength != queryLengthCheck)
-            {
-                _logger.LogCritical("Recieved query length was not expected", socket.RemoteEndPoint);
-            }
-
             var stopwatch = Stopwatch.StartNew();
 
             var answerLength = 0;
             try
             {
-                answerLength = await _dnsClient.Query(buffer.Slice(queryHeaderLength), queryLength - queryHeaderLength, token);
+                answerLength = await _dnsClient.Query(buffer.Slice(2), queryLength, token);
             }
             catch (Exception e)
             {
@@ -151,11 +171,12 @@ namespace Ae.Dns.Server
 
             try
             {
-                // Send the part of the buffer containing the answer
+                // Slice to the part of the buffer containing the answer and send it
+                var answerBuffer = buffer.Slice(0, answerHeaderLength + answerLength);
 #if NETSTANDARD2_1
-                await socket.SendAsync(buffer.Slice(0, answerHeaderLength + answerLength), SocketFlags.None);
+                await socket.SendAsync(answerBuffer, SocketFlags.None);
 #else
-                await socket.SendAsync(buffer.Slice(0, answerHeaderLength + answerLength), SocketFlags.None, token);
+                await socket.SendAsync(answerBuffer, SocketFlags.None, token);
 #endif
             }
             catch (Exception e)
