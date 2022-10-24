@@ -19,10 +19,7 @@ namespace Ae.Dns.Benchmarks
 
             services.AddLogging(x => x.AddConsole());
 
-            services.AddSingleton<IDnsClient>(x =>
-            {
-                return new DnsUdpClient(x.GetRequiredService<ILogger<DnsUdpClient>>(), IPAddress.Parse("8.8.8.8"));
-            });
+            services.AddHttpClient<IDnsClient, DnsHttpClient>(x => x.BaseAddress = new Uri("https://dns.google/"));
 
             var provider = services.BuildServiceProvider();
 
