@@ -29,7 +29,7 @@ namespace Ae.Dns.Benchmarks
         {
             using var client = _httpClientFactory.CreateClient("Crawler");
 
-            var pageCrawler = new PageCrawler(client);
+            var pageCrawler = new PageCrawler(_logger, client);
 
             var foundDomains = new HashSet<string>();
 

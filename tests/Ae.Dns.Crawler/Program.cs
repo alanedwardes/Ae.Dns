@@ -2,6 +2,7 @@
 using Ae.Dns.Protocol;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Net;
 
 namespace Ae.Dns.Benchmarks
@@ -12,7 +13,7 @@ namespace Ae.Dns.Benchmarks
         {
             var services = new ServiceCollection();
 
-            services.AddHttpClient("Crawler");
+            services.AddHttpClient("Crawler", x=> x.Timeout = TimeSpan.FromSeconds(5));
 
             services.AddSingleton<Crawler>();
 
