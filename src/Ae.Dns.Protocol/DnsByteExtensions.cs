@@ -83,7 +83,7 @@ namespace Ae.Dns.Protocol
                 {
                     var compressedOffset = (ushort)ReadInt16(bytes[offset + 1], (byte)(currentByte & (1 << 6) - 1));
 
-                    // Ensure the computed offset isn't outside the buffer
+                    // THIS CHECK MASKS A BUG
                     if (compressedOffset < bytes.Length)
                     {
                         if (!originalOffset.HasValue)
