@@ -67,35 +67,25 @@ namespace Ae.Dns.Protocol
             return data;
         }
 
+        private enum LabelFlags
+        {
+            Normal = 0,
+            Reserved1 = 64,
+            Reserved2 = 128,
+            Compressed = 192,
+        }
+
         public static string[] ReadString(ReadOnlySpan<byte> bytes, ref int offset)
         {
+            static LabelFlags GetLabelFlags(byte value) => (LabelFlags)((value & (1 << 6)) + (value & (1 << 7)));
+
             // Assume most labels consist of 3 parts
             var parts = new List<string>(3);
 
             int? originalOffset = null;
             while (offset < bytes.Length)
             {
-                byte currentByte = bytes[offset];
-                bool isCompressed = (currentByte & (1 << 6)) != 0 && (currentByte & (1 << 7)) != 0;
-                bool isEnd = currentByte == 0;
-
-                if (isCompressed)
-                {
-                    var compressedOffset = (ushort)ReadInt16(bytes[offset + 1], (byte)(currentByte & (1 << 6) - 1));
-
-                    if (compressedOffset < bytes.Length && (bytes[compressedOffset] & (1 << 6)) == 0 && (bytes[compressedOffset] & (1 << 7)) == 0)
-                    {
-                        if (!originalOffset.HasValue)
-                        {
-                            originalOffset = ++offset;
-                        }
-
-                        offset = compressedOffset;
-                        continue;
-                    }
-                }
-
-                if (isEnd)
+                if (bytes[offset] == 0)
                 {
                     if (originalOffset.HasValue)
                     {
@@ -106,10 +96,24 @@ namespace Ae.Dns.Protocol
                     break;
                 }
 
-                offset++;
-                var str = Encoding.ASCII.GetString(bytes.Slice(offset, currentByte));
+                if (GetLabelFlags(bytes[offset]) == LabelFlags.Compressed)
+                {
+                    var compressedOffset = ReadUInt16(bytes[offset + 1], (byte)(bytes[offset] & (1 << 6) - 1));
+                    if (compressedOffset < bytes.Length && GetLabelFlags(bytes[compressedOffset]) == LabelFlags.Normal)
+                    {
+                        if (!originalOffset.HasValue)
+                        {
+                            originalOffset = ++offset;
+                        }
+
+                        offset = compressedOffset;
+                    }
+                }
+
+                byte labelLength = bytes[offset];
+                var str = Encoding.ASCII.GetString(bytes.Slice(++offset, labelLength));
                 parts.Add(str);
-                offset += currentByte;
+                offset += labelLength;
             }
 
             return parts.ToArray();
