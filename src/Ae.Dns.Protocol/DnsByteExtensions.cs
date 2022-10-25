@@ -75,6 +75,15 @@ namespace Ae.Dns.Protocol
             Compressed = 192,
         }
 
+        public static string ReadStringSimple(ReadOnlySpan<byte> bytes, ref int offset)
+        {
+            byte labelLength = bytes[offset];
+            offset += 1;
+            var str = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength));
+            offset += labelLength;
+            return str;
+        }
+
         public static string[] ReadString(ReadOnlySpan<byte> bytes, ref int offset)
         {
             static LabelFlags GetLabelFlags(byte value) => (LabelFlags)((value & (1 << 6)) + (value & (1 << 7)));
@@ -82,16 +91,11 @@ namespace Ae.Dns.Protocol
             // Assume most labels consist of 3 parts
             var parts = new List<string>(3);
 
-            int? originalOffset = null;
+            int? preCompressionOffset = null;
             while (offset < bytes.Length)
             {
                 if (bytes[offset] == 0)
                 {
-                    if (originalOffset.HasValue)
-                    {
-                        offset = originalOffset.Value;
-                    }
-
                     offset++;
                     break;
                 }
@@ -101,19 +105,21 @@ namespace Ae.Dns.Protocol
                     var compressedOffset = ReadUInt16(bytes[offset + 1], (byte)(bytes[offset] & (1 << 6) - 1));
                     if (compressedOffset < bytes.Length && GetLabelFlags(bytes[compressedOffset]) == LabelFlags.Normal)
                     {
-                        if (!originalOffset.HasValue)
+                        if (!preCompressionOffset.HasValue)
                         {
-                            originalOffset = ++offset;
+                            preCompressionOffset = offset;
                         }
 
                         offset = compressedOffset;
                     }
                 }
 
-                byte labelLength = bytes[offset];
-                var str = Encoding.ASCII.GetString(bytes.Slice(++offset, labelLength));
-                parts.Add(str);
-                offset += labelLength;
+                parts.Add(ReadStringSimple(bytes, ref offset));
+            }
+
+            if (preCompressionOffset.HasValue)
+            {
+                offset = preCompressionOffset.Value + 2;
             }
 
             return parts.ToArray();
