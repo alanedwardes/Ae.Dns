@@ -15,13 +15,14 @@ namespace Ae.Dns.Client
     public sealed class DnsTcpClient : IDnsClient
     {
         private readonly ILogger<DnsTcpClient> _logger;
+        private readonly IPAddress _address;
         private readonly TcpClient _socket;
 
         public DnsTcpClient(ILogger<DnsTcpClient> logger, IPAddress address)
         {
             _logger = logger;
+            _address = address;
             _socket = new TcpClient(address.AddressFamily);
-            _socket.Connect(address, 53);
         }
 
         /// <inheritdoc/>
@@ -31,27 +32,57 @@ namespace Ae.Dns.Client
             _socket.Dispose();
         }
 
+        /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
-            var sendBuffer = new byte[65527];
-
-            var sendOffset = sizeof(ushort);
-            query.WriteBytes(sendBuffer, ref sendOffset);
-
-            var fakeOffset = 0;
-            DnsByteExtensions.ToBytes((ushort)(sendOffset - sizeof(ushort)), sendBuffer, ref fakeOffset);
+            if (!_socket.Connected)
+            {
+                await _socket.ConnectAsync(_address, 53);
+            }
 
             var stream = _socket.GetStream();
 
-            await stream.WriteAsync(sendBuffer, 0, sendOffset, token);
+            var buffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
 
-            var buffer = new byte[4096];
-            var receive = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+            var sendOffset = sizeof(ushort);
+#if NETSTANDARD2_1
+            query.WriteBytes(buffer, ref sendOffset);
+#else
+            query.WriteBytes(buffer.Span, ref sendOffset);
+#endif
+
+            var fakeOffset = 0;
+#if NETSTANDARD2_1
+            DnsByteExtensions.ToBytes((ushort)(sendOffset - sizeof(ushort)), buffer, ref fakeOffset);
+#else
+            DnsByteExtensions.ToBytes((ushort)(sendOffset - sizeof(ushort)), buffer.Span, ref fakeOffset);
+#endif
+
+            var sendBuffer = buffer.Slice(0, sendOffset);
+
+            await stream.WriteAsync(sendBuffer, token);
+
+            var received = await stream.ReadAsync(buffer, token);
 
             var offset = 0;
-            var responseLength = DnsByteExtensions.ReadUInt16(buffer, ref offset);
+#if NETSTANDARD2_1
+            var answerLength = DnsByteExtensions.ReadUInt16(buffer, ref offset);
+#else
+            var answerLength = DnsByteExtensions.ReadUInt16(buffer.Span, ref offset);
+#endif
 
-            var answer = DnsByteExtensions.FromBytes<DnsMessage>(DnsByteExtensions.ReadBytes(buffer, responseLength, ref offset));
+            while (received < answerLength)
+            {
+                received += await stream.ReadAsync(buffer.Slice(received), token);
+            }
+
+            var answerBuffer = buffer.Slice(offset, answerLength);
+
+#if NETSTANDARD2_1
+            var answer = DnsByteExtensions.FromBytes<DnsMessage>(answerBuffer);
+#else
+            var answer = DnsByteExtensions.FromBytes<DnsMessage>(answerBuffer.Span);
+#endif
             answer.Header.Tags.Add("Resolver", ToString());
             return answer;
         }

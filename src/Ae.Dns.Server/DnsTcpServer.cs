@@ -65,13 +65,7 @@ namespace Ae.Dns.Server
         {
             using (socket)
             {
-#if NETSTANDARD2_1
-                ArraySegment<byte> buffer = new byte[65527];
-#else
-                // Allocate a buffer which will be used for the incoming query, and re-used to send the answer.
-                // Also make it pinned, see https://enclave.io/high-performance-udp-sockets-net6/
-                Memory<byte> buffer = GC.AllocateArray<byte>(65527, true);
-#endif
+                var buffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
 
                 while (socket.Connected && !token.IsCancellationRequested)
                 {

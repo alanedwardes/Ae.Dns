@@ -135,6 +135,14 @@ namespace Ae.Dns.Protocol
             return buffer.Slice(0, offset);
         }
 
+#if NETSTANDARD2_1
+        public static ArraySegment<byte> AllocatePinnedNetworkBuffer() => new byte[65527];
+#else
+        // Allocate a buffer which will be used for the incoming query, and re-used to send the answer.
+        // Also make it pinned, see https://enclave.io/high-performance-udp-sockets-net6/
+        public static Memory<byte> AllocatePinnedNetworkBuffer() => GC.AllocateArray<byte>(65527, true);
+#endif
+
         public static TReader FromBytes<TReader>(ReadOnlySpan<byte> bytes) where TReader : IDnsByteArrayReader, new()
         {
             var offset = 0;

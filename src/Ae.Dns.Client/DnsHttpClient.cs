@@ -28,14 +28,14 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {
-#if NETSTANDARD2_1
-            Memory<byte> queryBuffer = new byte[65527];
-#else
-            Memory<byte> queryBuffer = GC.AllocateArray<byte>(65527, true);
-#endif
+            var queryBuffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
 
             var queryBufferLength = 0;
+#if NETSTANDARD2_1
+            query.WriteBytes(queryBuffer, ref queryBufferLength);
+#else
             query.WriteBytes(queryBuffer.Span, ref queryBufferLength);
+#endif
 
             var content = new ReadOnlyMemoryContent(queryBuffer.Slice(0, queryBufferLength));
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);
