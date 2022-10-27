@@ -40,8 +40,9 @@ namespace Ae.Dns.Client
 
         private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
-        private readonly UdpClient _socket;
-        private readonly Task _task;
+        private readonly IPEndPoint _endpoint;
+        private readonly Socket _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        private Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
         public DnsUdpClient(IPAddress address) :
@@ -62,8 +63,7 @@ namespace Ae.Dns.Client
         public DnsUdpClient(ILogger<DnsUdpClient> logger, IPEndPoint endpoint)
         {
             _logger = logger;
-            _socket = new UdpClient(endpoint.AddressFamily);
-            _socket.Connect(endpoint);
+            _endpoint = endpoint;
             _task = Task.Run(ReceiveTask);
         }
 
@@ -71,11 +71,13 @@ namespace Ae.Dns.Client
         {
             while (!_cancel.IsCancellationRequested)
             {
-                UdpReceiveResult recieve;
+                var buffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
+
+                int recieved;
 
                 try
                 {
-                    recieve = await _socket.ReceiveAsync();
+                    recieved = await _socket.ReceiveAsync(buffer, SocketFlags.None);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -88,29 +90,37 @@ namespace Ae.Dns.Client
                     continue;
                 }
 
-                if (recieve.Buffer.Length > 0)
+                if (recieved > 0)
                 {
-                    _ = Task.Run(() => Receive(recieve.Buffer));
+                    _ = Task.Run(() => Receive(buffer.Slice(0, recieved)));
                 }
             }
         }
 
-        private void Receive(byte[] buffer)
+#if NETSTANDARD2_1
+        private void Receive(ArraySegment<byte> buffer)
+#else
+        private void Receive(Memory<byte> buffer)
+#endif
         {
             DnsMessage answer;
             try
             {
+#if NETSTANDARD2_1
                 answer = DnsByteExtensions.FromBytes<DnsMessage>(buffer);
+#else
+                answer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Span);
+#endif
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _socket.Client.RemoteEndPoint, buffer);
+                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _endpoint, buffer);
                 return;
             }
 
             if (_pending.TryRemove(ToMessageId(answer), out TaskCompletionSource<byte[]> completionSource))
             {
-                completionSource.SetResult(buffer);
+                completionSource.SetResult(buffer.ToArray());
             }
         }
 
@@ -131,7 +141,7 @@ namespace Ae.Dns.Client
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
-                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _socket.Client.RemoteEndPoint);
+                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _endpoint);
                 completionSource.SetException(exception);
             }
         }
@@ -139,7 +149,7 @@ namespace Ae.Dns.Client
         private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] raw, CancellationToken token)
         {
             _ = RemoveFailedRequest(messageId, token);
-            _ = _socket.SendAsync(raw, raw.Length);
+            _ = _socket.SendToAsync(raw, SocketFlags.None, _endpoint);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
@@ -170,6 +180,6 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"udp://{_socket.Client.RemoteEndPoint}/";
+        public override string ToString() => $"udp://{_endpoint}/";
     }
 }

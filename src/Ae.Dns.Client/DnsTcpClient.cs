@@ -16,13 +16,12 @@ namespace Ae.Dns.Client
     {
         private readonly ILogger<DnsTcpClient> _logger;
         private readonly IPAddress _address;
-        private readonly TcpClient _socket;
+        private readonly Socket _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         public DnsTcpClient(ILogger<DnsTcpClient> logger, IPAddress address)
         {
             _logger = logger;
             _address = address;
-            _socket = new TcpClient(address.AddressFamily);
         }
 
         /// <inheritdoc/>
@@ -39,8 +38,6 @@ namespace Ae.Dns.Client
             {
                 await _socket.ConnectAsync(_address, 53);
             }
-
-            var stream = _socket.GetStream();
 
             var buffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
 
@@ -60,9 +57,9 @@ namespace Ae.Dns.Client
 
             var sendBuffer = buffer.Slice(0, sendOffset);
 
-            await stream.WriteAsync(sendBuffer, token);
+            await _socket.SendAsync(sendBuffer, SocketFlags.None, token);
 
-            var received = await stream.ReadAsync(buffer, token);
+            var received = await _socket.ReceiveAsync(buffer, SocketFlags.None, token);
 
             var offset = 0;
 #if NETSTANDARD2_1
@@ -73,7 +70,7 @@ namespace Ae.Dns.Client
 
             while (received < answerLength)
             {
-                received += await stream.ReadAsync(buffer.Slice(received), token);
+                received += await _socket.ReceiveAsync(buffer.Slice(received), SocketFlags.None, token);
             }
 
             var answerBuffer = buffer.Slice(offset, answerLength);
@@ -88,6 +85,6 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"tcp://{_socket.Client.RemoteEndPoint}/";
+        public override string ToString() => $"tcp://{_address}/";
     }
 }
