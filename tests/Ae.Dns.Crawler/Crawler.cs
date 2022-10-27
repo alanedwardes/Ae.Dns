@@ -92,7 +92,7 @@ namespace Ae.Dns.Benchmarks
                 var buffer = DnsByteExtensions.AllocateAndWrite(answer);
 
                 bw.Write(buffer.Length);
-                bw.Write(buffer);
+                bw.Write(buffer.Span);
             }
         }
     }

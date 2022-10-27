@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Protocol;
-using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -21,9 +20,7 @@ namespace Ae.Dns.Client
         public DnsHttpClient(HttpClient httpClient) => _httpClient = httpClient;
 
         /// <inheritdoc/>
-        public void Dispose()
-        {
-        }
+        public void Dispose() => _httpClient?.Dispose();
 
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
@@ -31,19 +28,15 @@ namespace Ae.Dns.Client
             var queryBuffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
 
             var queryBufferLength = 0;
-#if NETSTANDARD2_1
             query.WriteBytes(queryBuffer, ref queryBufferLength);
-#else
-            query.WriteBytes(queryBuffer.Span, ref queryBufferLength);
-#endif
 
-            var content = new ReadOnlyMemoryContent(queryBuffer.Slice(0, queryBufferLength));
+            using var content = new ReadOnlyMemoryContent(queryBuffer.Slice(0, queryBufferLength));
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, "/dns-query") { Content = content };
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/dns-query") { Content = content };
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(DnsMessageType));
 
-            var response = await _httpClient.SendAsync(request, token);
+            using var response = await _httpClient.SendAsync(request, token);
             response.EnsureSuccessStatusCode();
 
 #if NETSTANDARD2_1

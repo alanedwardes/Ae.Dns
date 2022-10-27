@@ -16,36 +16,36 @@ namespace Ae.Dns.Protocol
             return (ushort)(a << 0 | b << 8);
         }
 
-        public static short ReadInt16(ReadOnlySpan<byte> bytes, ref int offset)
+        public static short ReadInt16(ReadOnlyMemory<byte> bytes, ref int offset)
         {
-            var value = ReadInt16(bytes[offset + 1], bytes[offset + 0]);
+            var value = ReadInt16(bytes.Span[offset + 1], bytes.Span[offset + 0]);
             offset += sizeof(short);
             return value;
         }
 
-        public static ushort ReadUInt16(ReadOnlySpan<byte> bytes, ref int offset)
+        public static ushort ReadUInt16(ReadOnlyMemory<byte> bytes, ref int offset)
         {
-            var value = ReadUInt16(bytes[offset + 1], bytes[offset + 0]);
+            var value = ReadUInt16(bytes.Span[offset + 1], bytes.Span[offset + 0]);
             offset += sizeof(ushort);
             return value;
         }
 
-        public static int ReadInt32(ReadOnlySpan<byte> bytes, ref int offset)
+        public static int ReadInt32(ReadOnlyMemory<byte> bytes, ref int offset)
         {
-            var value = bytes[offset + 3] << 0 |
-                        bytes[offset + 2] << 8 |
-                        bytes[offset + 1] << 16 |
-                        bytes[offset + 0] << 24;
+            var value = bytes.Span[offset + 3] << 0 |
+                        bytes.Span[offset + 2] << 8 |
+                        bytes.Span[offset + 1] << 16 |
+                        bytes.Span[offset + 0] << 24;
             offset += sizeof(int);
             return value;
         }
 
-        public static uint ReadUInt32(ReadOnlySpan<byte> bytes, ref int offset)
+        public static uint ReadUInt32(ReadOnlyMemory<byte> bytes, ref int offset)
         {
-            var value = bytes[offset + 3] << 0 |
-                        bytes[offset + 2] << 8 |
-                        bytes[offset + 1] << 16 |
-                        bytes[offset + 0] << 24;
+            var value = bytes.Span[offset + 3] << 0 |
+                        bytes.Span[offset + 2] << 8 |
+                        bytes.Span[offset + 1] << 16 |
+                        bytes.Span[offset + 0] << 24;
             offset += sizeof(uint);
             return (uint)value;
         }
@@ -60,7 +60,7 @@ namespace Ae.Dns.Protocol
             return $"new byte [] {{{string.Join(",", bytes)}}}";
         }
 
-        public static ReadOnlySpan<byte> ReadBytes(ReadOnlySpan<byte> bytes, int length, ref int offset)
+        public static ReadOnlyMemory<byte> ReadBytes(ReadOnlyMemory<byte> bytes, int length, ref int offset)
         {
             var data = bytes.Slice(offset, length);
             offset += length;
@@ -75,16 +75,16 @@ namespace Ae.Dns.Protocol
             Compressed = 192,
         }
 
-        public static string ReadStringSimple(ReadOnlySpan<byte> bytes, ref int offset)
+        public static string ReadStringSimple(ReadOnlyMemory<byte> bytes, ref int offset)
         {
-            byte labelLength = bytes[offset];
+            byte labelLength = bytes.Span[offset];
             offset += 1;
-            var str = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength));
+            var str = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength).Span);
             offset += labelLength;
             return str;
         }
 
-        public static string[] ReadString(ReadOnlySpan<byte> bytes, ref int offset)
+        public static string[] ReadString(ReadOnlyMemory<byte> bytes, ref int offset)
         {
             static LabelFlags GetLabelFlags(byte value) => (LabelFlags)((value & (1 << 6)) + (value & (1 << 7)));
 
@@ -94,16 +94,16 @@ namespace Ae.Dns.Protocol
             int? preCompressionOffset = null;
             while (offset < bytes.Length)
             {
-                if (bytes[offset] == 0)
+                if (bytes.Span[offset] == 0)
                 {
                     offset++;
                     break;
                 }
 
-                if (GetLabelFlags(bytes[offset]) == LabelFlags.Compressed)
+                if (GetLabelFlags(bytes.Span[offset]) == LabelFlags.Compressed)
                 {
-                    var compressedOffset = ReadUInt16(bytes[offset + 1], (byte)(bytes[offset] & (1 << 6) - 1));
-                    if (compressedOffset < bytes.Length && GetLabelFlags(bytes[compressedOffset]) == LabelFlags.Normal)
+                    var compressedOffset = ReadUInt16(bytes.Span[offset + 1], (byte)(bytes.Span[offset] & (1 << 6) - 1));
+                    if (compressedOffset < bytes.Length && GetLabelFlags(bytes.Span[compressedOffset]) == LabelFlags.Normal)
                     {
                         if (!preCompressionOffset.HasValue)
                         {
@@ -125,13 +125,11 @@ namespace Ae.Dns.Protocol
             return parts.ToArray();
         }
 
-        public static ReadOnlySpan<byte> AllocateAndWrite(IDnsByteArrayWriter writer)
+        public static ReadOnlyMemory<byte> AllocateAndWrite(IDnsByteArrayWriter writer)
         {
-            Span<byte> buffer = new byte[65527];
+            var buffer = AllocatePinnedNetworkBuffer();
             var offset = 0;
-
             writer.WriteBytes(buffer, ref offset);
-
             return buffer.Slice(0, offset);
         }
 
@@ -143,7 +141,7 @@ namespace Ae.Dns.Protocol
         public static Memory<byte> AllocatePinnedNetworkBuffer() => GC.AllocateArray<byte>(65527, true);
 #endif
 
-        public static TReader FromBytes<TReader>(ReadOnlySpan<byte> bytes) where TReader : IDnsByteArrayReader, new()
+        public static TReader FromBytes<TReader>(ReadOnlyMemory<byte> bytes) where TReader : IDnsByteArrayReader, new()
         {
             var offset = 0;
 
@@ -157,43 +155,43 @@ namespace Ae.Dns.Protocol
             return reader;
         }
 
-        public static void ToBytes(Span<string> strings, Span<byte> buffer, ref int offset)
+        public static void ToBytes(ReadOnlySpan<string> strings, Memory<byte> buffer, ref int offset)
         {
             for (int i = 0; i < strings.Length; i++)
             {
-                buffer[offset++] = (byte)strings[i].Length;
-                offset += Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset));
+                buffer.Span[offset++] = (byte)strings[i].Length;
+                offset += Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset).Span);
             }
 
-            buffer[offset++] = 0;
+            buffer.Span[offset++] = 0;
         }
 
-        public static void ToBytes(int value, Span<byte> buffer, ref int offset)
+        public static void ToBytes(int value, Memory<byte> buffer, ref int offset)
         {
-            buffer[offset++] = (byte)(value >> 24);
-            buffer[offset++] = (byte)(value >> 16);
-            buffer[offset++] = (byte)(value >> 8);
-            buffer[offset++] = (byte)(value >> 0);
+            buffer.Span[offset++] = (byte)(value >> 24);
+            buffer.Span[offset++] = (byte)(value >> 16);
+            buffer.Span[offset++] = (byte)(value >> 8);
+            buffer.Span[offset++] = (byte)(value >> 0);
         }
 
-        public static void ToBytes(uint value, Span<byte> buffer, ref int offset)
+        public static void ToBytes(uint value, Memory<byte> buffer, ref int offset)
         {
-            buffer[offset++] = (byte)(value >> 24);
-            buffer[offset++] = (byte)(value >> 16);
-            buffer[offset++] = (byte)(value >> 8);
-            buffer[offset++] = (byte)(value >> 0);
+            buffer.Span[offset++] = (byte)(value >> 24);
+            buffer.Span[offset++] = (byte)(value >> 16);
+            buffer.Span[offset++] = (byte)(value >> 8);
+            buffer.Span[offset++] = (byte)(value >> 0);
         }
 
-        public static void ToBytes(short value, Span<byte> buffer, ref int offset)
+        public static void ToBytes(short value, Memory<byte> buffer, ref int offset)
         {
-            buffer[offset++] = (byte)(value >> 8);
-            buffer[offset++] = (byte)(value >> 0);
+            buffer.Span[offset++] = (byte)(value >> 8);
+            buffer.Span[offset++] = (byte)(value >> 0);
         }
 
-        public static void ToBytes(ushort value, Span<byte> buffer, ref int offset)
+        public static void ToBytes(ushort value, Memory<byte> buffer, ref int offset)
         {
-            buffer[offset++] = (byte)(value >> 8);
-            buffer[offset++] = (byte)(value >> 0);
+            buffer.Span[offset++] = (byte)(value >> 8);
+            buffer.Span[offset++] = (byte)(value >> 0);
         }
     }
 }

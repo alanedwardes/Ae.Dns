@@ -22,11 +22,11 @@ namespace Ae.Dns.Client
                 var allRecords = new[] { answer.Answers, answer.Nameservers, answer.Additional };
 
                 LowestRecordTimeToLive = TimeSpan.FromSeconds(allRecords.SelectMany(x => x).Min(x => x.TimeToLive));
-                Data = DnsByteExtensions.AllocateAndWrite(answer).ToArray();
+                Data = DnsByteExtensions.AllocateAndWrite(answer);
             }
 
             public DateTimeOffset Time { get; } = DateTimeOffset.UtcNow;
-            public byte[] Data { get; }
+            public ReadOnlyMemory<byte> Data { get; }
             public TimeSpan LowestRecordTimeToLive { get; }
             public DateTimeOffset Expiry => Time + LowestRecordTimeToLive;
             public TimeSpan Age => DateTimeOffset.UtcNow - Time;

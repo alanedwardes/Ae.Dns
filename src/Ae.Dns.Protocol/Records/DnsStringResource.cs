@@ -26,7 +26,7 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Entries);
 
         /// <inheritdoc/>
-        public virtual void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
+        public virtual void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             // Provide the ReadString method with a sliced buffer, which ends when this resource ends
             // It must start where the packet starts, since there are often pointers back to the beginning
@@ -34,7 +34,7 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public virtual void WriteBytes(Span<byte> bytes, ref int offset)
+        public virtual void WriteBytes(Memory<byte> bytes, ref int offset)
         {
             DnsByteExtensions.ToBytes(Entries, bytes, ref offset);
         }

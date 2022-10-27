@@ -38,11 +38,11 @@ namespace Ae.Dns.Client
             };
         }
 
-        private ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
+        private readonly ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
         private readonly IPEndPoint _endpoint;
-        private readonly Socket _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        private Task _task;
+        private readonly Socket _socket;
+        private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
         public DnsUdpClient(IPAddress address) :
@@ -65,6 +65,7 @@ namespace Ae.Dns.Client
             _logger = logger;
             _endpoint = endpoint;
             _task = Task.Run(ReceiveTask);
+            _socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
         }
 
         private async Task ReceiveTask()
@@ -77,7 +78,7 @@ namespace Ae.Dns.Client
 
                 try
                 {
-                    recieved = await _socket.ReceiveAsync(buffer, SocketFlags.None);
+                    recieved = await _socket.ReceiveAsync(buffer, SocketFlags.None, _cancel.Token);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -97,20 +98,12 @@ namespace Ae.Dns.Client
             }
         }
 
-#if NETSTANDARD2_1
-        private void Receive(ArraySegment<byte> buffer)
-#else
-        private void Receive(Memory<byte> buffer)
-#endif
+        private void Receive(ReadOnlyMemory<byte> buffer)
         {
             DnsMessage answer;
             try
             {
-#if NETSTANDARD2_1
                 answer = DnsByteExtensions.FromBytes<DnsMessage>(buffer);
-#else
-                answer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Span);
-#endif
             }
             catch (Exception e)
             {
@@ -146,10 +139,10 @@ namespace Ae.Dns.Client
             }
         }
 
-        private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, byte[] raw, CancellationToken token)
+        private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, ReadOnlyMemory<byte> raw, CancellationToken token)
         {
             _ = RemoveFailedRequest(messageId, token);
-            _ = _socket.SendToAsync(raw, SocketFlags.None, _endpoint);
+            _ = _socket.DnsSendToAsync(raw, _endpoint, token);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
@@ -177,6 +170,7 @@ namespace Ae.Dns.Client
             _socket.Close();
             _task.GetAwaiter().GetResult();
             _socket.Dispose();
+            _cancel.Dispose();
         }
 
         /// <inheritdoc/>

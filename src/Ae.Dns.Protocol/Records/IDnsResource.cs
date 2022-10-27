@@ -13,6 +13,6 @@ namespace Ae.Dns.Protocol.Records
         /// <param name="bytes">The byte array to read from.</param>
         /// <param name="offset">The offset to start at.</param>
         /// <param name="length">The maximum number of bytes to read.</param>
-        void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length);
+        void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length);
     }
 }

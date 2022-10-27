@@ -73,7 +73,7 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Name, Type, Class, TimeToLive, Host, Resource);
 
         /// <inheritdoc/>
-        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset)
+        public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset)
         {
             Name = DnsByteExtensions.ReadString(bytes, ref offset);
             Type = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
@@ -84,7 +84,7 @@ namespace Ae.Dns.Protocol.Records
             FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
         }
 
-        private static void FromBytesKnownLength(IDnsResource resource, ReadOnlySpan<byte> bytes, ref int offset, int length)
+        private static void FromBytesKnownLength(IDnsResource resource, ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             var expectedOffset = offset + length;
             resource.ReadBytes(bytes, ref offset, length);
@@ -95,7 +95,7 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public void WriteBytes(Span<byte> bytes, ref int offset)
+        public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
             DnsByteExtensions.ToBytes(Name, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)Type, bytes, ref offset);

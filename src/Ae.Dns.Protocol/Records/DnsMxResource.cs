@@ -35,7 +35,7 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Preference, Exchange);
 
         /// <inheritdoc/>
-        public override void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
+        public override void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             Preference = DnsByteExtensions.ReadUInt16(bytes, ref offset);
             base.ReadBytes(bytes, ref offset, length - sizeof(ushort));
@@ -45,7 +45,7 @@ namespace Ae.Dns.Protocol.Records
         public override string ToString() => Exchange;
 
         /// <inheritdoc/>
-        public override void WriteBytes(Span<byte> bytes, ref int offset)
+        public override void WriteBytes(Memory<byte> bytes, ref int offset)
         {
             DnsByteExtensions.ToBytes(Preference, bytes, ref offset);
             base.WriteBytes(bytes, ref offset);

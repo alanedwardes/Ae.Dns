@@ -36,7 +36,7 @@ namespace Ae.Dns.Client
             DnsMessage query;
             try
             {
-                query = DnsByteExtensions.FromBytes<DnsMessage>(queryBuffer.Span);
+                query = DnsByteExtensions.FromBytes<DnsMessage>(queryBuffer);
             }
             catch (Exception e)
             {
@@ -58,7 +58,7 @@ namespace Ae.Dns.Client
             var answerLength = 0;
             try
             {
-                answer.WriteBytes(buffer.Span, ref answerLength);
+                answer.WriteBytes(buffer, ref answerLength);
             }
             catch (Exception e)
             {

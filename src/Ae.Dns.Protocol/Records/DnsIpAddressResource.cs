@@ -29,7 +29,7 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(IPAddress);
 
         /// <inheritdoc/>
-        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length) => IPAddress = new IPAddress(DnsByteExtensions.ReadBytes(bytes, length, ref offset));
+        public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length) => IPAddress = new IPAddress(DnsByteExtensions.ReadBytes(bytes, length, ref offset).Span);
 
         /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()
@@ -41,11 +41,11 @@ namespace Ae.Dns.Protocol.Records
         public override string ToString() => IPAddress.ToString();
 
         /// <inheritdoc/>
-        public void WriteBytes(Span<byte> bytes, ref int offset)
+        public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
             Span<byte> address = IPAddress.GetAddressBytes();
 
-            address.CopyTo(bytes.Slice(offset));
+            address.CopyTo(bytes.Slice(offset).Span);
             offset += address.Length;
         }
     }

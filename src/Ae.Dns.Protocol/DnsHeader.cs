@@ -188,7 +188,7 @@ namespace Ae.Dns.Protocol
         }
 
         /// <inheritdoc/>
-        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset)
+        public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset)
         {
             Id = DnsByteExtensions.ReadUInt16(bytes, ref offset);
             Flags = DnsByteExtensions.ReadUInt16(bytes, ref offset);
@@ -207,7 +207,7 @@ namespace Ae.Dns.Protocol
         }
 
         /// <inheritdoc/>
-        public void WriteBytes(Span<byte> bytes, ref int offset)
+        public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
             DnsByteExtensions.ToBytes(Id, bytes, ref offset);
             DnsByteExtensions.ToBytes(Flags, bytes, ref offset);

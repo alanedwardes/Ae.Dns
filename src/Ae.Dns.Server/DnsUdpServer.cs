@@ -24,7 +24,7 @@ namespace Ae.Dns.Server
 
         public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
         {
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             _socket.Bind(endpoint);
             _logger = logger;
             _dnsClient = dnsClient;
@@ -74,11 +74,7 @@ namespace Ae.Dns.Server
             }
         }
 
-#if NETSTANDARD2_1
-        private async void Respond(EndPoint sender, ArraySegment<byte> buffer, int queryLength, CancellationToken token)
-#else
         private async void Respond(EndPoint sender, Memory<byte> buffer, int queryLength, CancellationToken token)
-#endif
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -95,11 +91,7 @@ namespace Ae.Dns.Server
             try
             {
                 // Send the part of the buffer containing the answer
-#if NETSTANDARD2_1
-                await _socket.SendToAsync(buffer.Slice(0, answerLength), SocketFlags.None, sender);
-#else
-                await _socket.SendToAsync(buffer.Slice(0, answerLength), SocketFlags.None, sender, token);
-#endif
+                await _socket.DnsSendToAsync(buffer.Slice(0, answerLength), sender, token);
             }
             catch (Exception e)
             {

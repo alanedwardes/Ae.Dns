@@ -27,7 +27,7 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(Raw);
 
         /// <inheritdoc/>
-        public void ReadBytes(ReadOnlySpan<byte> bytes, ref int offset, int length)
+        public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             Raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset).ToArray();
         }
@@ -36,7 +36,7 @@ namespace Ae.Dns.Protocol.Records
         public override string ToString() => $"Raw {Raw.Length} bytes";
 
         /// <inheritdoc/>
-        public void WriteBytes(Span<byte> bytes, ref int offset)
+        public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
             Raw.CopyTo(bytes.Slice(offset));
             offset += Raw.Length;

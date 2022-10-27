@@ -8,7 +8,7 @@ namespace Ae.Dns.Benchmarks
     {
         public static void Main(string[] args)
         {
-            Span<byte> buffer = new byte[65527];
+            ArraySegment<byte> buffer = new byte[65527];
 
             var answers = SampleDnsPackets.AnswerBatch1;
 

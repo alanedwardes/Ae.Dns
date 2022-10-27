@@ -23,7 +23,7 @@ namespace Ae.Dns.Server
 
         public DnsTcpServer(ILogger<DnsTcpServer> logger, IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
         {
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             _socket.Bind(endpoint);
             _logger = logger;
             _dnsClient = dnsClient;
@@ -96,17 +96,9 @@ namespace Ae.Dns.Server
             }
         }
 
-#if NETSTANDARD2_1
-        private async Task<int> Receive(Socket socket, ArraySegment<byte> buffer, CancellationToken token)
-#else
         private async Task<int> Receive(Socket socket, Memory<byte> buffer, CancellationToken token)
-#endif
         {
-#if NETSTANDARD2_1
-            async Task<int> DoReceive(ArraySegment<byte> bufferPart)
-#else
             async Task<int> DoReceive(Memory<byte> bufferPart)
-#endif
             {
                 var receivedBytes = await socket.ReceiveAsync(bufferPart, SocketFlags.None, token);
                 if (receivedBytes == 0)
@@ -122,11 +114,7 @@ namespace Ae.Dns.Server
             var bufferOffset = await DoReceive(buffer);
 
             var queryHeaderLength = 0;
-#if NETSTANDARD2_1
             var queryLength = DnsByteExtensions.ReadUInt16(buffer, ref queryHeaderLength);
-#else
-            var queryLength = DnsByteExtensions.ReadUInt16(buffer.Span, ref queryHeaderLength);
-#endif
 
             // Keep receiving until we have enough data
             while (socket.Connected && bufferOffset - queryHeaderLength < queryLength)
@@ -137,11 +125,7 @@ namespace Ae.Dns.Server
             return queryLength;
         }
 
-#if NETSTANDARD2_1
-        private async Task Respond(Socket socket, ArraySegment<byte> buffer, int queryLength, CancellationToken token)
-#else
         private async Task Respond(Socket socket, Memory<byte> buffer, int queryLength, CancellationToken token)
-#endif
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -157,21 +141,13 @@ namespace Ae.Dns.Server
             }
 
             var answerHeaderLength = 0;
-#if NETSTANDARD2_1
             DnsByteExtensions.ToBytes((ushort)answerLength, buffer, ref answerHeaderLength);
-#else
-            DnsByteExtensions.ToBytes((ushort)answerLength, buffer.Span, ref answerHeaderLength);
-#endif
 
             try
             {
                 // Slice to the part of the buffer containing the answer and send it
                 var answerBuffer = buffer.Slice(0, answerHeaderLength + answerLength);
-#if NETSTANDARD2_1
-                await socket.SendAsync(answerBuffer, SocketFlags.None);
-#else
                 await socket.SendAsync(answerBuffer, SocketFlags.None, token);
-#endif
             }
             catch (Exception e)
             {
