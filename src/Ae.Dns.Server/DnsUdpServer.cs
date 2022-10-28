@@ -16,6 +16,7 @@ namespace Ae.Dns.Server
         private readonly Socket _socket;
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly IDnsSingleBufferClient _dnsClient;
+        private const int MaxDatagramSize = 512;
 
         public DnsUdpServer(IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
             : this(new NullLogger<DnsUdpServer>(), endpoint, dnsClient)
@@ -74,6 +75,22 @@ namespace Ae.Dns.Server
             }
         }
 
+        private int TruncateAnswer(Memory<byte> buffer, int answerLength)
+        {
+            if (answerLength < MaxDatagramSize)
+            {
+                // Within acceptable size, do nothing
+                return answerLength;
+            }
+
+            var originalAnswer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, answerLength));
+            var truncatedAnswer = DnsQueryFactory.TruncateAnswer(originalAnswer);
+
+            var newAnswerLength = 0;
+            truncatedAnswer.WriteBytes(buffer, ref newAnswerLength);
+            return newAnswerLength;
+        }
+
         private async void Respond(EndPoint sender, Memory<byte> buffer, int queryLength, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -87,6 +104,9 @@ namespace Ae.Dns.Server
             {
                 _logger.LogCritical(e, "Unable to run query for {RemoteEndPoint}", sender);
             }
+
+            // Truncate answer if necessary
+            answerLength = TruncateAnswer(buffer, answerLength);
 
             try
             {

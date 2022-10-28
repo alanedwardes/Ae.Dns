@@ -44,6 +44,42 @@ namespace Ae.Dns.Protocol
             };
         }
 
+        public static DnsHeader Clone(DnsHeader header)
+        {
+            return new DnsHeader
+            {
+                Id = header.Id,
+                Host = header.Host,
+                QueryType = header.QueryType,
+                QueryClass = header.QueryClass,
+                OperationCode = header.OperationCode,
+                QuestionCount = header.QuestionCount,
+                RecusionDesired = header.RecusionDesired,
+                AdditionalRecordCount = header.AdditionalRecordCount,
+                AnswerRecordCount = header.AnswerRecordCount,
+                AuthoritativeAnswer = header.AuthoritativeAnswer,
+                IsQueryResponse = header.IsQueryResponse,
+                NameServerRecordCount = header.NameServerRecordCount,
+                RecursionAvailable = header.RecursionAvailable,
+                ResponseCode = header.ResponseCode,
+                Truncation = header.Truncation
+            };
+        }
+
+        public static DnsMessage TruncateAnswer(DnsMessage query)
+        {
+            var header = Clone(query.Header);
+
+            header.AnswerRecordCount = 0;
+            header.NameServerRecordCount = 0;
+            header.AdditionalRecordCount = 0;
+            header.IsQueryResponse = true;
+            header.OperationCode = DnsOperationCode.QUERY;
+            header.Truncation = true;
+
+            return new DnsMessage {Header = header};
+        }
+
         /// <summary>
         /// Create a reverse DNS query which resolves an IP address to a host name.
         /// </summary>

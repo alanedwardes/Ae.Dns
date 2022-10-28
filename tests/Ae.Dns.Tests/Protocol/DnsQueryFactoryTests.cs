@@ -58,5 +58,18 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(1, header.Header.QuestionCount);
             Assert.True(header.Header.RecusionDesired);
         }
+
+        [Fact]
+        public void TestTruncateAnswer()
+        {
+            var sampleAnswers = SampleDnsPackets.AnswerBatch1.Select(x => DnsByteExtensions.FromBytes<DnsMessage>(x));
+
+            var knownTruncatedAnswer = sampleAnswers.Where(x => x.Header.Truncation).First();
+            var knownNonTruncatedAnswer = sampleAnswers.Where(x => !x.Header.Truncation).First();
+
+            var truncatedAnswer = DnsQueryFactory.TruncateAnswer(knownNonTruncatedAnswer);
+
+            Assert.Equal(knownTruncatedAnswer.Header.Flags, truncatedAnswer.Header.Flags);
+        }
     }
 }
