@@ -75,22 +75,23 @@ namespace Ae.Dns.Server
             }
         }
 
-        private int TruncateAnswer(Memory<byte> buffer, int originalAnswerLength)
+        private void TruncateAnswer(Memory<byte> buffer, ref int answerLength)
         {
-            if (originalAnswerLength < MaxDatagramSize)
+            if (answerLength < MaxDatagramSize)
             {
                 // Within acceptable size, do nothing
-                return originalAnswerLength;
+                return;
             }
 
-            var originalAnswer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, originalAnswerLength));
+            var originalAnswer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, answerLength));
+
             var truncatedAnswer = DnsQueryFactory.TruncateAnswer(originalAnswer);
 
-            _logger.LogWarning("Truncating answer {Answer} since it is {AnswerLength} bytes", truncatedAnswer, originalAnswerLength);
-
-            var newAnswerLength = 0;
-            truncatedAnswer.WriteBytes(buffer, ref newAnswerLength);
-            return newAnswerLength;
+            _logger.LogWarning("Truncating answer {Answer} since it is {AnswerLength} bytes", truncatedAnswer, answerLength);
+            
+            // Write the truncated answer into the buffer
+            answerLength = 0;
+            truncatedAnswer.WriteBytes(buffer, ref answerLength);
         }
 
         private async void Respond(EndPoint sender, Memory<byte> buffer, int queryLength, CancellationToken token)
@@ -111,7 +112,7 @@ namespace Ae.Dns.Server
             try
             {
                 // Truncate answer if necessary
-                answerLength = TruncateAnswer(buffer, answerLength);
+                TruncateAnswer(buffer, ref answerLength);
             }
             catch (Exception e)
             {
