@@ -86,6 +86,8 @@ namespace Ae.Dns.Server
             var originalAnswer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, answerLength));
             var truncatedAnswer = DnsQueryFactory.TruncateAnswer(originalAnswer);
 
+            _logger.LogWarning("Truncating answer {Answer} since it is {AnswerLength} bytes", truncatedAnswer, answerLength);
+
             var newAnswerLength = 0;
             truncatedAnswer.WriteBytes(buffer, ref newAnswerLength);
             return newAnswerLength;
