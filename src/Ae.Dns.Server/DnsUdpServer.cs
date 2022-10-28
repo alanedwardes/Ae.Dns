@@ -104,7 +104,7 @@ namespace Ae.Dns.Server
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Unable to run query for {RemoteEndPoint}", sender);
+                _logger.LogCritical(e, "Unable to run query {QueryBytes} for {RemoteEndPoint}", DnsByteExtensions.ToDebugString(buffer.Slice(0, queryLength)), sender);
                 return;
             }
 
@@ -115,7 +115,7 @@ namespace Ae.Dns.Server
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Unable to truncate query for {RemoteEndPoint}", sender);
+                _logger.LogCritical(e, "Unable to truncate answer {QueryBytes} for {RemoteEndPoint}", DnsByteExtensions.ToDebugString(buffer.Slice(0, answerLength)), sender);
                 return;
             }
 
@@ -126,7 +126,7 @@ namespace Ae.Dns.Server
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Unable to send back response to {RemoteEndPoint}", sender);
+                _logger.LogCritical(e, "Unable to send back answer {AnswerBytes} to {RemoteEndPoint}", DnsByteExtensions.ToDebugString(buffer.Slice(0, answerLength)), sender);
                 return;
             }
 

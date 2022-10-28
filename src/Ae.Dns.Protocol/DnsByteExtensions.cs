@@ -50,11 +50,11 @@ namespace Ae.Dns.Protocol
             return (uint)value;
         }
 
-        public static string ToDebugString(IEnumerable<byte> bytes)
+        public static string ToDebugString(ReadOnlyMemory<byte> bytes)
         {
-            if (bytes == null)
+            if (bytes.IsEmpty)
             {
-                return "<null>";
+                return "<empty>";
             }
 
             return $"new byte [] {{{string.Join(",", bytes)}}}";
