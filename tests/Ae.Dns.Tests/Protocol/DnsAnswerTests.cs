@@ -2,6 +2,7 @@ using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using Xunit;
@@ -266,6 +267,30 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal("stripe-verification=f88ef17321660a01bab1660454192e014defa29ba7b8de9633c69d6b4912217f", Assert.Single(((DnsTextResource)value.Answers[8].Resource).Entries));
             Assert.Equal("v=spf1 ip4:192.30.252.0/22 include:_netblocks.google.com include:_netblocks2.google.com include:_netblocks3.google.com include:spf.protection.outlook.com include:mail.zendesk.com include:_spf.salesforce.com include:servers.mcsv.net ip4:166.78.69.169 ip4:1", ((DnsTextResource)value.Answers[9].Resource).Entries[0]);
             Assert.Equal("66.78.69.170 ip4:166.78.71.131 ip4:167.89.101.2 ip4:167.89.101.192/28 ip4:192.254.112.60 ip4:192.254.112.98/31 ip4:192.254.113.10 ip4:192.254.113.101 ip4:192.254.114.176 ip4:62.253.227.114 ~all", ((DnsTextResource)value.Answers[9].Resource).Entries[1]);
+        }
+
+        [Fact(Skip = "Skipped, it is unclear whether this is a valid packet")]
+        public void ReadAnswer13()
+        {
+            var value = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Answer13);
+
+            var answers = value.Answers.Select(x => x.Resource).Cast<DnsStringResource>().Select(x => x.Entries.Single()).ToArray();
+
+            Assert.Equal(29, answers.Length);
+
+            Assert.Equal("Nam eu nisl mauris. Maecenas at risus sit amet enim vestibulum efficitur sit amet quis quam.", answers[0]);
+            Assert.Equal("Sed sodales nisi vitae nisi eleifend, vitae vestibulum nunc tempor. Integer vitae mauris odio.", answers[1]);
+            Assert.Equal("Sed imperdiet tellus sit amet nibh tempus, at tincidunt purus vestibulum. Duis ut sagittis diam.", answers[2]);
+            Assert.Equal("Sed dapibus placerat malesuada. Aenean accumsan arcu in nisl laoreet consectetur. Nunc quis gravida dolor.", answers[3]);
+            Assert.Equal("In ultrices mi nec mauris volutpat tincidunt. Fusce nisl ligula, venenatis non elit sit amet, pretium semper quam.", answers[4]);
+            Assert.Equal("Donec vel sapien sed tortor mollis interdum. Suspendisse tortor nisl, molestie eget nunc eget, tempor tincidunt diam.", answers[5]);
+            Assert.Equal("Cras sed nulla nibh. Morbi convallis venenatis purus ut condimentum. Fusce enim velit, cursus ut elementum id, dignissim vitae lacus.", answers[6]);
+            Assert.Equal("Pellentesque porttitor scelerisque nisi, ut dapibus velit rutrum volutpat. Nullam ultrices pellentesque massa, in suscipit velit porta id.", answers[7]);
+            Assert.Equal("Vivamus at massa vel magna viverra sodales sit amet a velit. Vivamus ut lorem sed dui tincidunt fermentum ut a leo. In pretium feugiat pretium.", answers[8]);
+            Assert.Equal("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent quis sagittis est. Donec imperdiet nunc lacinia quam eleifend tincidunt. Duis vel arcu orci.", answers[9]);
+            Assert.Equal("Vivamus euismod felis nulla, eu congue orci feugiat ac. Curabitur posuere tortor eget pellentesque luctus. Integer non mi sit amet urna ullamcorper efficitur.", answers[10]);
+            Assert.Equal("Ut dapibus magna nec ante euismod, ut ornare justo sagittis. Vestibulum at elit id arcu convallis vehicula. Sed ac odio non augue ornare tempus sit amet vitae ligula.", answers[11]);
+            Assert.Equal("Suspendisse ornare porttitor massa ac tempor. Fusce eu cursus quam. Aliquam elit libero, dapibus eu accumsan et, accumsan sit amet ipsum. Ut consectetur et odio ut tempor.", answers[12]);
         }
     }
 }
