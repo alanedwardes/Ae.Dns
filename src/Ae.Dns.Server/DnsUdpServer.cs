@@ -75,18 +75,18 @@ namespace Ae.Dns.Server
             }
         }
 
-        private int TruncateAnswer(Memory<byte> buffer, int answerLength)
+        private int TruncateAnswer(Memory<byte> buffer, int originalAnswerLength)
         {
-            if (answerLength < MaxDatagramSize)
+            if (originalAnswerLength < MaxDatagramSize)
             {
                 // Within acceptable size, do nothing
-                return answerLength;
+                return originalAnswerLength;
             }
 
-            var originalAnswer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, answerLength));
+            var originalAnswer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, originalAnswerLength));
             var truncatedAnswer = DnsQueryFactory.TruncateAnswer(originalAnswer);
 
-            _logger.LogWarning("Truncating answer {Answer} since it is {AnswerLength} bytes", truncatedAnswer, answerLength);
+            _logger.LogWarning("Truncating answer {Answer} since it is {AnswerLength} bytes", truncatedAnswer, originalAnswerLength);
 
             var newAnswerLength = 0;
             truncatedAnswer.WriteBytes(buffer, ref newAnswerLength);
@@ -97,7 +97,7 @@ namespace Ae.Dns.Server
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var answerLength = 0;
+            int answerLength;
             try
             {
                 answerLength = await _dnsClient.Query(buffer, queryLength, token);
@@ -105,10 +105,19 @@ namespace Ae.Dns.Server
             catch (Exception e)
             {
                 _logger.LogCritical(e, "Unable to run query for {RemoteEndPoint}", sender);
+                return;
             }
 
-            // Truncate answer if necessary
-            answerLength = TruncateAnswer(buffer, answerLength);
+            try
+            {
+                // Truncate answer if necessary
+                answerLength = TruncateAnswer(buffer, answerLength);
+            }
+            catch (Exception e)
+            {
+                _logger.LogCritical(e, "Unable to truncate query for {RemoteEndPoint}", sender);
+                return;
+            }
 
             try
             {
