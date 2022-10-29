@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Ae.Dns.Protocol
@@ -67,14 +68,6 @@ namespace Ae.Dns.Protocol
             return data;
         }
 
-        private enum LabelFlags
-        {
-            Normal = 0,
-            Reserved1 = 64,
-            Reserved2 = 128,
-            Compressed = 192,
-        }
-
         public static string ReadStringSimple(ReadOnlyMemory<byte> bytes, ref int offset)
         {
             byte labelLength = bytes.Span[offset];
@@ -86,8 +79,6 @@ namespace Ae.Dns.Protocol
 
         public static string[] ReadString(ReadOnlyMemory<byte> bytes, ref int offset)
         {
-            static LabelFlags GetLabelFlags(byte value) => (LabelFlags)((value & (1 << 6)) + (value & (1 << 7)));
-
             // Assume most labels consist of 3 parts
             var parts = new List<string>(3);
 
@@ -100,10 +91,14 @@ namespace Ae.Dns.Protocol
                     break;
                 }
 
-                if (GetLabelFlags(bytes.Span[offset]) == LabelFlags.Compressed)
+                // Pointers are always 192 or more,
+                // because the first two bits are 1s
+                if (bytes.Span[offset] >= 192)
                 {
                     var compressedOffset = ReadUInt16(bytes.Span[offset + 1], (byte)(bytes.Span[offset] & (1 << 6) - 1));
-                    if (compressedOffset < bytes.Length && GetLabelFlags(bytes.Span[compressedOffset]) == LabelFlags.Normal)
+
+                    // Ensure the destination of the pointer is within the buffer, and a regular value
+                    if (compressedOffset < bytes.Length && bytes.Span[compressedOffset] <= 63)
                     {
                         if (!preCompressionOffset.HasValue)
                         {
