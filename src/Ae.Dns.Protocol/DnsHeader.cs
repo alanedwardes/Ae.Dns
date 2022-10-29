@@ -215,7 +215,7 @@ namespace Ae.Dns.Protocol
             DnsByteExtensions.ToBytes(AnswerRecordCount, bytes, ref offset);
             DnsByteExtensions.ToBytes(NameServerRecordCount, bytes, ref offset);
             DnsByteExtensions.ToBytes(AdditionalRecordCount, bytes, ref offset);
-            DnsByteExtensions.ToBytes(Labels, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Labels, true, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)QueryType, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)QueryClass, bytes, ref offset);
         }

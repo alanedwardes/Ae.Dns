@@ -85,8 +85,8 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(MName.Split('.'), bytes, ref offset);
-            DnsByteExtensions.ToBytes(RName.Split('.'), bytes, ref offset);
+            DnsByteExtensions.ToBytes(MName.Split('.'), true, bytes, ref offset);
+            DnsByteExtensions.ToBytes(RName.Split('.'), true, bytes, ref offset);
             DnsByteExtensions.ToBytes(Serial, bytes, ref offset);
             DnsByteExtensions.ToBytes((int)Refresh.TotalSeconds, bytes, ref offset);
             DnsByteExtensions.ToBytes((int)Retry.TotalSeconds, bytes, ref offset);
