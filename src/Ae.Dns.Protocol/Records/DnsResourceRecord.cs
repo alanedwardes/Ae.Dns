@@ -97,7 +97,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(Name, true, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Name, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)Type, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)Class, bytes, ref offset);
             DnsByteExtensions.ToBytes(TimeToLive, bytes, ref offset);

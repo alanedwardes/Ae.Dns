@@ -36,7 +36,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public virtual void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(Entries, false, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Entries, bytes, ref offset);
         }
     }
 }

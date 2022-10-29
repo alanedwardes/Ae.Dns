@@ -155,7 +155,7 @@ namespace Ae.Dns.Protocol
             return reader;
         }
 
-        public static void ToBytes(ReadOnlySpan<string> strings, bool terminate, Memory<byte> buffer, ref int offset)
+        public static void ToBytes(ReadOnlySpan<string> strings, Memory<byte> buffer, ref int offset)
         {
             for (int i = 0; i < strings.Length; i++)
             {
@@ -163,10 +163,7 @@ namespace Ae.Dns.Protocol
                 offset += Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset).Span);
             }
 
-            if (terminate)
-            {
-                buffer.Span[offset++] = 0;
-            }
+            buffer.Span[offset++] = 0;
         }
 
         public static void ToBytes(int value, Memory<byte> buffer, ref int offset)
