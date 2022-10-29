@@ -154,8 +154,14 @@ namespace Ae.Dns.Protocol
         {
             for (int i = 0; i < strings.Length; i++)
             {
-                buffer.Span[offset++] = (byte)strings[i].Length;
-                offset += Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset).Span);
+                // First write the value 1 byte from the offset to leave room for the length byte
+                var length = Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset + 1, strings[i].Length).Span);
+
+                // Then write the length before the value
+                buffer.Span[offset] = (byte)length;
+
+                // Finally advance the offset past the length and value
+                offset += 1 + length;
             }
 
             buffer.Span[offset++] = 0;
