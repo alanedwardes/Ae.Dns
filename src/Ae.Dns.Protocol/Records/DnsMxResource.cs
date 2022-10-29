@@ -26,6 +26,9 @@ namespace Ae.Dns.Protocol.Records
         public string Exchange => string.Join(".", Entries);
 
         /// <inheritdoc/>
+        protected override bool CanUseCompression => true;
+
+        /// <inheritdoc/>
         public bool Equals(DnsMxResource other) => Preference == other.Preference && Exchange == other.Exchange;
 
         /// <inheritdoc/>

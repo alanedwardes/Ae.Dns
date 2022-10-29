@@ -25,12 +25,17 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Entries);
 
+        /// <summary>
+        /// Describes whether this string resource can use string compression.
+        /// </summary>
+        protected abstract bool CanUseCompression { get; }
+
         /// <inheritdoc/>
         public virtual void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             // Provide the ReadString method with a sliced buffer, which ends when this resource ends
             // It must start where the packet starts, since there are often pointers back to the beginning
-            Entries = DnsByteExtensions.ReadString(bytes.Slice(0, offset + length), ref offset);
+            Entries = DnsByteExtensions.ReadString(bytes.Slice(0, offset + length), ref offset, CanUseCompression);
         }
 
         /// <inheritdoc/>

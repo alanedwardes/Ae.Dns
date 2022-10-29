@@ -77,7 +77,7 @@ namespace Ae.Dns.Protocol
             return str;
         }
 
-        public static string[] ReadString(ReadOnlyMemory<byte> bytes, ref int offset)
+        public static string[] ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
         {
             // Assume most labels consist of 3 parts
             var parts = new List<string>(3);
@@ -91,22 +91,16 @@ namespace Ae.Dns.Protocol
                     break;
                 }
 
-                // Pointers are always 192 or more,
-                // because the first two bits are 1s
-                if (bytes.Span[offset] >= 192)
+                // Pointers are always 192 or more, because the first two bits are 1s
+                if (bytes.Span[offset] >= 192 && compressionPermitted)
                 {
-                    var compressedOffset = ReadUInt16(bytes.Span[offset + 1], (byte)(bytes.Span[offset] & (1 << 6) - 1));
-
-                    // Ensure the destination of the pointer is within the buffer, and a regular value
-                    if (compressedOffset < bytes.Length && bytes.Span[compressedOffset] <= 63)
+                    if (!preCompressionOffset.HasValue)
                     {
-                        if (!preCompressionOffset.HasValue)
-                        {
-                            preCompressionOffset = offset;
-                        }
-
-                        offset = compressedOffset;
+                        preCompressionOffset = offset + 2;
                     }
+
+                    // Read the 14 bit pointer as our new offset
+                    offset = ReadUInt16(bytes.Span[offset + 1], (byte)(bytes.Span[offset] & (1 << 6) - 1));
                 }
 
                 parts.Add(ReadStringSimple(bytes, ref offset));
@@ -114,7 +108,7 @@ namespace Ae.Dns.Protocol
 
             if (preCompressionOffset.HasValue)
             {
-                offset = preCompressionOffset.Value + 2;
+                offset = preCompressionOffset.Value;
             }
 
             return parts.ToArray();
