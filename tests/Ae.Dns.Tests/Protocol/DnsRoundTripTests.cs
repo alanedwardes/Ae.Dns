@@ -1,6 +1,5 @@
 ﻿using Xunit;
 using Ae.Dns.Protocol;
-using System.Linq;
 
 namespace Ae.Dns.Tests.Protocol
 {

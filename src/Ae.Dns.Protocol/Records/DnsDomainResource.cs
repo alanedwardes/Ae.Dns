@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Ae.Dns.Protocol.Records
+﻿namespace Ae.Dns.Protocol.Records
 {
     /// <summary>
     /// Represents a DNS text resource containing a domain name.
