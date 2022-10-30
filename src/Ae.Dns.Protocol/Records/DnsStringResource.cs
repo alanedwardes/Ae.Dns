@@ -14,10 +14,10 @@ namespace Ae.Dns.Protocol.Records
         /// <value>
         /// The text values of this resource as an array of strings.
         /// </value>
-        public string[] Entries { get; set; } = Array.Empty<string>();
+        public StringLabels Entries { get; set; }
 
         /// <inheritdoc/>
-        public bool Equals(DnsStringResource other) => Entries.SequenceEqual(other.Entries);
+        public bool Equals(DnsStringResource other) => Entries.Equals(other.Entries);
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is DnsStringResource record ? Equals(record) : base.Equals(obj);

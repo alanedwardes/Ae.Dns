@@ -30,7 +30,7 @@ namespace Ae.Dns.Protocol.Records
             set => Name = value.Split('.');
         }
 
-        private string[] Name { get; set; }
+        private StringLabels Name { get; set; }
 
         /// <summary>
         /// The value of this DNS record, which should be

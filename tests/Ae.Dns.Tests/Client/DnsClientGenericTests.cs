@@ -60,7 +60,7 @@ namespace Ae.Dns.Tests.Client
             }
             else
             {
-                var answers = result.Answers.Select(x => x.Resource).Cast<DnsStringResource>().Select(x => x.Entries.Single()).ToArray();
+                var answers = result.Answers.Select(x => x.Resource).Cast<DnsStringResource>().Select(x => x.Entries.AsString).ToArray();
 
                 Assert.Equal(29, answers.Length);
 

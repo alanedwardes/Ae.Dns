@@ -67,19 +67,19 @@ namespace Ae.Dns.Protocol
             return data;
         }
 
-        public static string ReadStringSimple(ReadOnlyMemory<byte> bytes, ref int offset)
+        public static ReadOnlyMemory<byte> ReadStringSimple(ReadOnlyMemory<byte> bytes, ref int offset)
         {
             byte labelLength = bytes.Span[offset];
             offset += 1;
-            var str = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength).Span);
+            var memory = bytes.Slice(offset, labelLength);
             offset += labelLength;
-            return str;
+            return memory;
         }
 
-        public static string[] ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
+        public static StringLabels ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
         {
             // Assume most labels consist of 3 parts
-            var parts = new List<string>(3);
+            var parts = new List<ReadOnlyMemory<byte>>(3);
 
             int? preCompressionOffset = null;
             while (offset < bytes.Length)
@@ -143,18 +143,19 @@ namespace Ae.Dns.Protocol
             return reader;
         }
 
-        public static void ToBytes(ReadOnlySpan<string> strings, Memory<byte> buffer, ref int offset)
+        public static void ToBytes(StringLabels strings, Memory<byte> buffer, ref int offset)
         {
-            for (int i = 0; i < strings.Length; i++)
+            for (int i = 0; i < strings.Entries.Length; i++)
             {
                 // First write the value 1 byte from the offset to leave room for the length byte
-                var length = Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset + 1, strings[i].Length).Span);
-
+                //var length = Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset + 1, strings[i].Length).Span);
+                strings.Entries[i].CopyTo(buffer.Slice(offset + 1, strings.Entries[i].Length));
+                
                 // Then write the length before the value
-                buffer.Span[offset] = (byte)length;
+                buffer.Span[offset] = (byte)strings.Entries[i].Length;
 
                 // Finally advance the offset past the length and value
-                offset += 1 + length;
+                offset += 1 + strings.Entries[i].Length;
             }
 
             buffer.Span[offset++] = 0;
