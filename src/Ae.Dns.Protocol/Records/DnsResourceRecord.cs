@@ -52,6 +52,7 @@ namespace Ae.Dns.Protocol.Records
                 DnsQueryType.SPF => new DnsTextResource(),
                 DnsQueryType.SOA => new DnsSoaResource(),
                 DnsQueryType.MX => new DnsMxResource(),
+                DnsQueryType.OPT => new DnsOptResource(),
                 _ => new DnsUnknownResource(),
             };
         }

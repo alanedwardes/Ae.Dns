@@ -15,10 +15,10 @@ namespace Ae.Dns.Protocol.Records
         /// The raw set of bytes representing the value fo this DNS resource.
         /// For string values, due to compression the whole packet may be needed.
         /// </value>
-        public byte[] Raw { get; set; }
+        public ReadOnlyMemory<byte> Raw { get; set; }
 
         /// <inheritdoc/>
-        public bool Equals(DnsUnknownResource other) => Raw.SequenceEqual(other.Raw);
+        public bool Equals(DnsUnknownResource other) => Raw.Span.SequenceEqual(other.Raw.Span);
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is DnsUnknownResource record ? Equals(record) : base.Equals(obj);
@@ -29,7 +29,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
-            Raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset).ToArray();
+            Raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset);
         }
 
         /// <inheritdoc/>
