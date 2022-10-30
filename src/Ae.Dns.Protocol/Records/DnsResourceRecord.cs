@@ -26,11 +26,18 @@ namespace Ae.Dns.Protocol.Records
         /// </summary>
         public string Host
         {
-            get => string.Join(".", Name);
-            set => Name = value.Split('.');
+            get => string.Join(".", Labels);
+            set => Labels = value.Split('.');
         }
 
-        private StringLabels Name { get; set; }
+        /// <summary>
+        /// The labels which this header contains.
+        /// To access the host name, use <see cref="DnsLabels.AsHost"/>.
+        /// </summary>
+        /// <value>
+        /// The <see cref="DnsLabels"/> describing the host name.
+        /// </value>
+        public DnsLabels Labels { get; set; }
 
         /// <summary>
         /// The value of this DNS record, which should be
@@ -70,12 +77,12 @@ namespace Ae.Dns.Protocol.Records
         public override bool Equals(object obj) => obj is DnsResourceRecord record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => HashCode.Combine(Name, Type, Class, TimeToLive, Host, Resource);
+        public override int GetHashCode() => HashCode.Combine(Labels, Type, Class, TimeToLive, Host, Resource);
 
         /// <inheritdoc/>
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset)
         {
-            Name = DnsByteExtensions.ReadString(bytes, ref offset);
+            Labels = DnsByteExtensions.ReadString(bytes, ref offset);
             Type = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             Class = (DnsQueryClass)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             TimeToLive = DnsByteExtensions.ReadUInt32(bytes, ref offset);
@@ -97,7 +104,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(Name, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Labels, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)Type, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)Class, bytes, ref offset);
             DnsByteExtensions.ToBytes(TimeToLive, bytes, ref offset);

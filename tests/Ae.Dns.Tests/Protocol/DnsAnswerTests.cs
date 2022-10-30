@@ -199,8 +199,8 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(DnsQueryClass.IN, record1.Class);
             Assert.Equal("_spf.mailgun.org", record1.Host);
 
-            var entries = ((DnsTextResource)record1.Resource).Entries;
-            Assert.Equal(2, entries.Entries.Length);
+            var entries = ((DnsTextResource)record1.Resource).Labels;
+            Assert.Equal(2, entries.Count);
             Assert.Equal("v=spf1 ip4:209.61.151.0/24 ip4:166.78.68.0/22 ip4:198.61.254.0/23 ip4:192.237.158.0/23 ip4:23.253.182.0/23 ip4:104.130.96.0/28 ip4:146.20.113.0/24 ip4:146.20.191.0/24 ip4:159.135.224.0/20 ip4:69.72.32.0/20", entries[0]);
             Assert.Equal(" ip4:104.130.122.0/23 ip4:146.20.112.0/26 ip4:161.38.192.0/20 ip4:143.55.224.0/21 ip4:143.55.232.0/22 ip4:159.112.240.0/20 ~all", entries[1]);
             Assert.Equal((uint)TimeSpan.Parse("00:00:21").TotalSeconds, record1.TimeToLive);
@@ -255,17 +255,17 @@ namespace Ae.Dns.Tests.Protocol
         {
             var value = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Answer12);
 
-            Assert.Equal("MS=6BF03E6AF5CB689E315FB6199603BABF2C88D805", Assert.Single(((DnsTextResource)value.Answers[0].Resource).Entries));
-            Assert.Equal("MS=ms44452932", Assert.Single(((DnsTextResource)value.Answers[1].Resource).Entries));
-            Assert.Equal("MS=ms58704441", Assert.Single(((DnsTextResource)value.Answers[2].Resource).Entries));
-            Assert.Equal("adobe-idp-site-verification=b92c9e999aef825edc36e0a3d847d2dbad5b2fc0e05c79ddd7a16139b48ecf4b", Assert.Single(((DnsTextResource)value.Answers[3].Resource).Entries));
-            Assert.Equal("apple-domain-verification=RyQhdzTl6Z6x8ZP4", Assert.Single(((DnsTextResource)value.Answers[4].Resource).Entries));
-            Assert.Equal("atlassian-domain-verification=jjgw98AKv2aeoYFxiL/VFaoyPkn3undEssTRuMg6C/3Fp/iqhkV4HVV7WjYlVeF8", Assert.Single(((DnsTextResource)value.Answers[5].Resource).Entries));
-            Assert.Equal("docusign=087098e3-3d46-47b7-9b4e-8a23028154cd", Assert.Single(((DnsTextResource)value.Answers[6].Resource).Entries));
-            Assert.Equal("google-site-verification=UTM-3akMgubp6tQtgEuAkYNYLyYAvpTnnSrDMWoDR3o", Assert.Single(((DnsTextResource)value.Answers[7].Resource).Entries));
-            Assert.Equal("stripe-verification=f88ef17321660a01bab1660454192e014defa29ba7b8de9633c69d6b4912217f", Assert.Single(((DnsTextResource)value.Answers[8].Resource).Entries));
-            Assert.Equal("v=spf1 ip4:192.30.252.0/22 include:_netblocks.google.com include:_netblocks2.google.com include:_netblocks3.google.com include:spf.protection.outlook.com include:mail.zendesk.com include:_spf.salesforce.com include:servers.mcsv.net ip4:166.78.69.169 ip4:1", ((DnsTextResource)value.Answers[9].Resource).Entries[0]);
-            Assert.Equal("66.78.69.170 ip4:166.78.71.131 ip4:167.89.101.2 ip4:167.89.101.192/28 ip4:192.254.112.60 ip4:192.254.112.98/31 ip4:192.254.113.10 ip4:192.254.113.101 ip4:192.254.114.176 ip4:62.253.227.114 ~all", ((DnsTextResource)value.Answers[9].Resource).Entries[1]);
+            Assert.Equal("MS=6BF03E6AF5CB689E315FB6199603BABF2C88D805", Assert.Single(((DnsTextResource)value.Answers[0].Resource).Labels));
+            Assert.Equal("MS=ms44452932", Assert.Single(((DnsTextResource)value.Answers[1].Resource).Labels));
+            Assert.Equal("MS=ms58704441", Assert.Single(((DnsTextResource)value.Answers[2].Resource).Labels));
+            Assert.Equal("adobe-idp-site-verification=b92c9e999aef825edc36e0a3d847d2dbad5b2fc0e05c79ddd7a16139b48ecf4b", Assert.Single(((DnsTextResource)value.Answers[3].Resource).Labels));
+            Assert.Equal("apple-domain-verification=RyQhdzTl6Z6x8ZP4", Assert.Single(((DnsTextResource)value.Answers[4].Resource).Labels));
+            Assert.Equal("atlassian-domain-verification=jjgw98AKv2aeoYFxiL/VFaoyPkn3undEssTRuMg6C/3Fp/iqhkV4HVV7WjYlVeF8", Assert.Single(((DnsTextResource)value.Answers[5].Resource).Labels));
+            Assert.Equal("docusign=087098e3-3d46-47b7-9b4e-8a23028154cd", Assert.Single(((DnsTextResource)value.Answers[6].Resource).Labels));
+            Assert.Equal("google-site-verification=UTM-3akMgubp6tQtgEuAkYNYLyYAvpTnnSrDMWoDR3o", Assert.Single(((DnsTextResource)value.Answers[7].Resource).Labels));
+            Assert.Equal("stripe-verification=f88ef17321660a01bab1660454192e014defa29ba7b8de9633c69d6b4912217f", Assert.Single(((DnsTextResource)value.Answers[8].Resource).Labels));
+            Assert.Equal("v=spf1 ip4:192.30.252.0/22 include:_netblocks.google.com include:_netblocks2.google.com include:_netblocks3.google.com include:spf.protection.outlook.com include:mail.zendesk.com include:_spf.salesforce.com include:servers.mcsv.net ip4:166.78.69.169 ip4:1", ((DnsTextResource)value.Answers[9].Resource).Labels[0]);
+            Assert.Equal("66.78.69.170 ip4:166.78.71.131 ip4:167.89.101.2 ip4:167.89.101.192/28 ip4:192.254.112.60 ip4:192.254.112.98/31 ip4:192.254.113.10 ip4:192.254.113.101 ip4:192.254.114.176 ip4:62.253.227.114 ~all", ((DnsTextResource)value.Answers[9].Resource).Labels[1]);
         }
 
         [Fact(Skip = "Skipped, it is unclear whether this is a valid packet")]
@@ -273,7 +273,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             var value = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Answer13);
 
-            var answers = value.Answers.Select(x => x.Resource).Cast<DnsStringResource>().Select(x => x.Entries.Single()).ToArray();
+            var answers = value.Answers.Select(x => x.Resource).Cast<DnsStringResource>().Select(x => x.Labels.Single()).ToArray();
 
             Assert.Equal(29, answers.Length);
 

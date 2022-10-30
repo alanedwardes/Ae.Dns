@@ -53,7 +53,14 @@ namespace Ae.Dns.Protocol
         /// </value>
         public short AdditionalRecordCount { get; set; }
 
-        internal StringLabels Labels { get; set; }
+        /// <summary>
+        /// The labels which this header contains.
+        /// To access the host name, use <see cref="DnsLabels.AsHost"/>.
+        /// </summary>
+        /// <value>
+        /// The <see cref="DnsLabels"/> describing the host name.
+        /// </value>
+        public DnsLabels Labels { get; set; }
 
         /// <summary>
         /// The <see cref="DnsQueryType"/> of this header.

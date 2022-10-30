@@ -9,6 +9,6 @@
         protected override bool CanUseCompression => false;
 
         /// <inheritdoc/>
-        public override string ToString() => '"' + string.Join("\", \"", Entries) + '"';
+        public override string ToString() => '"' + string.Join("\", \"", Labels) + '"';
     }
 }

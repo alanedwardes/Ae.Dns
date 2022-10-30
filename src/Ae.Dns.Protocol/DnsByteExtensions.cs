@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Ae.Dns.Protocol
 {
@@ -71,12 +70,10 @@ namespace Ae.Dns.Protocol
         {
             byte labelLength = bytes.Span[offset];
             offset += 1;
-            var memory = bytes.Slice(offset, labelLength);
-            offset += labelLength;
-            return memory;
+            return ReadBytes(bytes, labelLength, ref offset);
         }
 
-        public static StringLabels ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
+        public static DnsLabels ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
         {
             // Assume most labels consist of 3 parts
             var parts = new List<ReadOnlyMemory<byte>>(3);
@@ -143,19 +140,19 @@ namespace Ae.Dns.Protocol
             return reader;
         }
 
-        public static void ToBytes(StringLabels strings, Memory<byte> buffer, ref int offset)
+        public static void ToBytes(DnsLabels strings, Memory<byte> buffer, ref int offset)
         {
-            for (int i = 0; i < strings.Entries.Length; i++)
+            for (int i = 0; i < strings.Count; i++)
             {
                 // First write the value 1 byte from the offset to leave room for the length byte
                 //var length = Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset + 1, strings[i].Length).Span);
-                strings.Entries[i].CopyTo(buffer.Slice(offset + 1, strings.Entries[i].Length));
+                strings.Labels[i].CopyTo(buffer.Slice(offset + 1, strings.Labels[i].Length));
                 
                 // Then write the length before the value
-                buffer.Span[offset] = (byte)strings.Entries[i].Length;
+                buffer.Span[offset] = (byte)strings.Labels[i].Length;
 
                 // Finally advance the offset past the length and value
-                offset += 1 + strings.Entries[i].Length;
+                offset += 1 + strings.Labels[i].Length;
             }
 
             buffer.Span[offset++] = 0;

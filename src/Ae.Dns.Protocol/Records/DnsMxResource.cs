@@ -23,7 +23,7 @@ namespace Ae.Dns.Protocol.Records
         /// <value>
         /// The host name must map directly to one or more address records (A, or AAAA) in the DNS, and must not point to any CNAME records.
         /// </value>
-        public string Exchange => string.Join(".", Entries);
+        public string Exchange => string.Join(".", Labels);
 
         /// <inheritdoc/>
         protected override bool CanUseCompression => true;

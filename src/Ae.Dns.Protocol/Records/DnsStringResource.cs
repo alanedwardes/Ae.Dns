@@ -14,16 +14,16 @@ namespace Ae.Dns.Protocol.Records
         /// <value>
         /// The text values of this resource as an array of strings.
         /// </value>
-        public StringLabels Entries { get; set; }
+        public DnsLabels Labels { get; set; }
 
         /// <inheritdoc/>
-        public bool Equals(DnsStringResource other) => Entries.Equals(other.Entries);
+        public bool Equals(DnsStringResource other) => Labels.Equals(other.Labels);
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is DnsStringResource record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => HashCode.Combine(Entries);
+        public override int GetHashCode() => HashCode.Combine(Labels);
 
         /// <summary>
         /// Describes whether this string resource can use string compression.
@@ -35,13 +35,13 @@ namespace Ae.Dns.Protocol.Records
         {
             // Provide the ReadString method with a sliced buffer, which ends when this resource ends
             // It must start where the packet starts, since there are often pointers back to the beginning
-            Entries = DnsByteExtensions.ReadString(bytes.Slice(0, offset + length), ref offset, CanUseCompression);
+            Labels = DnsByteExtensions.ReadString(bytes.Slice(0, offset + length), ref offset, CanUseCompression);
         }
 
         /// <inheritdoc/>
         public virtual void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(Entries, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Labels, bytes, ref offset);
         }
     }
 }
