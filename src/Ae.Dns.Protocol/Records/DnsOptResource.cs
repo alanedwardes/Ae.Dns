@@ -1,7 +1,10 @@
 ﻿using System;
 namespace Ae.Dns.Protocol.Records
 {
-    public class DnsOptResource : IDnsResource
+    /// <summary>
+    /// Describes an EDNS0 psuedo-resource.
+    /// </summary>
+    public sealed class DnsOptResource : IDnsResource, IEquatable<DnsOptResource>
     {
         /// <summary>
         /// The raw bytes recieved for this DNS resource.
@@ -26,6 +29,16 @@ namespace Ae.Dns.Protocol.Records
         /// </summary>
         public uint Flags { get; set; }
 
+        /// <inheritdoc/>
+        public bool Equals(DnsOptResource other) => Raw.Span.SequenceEqual(other.Raw.Span);
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) => obj is DnsOptResource record ? Equals(record) : base.Equals(obj);
+
+        /// <inheritdoc/>
+        public override int GetHashCode() => HashCode.Combine(MaximumPayloadSize, Flags, Raw);
+
+        /// <inheritdoc/>
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             // This type of DNS record uses the class, ttl and rdlen data
@@ -40,6 +53,7 @@ namespace Ae.Dns.Protocol.Records
             Raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset);
         }
 
+        /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
             // Payloadsize / flags is serialised at a higher level
