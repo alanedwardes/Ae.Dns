@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using Ae.Dns.Client.Internal;
 using Ae.Dns.Protocol;
+using Ae.Dns.Protocol.Enums;
 
 namespace Ae.Dns.Client.Filters
 {
@@ -31,6 +34,7 @@ namespace Ae.Dns.Client.Filters
             "lb._dns-sd._udp."
         };
 
+
         /// <inheritdoc/>
         public bool IsPermitted(DnsMessage query)
         {
@@ -50,6 +54,43 @@ namespace Ae.Dns.Client.Filters
             if (_reservedTopLevelDomainNames.Any(x => query.Header.Host.EndsWith(x, StringComparison.InvariantCultureIgnoreCase)))
             {
                 return false;
+            }
+
+            // Sometimes misconfigured applications can send
+            // queries beginning with a protocol
+            if (query.Header.Host.StartsWith("https://") || query.Header.Host.StartsWith("http://"))
+            {
+                return false;
+            }
+
+            var hostParts = query.Header.Host.Split('.');
+
+            // Disallow a TLD containing an underscore
+            if (hostParts.Last().Contains("_"))
+            {
+                return false;
+            }
+
+            // Disallow something without a TLD
+            // Note: sometimes this is valid, but it's so rare it's not worth allowing
+            if (hostParts.Length < 2)
+            {
+                return false;
+            }
+
+            // Disallow reverse DNS lookups for local IP addresses
+            if (query.Header.QueryType == DnsQueryType.PTR)
+            {
+                if (query.Header.Host.EndsWith(".in-addr.arpa"))
+                {
+                    var ipParts = hostParts.Take(4).Reverse();
+                    if (IPAddress.TryParse(string.Join('.', ipParts), out var address) && IpAddressExtensions.IsPrivate(address))
+                    {
+                        return false;
+                    }
+                }
+
+                // TODO: IPv6 lookups
             }
 
             return true;
