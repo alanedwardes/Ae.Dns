@@ -3,6 +3,7 @@ using Ae.Dns.Client.Filters;
 using Ae.Dns.Client.Lookup;
 using Ae.Dns.Metrics.InfluxDb;
 using Ae.Dns.Protocol;
+using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Server;
 using App.Metrics;
 using Microsoft.AspNetCore.Hosting;
@@ -117,8 +118,10 @@ namespace Ae.Dns.Console
 
             var networkFilter = new DnsLocalNetworkQueryFilter();
 
+            var queryTypeFilter = new DnsQueryTypeFilter(dnsConfiguration.DisallowedQueryTypes.Select(Enum.Parse<DnsQueryType>));
+
             // The domain must pass all of these filters to be allowed
-            var denyFilter = new DnsCompositeAndFilter(remoteFilter, suffixFilter, networkFilter);
+            var denyFilter = new DnsCompositeAndFilter(remoteFilter, suffixFilter, networkFilter, queryTypeFilter);
 
             // The domain must pass one of these filters to be allowed
             var compositeFilter = new DnsCompositeOrFilter(denyFilter, allowListFilter);
