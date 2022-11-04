@@ -35,12 +35,6 @@ namespace Ae.Dns.Protocol
         /// <value>Gets or sets the list representing <see cref="DnsResourceRecord"/> values returned by the DNS server.</value>
         public IList<DnsResourceRecord> Additional { get; set; } = Array.Empty<DnsResourceRecord>();
 
-        /// <summary>
-        /// Returns true if the query or answer supports EDNS(0).
-        /// This is a helper boolean which checks to see if there are any "OPT" resources defined in the "additional" section.
-        /// </summary>
-        public bool SupportsEdns0 => Additional.Any(x => x.Type == Enums.DnsQueryType.OPT);
-
         /// <inheritdoc/>
         public bool Equals(DnsMessage other) => Header.Equals(other.Header) &&
                                                 Answers.SequenceEqual(other.Answers) &&
