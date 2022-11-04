@@ -143,8 +143,10 @@ namespace Ae.Dns.Client
                     RecusionDesired = query.Header.RecusionDesired,
                     QueryClass = query.Header.QueryClass,
                     QueryType = query.Header.QueryType,
-                    QuestionCount = query.Header.QuestionCount
-                }
+                    QuestionCount = query.Header.QuestionCount,
+                    AdditionalRecordCount = query.Header.AdditionalRecordCount
+                },
+                Additional = query.Additional
             }, token);
 
             _logger.LogTrace("Returned fresh DNS result for {Domain}", query.Header.Host);
