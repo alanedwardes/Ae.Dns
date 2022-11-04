@@ -64,8 +64,8 @@ namespace Ae.Dns.Client
         {
             _logger = logger;
             _endpoint = endpoint;
-            _task = Task.Run(ReceiveTask);
             _socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            _task = Task.Run(ReceiveTask);
         }
 
         private async Task ReceiveTask()
