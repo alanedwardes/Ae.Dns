@@ -21,7 +21,9 @@ namespace Ae.Dns.Client.Filters
             // See https://www.ietf.org/archive/id/draft-chapin-rfc2606bis-00.html
             ".local", ".localdomain", ".domain", ".lan", ".host",
             // See https://www.icann.org/resources/board-material/resolutions-2018-02-04-en#2.c
-            ".home", ".corp", ".mail"
+            ".home", ".corp", ".mail",
+            // See https://www.rfc-editor.org/rfc/rfc6762#appendix-G
+            ".intranet", ".internal", ".private"
         };
 
         // See https://www.ietf.org/rfc/rfc6763.txt
