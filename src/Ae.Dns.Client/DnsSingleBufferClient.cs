@@ -66,6 +66,7 @@ namespace Ae.Dns.Client
                 throw;
             }
 
+            _logger.LogTrace("Returning {Answer} for query {Query}", answer, query);
             return answerLength;
         }
     }

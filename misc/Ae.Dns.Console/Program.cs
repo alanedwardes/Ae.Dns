@@ -180,9 +180,9 @@ namespace Ae.Dns.Console
             dnsClient = new DnsMetricsClient(dnsClient);
             dnsClient = new DnsAppMetricsClient(metrics, dnsClient);
 
-            IDnsServer tcpServer = new DnsTcpServer(provider.GetRequiredService<ILogger<DnsTcpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsSingleBufferClient(dnsClient));
+            IDnsServer tcpServer = new DnsTcpServer(provider.GetRequiredService<ILogger<DnsTcpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsSingleBufferClient(provider.GetRequiredService<ILogger<DnsSingleBufferClient>>(), dnsClient));
 
-            IDnsServer udpServer = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsSingleBufferClient(dnsClient));
+            IDnsServer udpServer = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsSingleBufferClient(provider.GetRequiredService<ILogger<DnsSingleBufferClient>>(), dnsClient));
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
