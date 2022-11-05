@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Linq;
 using System.Runtime.Caching;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +20,7 @@ namespace Ae.Dns.Client
         {
             public DnsCacheEntry(DnsMessage answer)
             {
-                var allRecords = new[] { answer.Answers, answer.Nameservers, answer.Additional };
+                var allRecords = new[] { answer.Answers, answer.Nameservers };
 
                 LowestRecordTimeToLive = TimeSpan.FromSeconds(allRecords.SelectMany(x => x).Min(x => x.TimeToLive));
                 Data = DnsByteExtensions.AllocateAndWrite(answer);
@@ -62,7 +63,18 @@ namespace Ae.Dns.Client
             _objectCache = objectCache;
         }
 
-        private string GetCacheKey(DnsMessage header) => $"{header.Header.Host}~{header.Header.QueryType}~{header.Header.QueryClass}";
+        private string GetCacheKey(DnsMessage header)
+        {
+            var sb = new StringBuilder();
+            sb.Append($"{header.Header.Host}~{header.Header.QueryType}~{header.Header.QueryClass}");
+
+            foreach (var additional in header.Additional)
+            {
+                sb.Append($"{additional.Host}~{additional.Type}~{additional.Class}~{additional.TimeToLive}");
+            }
+
+            return sb.ToString();
+        }
 
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
