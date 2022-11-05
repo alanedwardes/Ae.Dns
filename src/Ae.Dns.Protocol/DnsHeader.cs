@@ -153,7 +153,6 @@ namespace Ae.Dns.Protocol
             set => Labels = value.Split('.');
         }
 
-
         /// <inheritdoc/>
         public override string ToString() => $"{(IsQueryResponse ? "RES" : "QRY")}: {Id} Domain: {Host} Type: {QueryType} Class: {QueryClass}";
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Ae.Dns.Protocol
 {
@@ -88,7 +89,23 @@ namespace Ae.Dns.Protocol
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"{Header} Response: {Header.ResponseCode} Answers: {Answers.Count}" + string.Concat(Answers.Select(x => $"{Environment.NewLine} * {x}"));
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append($"{Header} Response: {Header.ResponseCode}");
+
+            if (Answers.Count > 0)
+            {
+                sb.Append($" Answers: {Answers.Count} {string.Concat(Answers.Select(x => $"{Environment.NewLine} * {x}"))}");
+            }
+
+            if (Additional.Count > 0)
+            {
+                sb.Append($" Additional: {Additional.Count} {string.Concat(Additional.Select(x => $"{Environment.NewLine} * {x}"))}");
+            }
+
+            return sb.ToString();
+        }
 
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
