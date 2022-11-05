@@ -71,12 +71,10 @@ namespace Ae.Dns.Client
             if (cachedAnswer != null)
             {
                 cachedAnswer.Header.Tags.Add("Resolver", $"{nameof(DnsCachingClient)}({_objectCache.Name})");
-                cachedAnswer.Header.Tags.Add("IsCached", true);
                 return cachedAnswer;
             }
 
             var freshAnswer = await GetFreshAnswer(query, token);
-            freshAnswer.Header.Tags.Add("IsCached", false);
             return freshAnswer;
         }
 

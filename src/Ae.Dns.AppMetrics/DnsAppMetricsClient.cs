@@ -61,11 +61,6 @@ namespace Ae.Dns.Metrics.InfluxDb
                 { "QueryType", answer.Header.QueryType.ToString() }
             };
 
-            if (answer.Header.Tags.TryGetValue("IsCached", out var isCached))
-            {
-                tags.Add("IsCached", isCached.ToString());
-            }
-
             if (answer.Header.Tags.TryGetValue("Resolver", out var resolver))
             {
                 tags.Add("Resolver", resolver.ToString());
