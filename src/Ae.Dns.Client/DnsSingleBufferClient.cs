@@ -29,7 +29,7 @@ namespace Ae.Dns.Client
         public void Dispose() => _dnsClient.Dispose();
 
         /// <inheritdoc/>
-        public async Task<int> Query(Memory<byte> buffer, int queryLength, CancellationToken token = default)
+        public async Task<DnsSingleBufferClientResponse> Query(Memory<byte> buffer, int queryLength, CancellationToken token = default)
         {
             var queryBuffer = buffer.Slice(0, queryLength);
 
@@ -67,7 +67,7 @@ namespace Ae.Dns.Client
             }
 
             _logger.LogTrace("Returning {Answer} for query {Query}", answer, query);
-            return answerLength;
+            return new DnsSingleBufferClientResponse(answerLength, query, answer);
         }
     }
 }

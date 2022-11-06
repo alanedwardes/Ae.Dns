@@ -16,7 +16,7 @@ namespace Ae.Dns.Server
         private readonly Socket _socket;
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly IDnsSingleBufferClient _dnsClient;
-        private const int MaxDatagramSize = 512;
+        private const uint DefaultDatagramSize = 512;
 
         public DnsUdpServer(IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
             : this(new NullLogger<DnsUdpServer>(), endpoint, dnsClient)
@@ -75,19 +75,18 @@ namespace Ae.Dns.Server
             }
         }
 
-        private void TruncateAnswer(Memory<byte> buffer, ref int answerLength)
+        private void TruncateAnswer(Memory<byte> buffer, DnsSingleBufferClientResponse response, ref int answerLength)
         {
-            if (answerLength < MaxDatagramSize)
+            var maximumDatagramLength = Math.Max(response.Query.GetMaxUdpMessageSize() ?? 0, DefaultDatagramSize);
+            if (answerLength < maximumDatagramLength)
             {
                 // Within acceptable size, do nothing
                 return;
             }
 
-            var originalAnswer = DnsByteExtensions.FromBytes<DnsMessage>(buffer.Slice(0, answerLength));
+            var truncatedAnswer = DnsQueryFactory.TruncateAnswer(response.Query);
 
-            var truncatedAnswer = DnsQueryFactory.TruncateAnswer(originalAnswer);
-
-            _logger.LogWarning("Truncating answer {Answer} since it is {AnswerLength} bytes", truncatedAnswer, answerLength);
+            _logger.LogWarning("Truncating answer {Answer} since it is {AnswerLength} bytes (maximum: {MaximumDatagramLength} bytes)", truncatedAnswer, answerLength, maximumDatagramLength);
             
             // Write the truncated answer into the buffer
             answerLength = 0;
@@ -98,10 +97,10 @@ namespace Ae.Dns.Server
         {
             var stopwatch = Stopwatch.StartNew();
 
-            int answerLength;
+            DnsSingleBufferClientResponse response;
             try
             {
-                answerLength = await _dnsClient.Query(buffer, queryLength, token);
+                response = await _dnsClient.Query(buffer, queryLength, token);
             }
             catch (Exception e)
             {
@@ -109,10 +108,11 @@ namespace Ae.Dns.Server
                 return;
             }
 
+            int answerLength = response.AnswerLength;
             try
             {
                 // Truncate answer if necessary
-                TruncateAnswer(buffer, ref answerLength);
+                TruncateAnswer(buffer, response, ref answerLength);
             }
             catch (Exception e)
             {

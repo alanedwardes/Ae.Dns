@@ -17,6 +17,20 @@ namespace Ae.Dns.Protocol
         /// <param name="queryLength">The length of the query in the buffer, in bytes.</param>
         /// <param name="token">The cancellation token to stop the operation.</param>
         /// <returns>The number of bytes written back into the buffer.</returns>
-        Task<int> Query(Memory<byte> buffer, int queryLength, CancellationToken token = default);
+        Task<DnsSingleBufferClientResponse> Query(Memory<byte> buffer, int queryLength, CancellationToken token = default);
+    }
+
+    public readonly struct DnsSingleBufferClientResponse
+    {
+        public DnsSingleBufferClientResponse(int answerLength, DnsMessage query, DnsMessage answer)
+        {
+            AnswerLength = answerLength;
+            Query = query;
+            Answer = answer;
+        }
+
+        public readonly int AnswerLength;
+        public readonly DnsMessage Query;
+        public readonly DnsMessage Answer;
     }
 }

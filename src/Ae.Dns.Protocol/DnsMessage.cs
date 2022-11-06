@@ -96,12 +96,12 @@ namespace Ae.Dns.Protocol
 
             if (Answers.Count > 0)
             {
-                sb.Append($" Answers: {Answers.Count} {string.Concat(Answers.Select(x => $"{Environment.NewLine} * {x}"))}");
+                sb.Append($"{Environment.NewLine}Answers: {Answers.Count}{string.Concat(Answers.Select(x => $"{Environment.NewLine} * {x}"))}");
             }
 
             if (Additional.Count > 0)
             {
-                sb.Append($" Additional: {Additional.Count} {string.Concat(Additional.Select(x => $"{Environment.NewLine} * {x}"))}");
+                sb.Append($"{Environment.NewLine}Additional: {Additional.Count}{string.Concat(Additional.Select(x => $"{Environment.NewLine} * {x}"))}");
             }
 
             return sb.ToString();

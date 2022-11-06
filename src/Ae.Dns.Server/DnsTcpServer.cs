@@ -129,16 +129,18 @@ namespace Ae.Dns.Server
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var answerLength = 0;
+            DnsSingleBufferClientResponse response;
             try
             {
-                answerLength = await _dnsClient.Query(buffer.Slice(2), queryLength, token);
+                response = await _dnsClient.Query(buffer.Slice(2), queryLength, token);
             }
             catch (Exception e)
             {
                 _logger.LogCritical(e, "Unable to run query for {RemoteEndPoint}", socket.RemoteEndPoint);
                 throw;
             }
+
+            var answerLength = response.AnswerLength;
 
             var answerHeaderLength = 0;
             DnsByteExtensions.ToBytes((ushort)answerLength, buffer, ref answerHeaderLength);

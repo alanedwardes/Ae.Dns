@@ -3,8 +3,8 @@
         "using": [ "Serilog.Sinks.Console" ],
         "writeTo": [
             { "name": "Console" }
-        ],
-        "minimumLevel": "Verbose"
+        ]
+        // Change level: "minimumLevel": "Warning"
     },
     "httpsUpstreams": [
         "https://dns.google/",
