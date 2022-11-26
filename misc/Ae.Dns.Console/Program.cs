@@ -187,7 +187,11 @@ namespace Ae.Dns.Console
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
                 .ConfigureLogging(x => x.ClearProviders().AddSerilog(logger))
-                .ConfigureWebHostDefaults(webHostBuilder => webHostBuilder.UseStartup<Startup>());
+                .ConfigureWebHostDefaults(webHostBuilder =>
+                {
+                    webHostBuilder.UseStartup<Startup>();
+                    webHostBuilder.UseConfiguration(configuration.GetSection("statsServer"));
+                });
 
             await Task.WhenAll(
                 builder.Build().RunAsync(CancellationToken.None),
