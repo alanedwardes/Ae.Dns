@@ -15,15 +15,15 @@ namespace Ae.Dns.Server
         private static readonly EndPoint _anyEndpoint = new IPEndPoint(IPAddress.Any, 0);
         private readonly Socket _socket;
         private readonly ILogger<DnsUdpServer> _logger;
-        private readonly IDnsSingleBufferClient _dnsClient;
+        private readonly IDnsRawClient _dnsClient;
         private const uint DefaultDatagramSize = 512;
 
-        public DnsUdpServer(IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
+        public DnsUdpServer(IPEndPoint endpoint, IDnsRawClient dnsClient)
             : this(new NullLogger<DnsUdpServer>(), endpoint, dnsClient)
         {
         }
 
-        public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
+        public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsRawClient dnsClient)
         {
             _socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             _socket.Bind(endpoint);
@@ -75,7 +75,7 @@ namespace Ae.Dns.Server
             }
         }
 
-        private void TruncateAnswer(Memory<byte> buffer, DnsSingleBufferClientResponse response, ref int answerLength)
+        private void TruncateAnswer(Memory<byte> buffer, DnsRawClientResponse response, ref int answerLength)
         {
             var maximumDatagramLength = Math.Max(response.Query.GetMaxUdpMessageSize() ?? 0, DefaultDatagramSize);
             if (answerLength < maximumDatagramLength)
@@ -97,10 +97,10 @@ namespace Ae.Dns.Server
         {
             var stopwatch = Stopwatch.StartNew();
 
-            DnsSingleBufferClientResponse response;
+            DnsRawClientResponse response;
             try
             {
-                response = await _dnsClient.Query(buffer, queryLength, token);
+                response = await _dnsClient.Query(buffer, queryLength, sender, token);
             }
             catch (Exception e)
             {

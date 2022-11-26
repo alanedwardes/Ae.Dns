@@ -2,26 +2,27 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ae.Dns.Client
 {
     /// <inheritdoc/>
-    public sealed class DnsSingleBufferClient : IDnsSingleBufferClient
+    public sealed class DnsRawClient : IDnsRawClient
     {
-        private readonly ILogger<DnsSingleBufferClient> _logger;
+        private readonly ILogger<DnsRawClient> _logger;
         private readonly IDnsClient _dnsClient;
 
         /// <inheritdoc/>
-        public DnsSingleBufferClient(ILogger<DnsSingleBufferClient> logger, IDnsClient dnsClient)
+        public DnsRawClient(ILogger<DnsRawClient> logger, IDnsClient dnsClient)
         {
             _logger = logger;
             _dnsClient = dnsClient;
         }
 
         /// <inheritdoc/>
-        public DnsSingleBufferClient(IDnsClient dnsClient) : this(NullLogger<DnsSingleBufferClient>.Instance, dnsClient)
+        public DnsRawClient(IDnsClient dnsClient) : this(NullLogger<DnsRawClient>.Instance, dnsClient)
         {
         }
 
@@ -29,7 +30,7 @@ namespace Ae.Dns.Client
         public void Dispose() => _dnsClient.Dispose();
 
         /// <inheritdoc/>
-        public async Task<DnsSingleBufferClientResponse> Query(Memory<byte> buffer, int queryLength, CancellationToken token = default)
+        public async Task<DnsRawClientResponse> Query(Memory<byte> buffer, int queryLength, EndPoint querySource, CancellationToken token = default)
         {
             var queryBuffer = buffer.Slice(0, queryLength);
 
@@ -43,6 +44,8 @@ namespace Ae.Dns.Client
                 _logger.LogCritical(e, "Unable to parse incoming query {Bytes}", DnsByteExtensions.ToDebugString(queryBuffer.ToArray()));
                 throw;
             }
+
+            query.Header.Tags.Add("Sender", querySource);
 
             DnsMessage answer;
             try
@@ -67,7 +70,7 @@ namespace Ae.Dns.Client
             }
 
             _logger.LogTrace("Returning {Answer} for query {Query}", answer, query);
-            return new DnsSingleBufferClientResponse(answerLength, query, answer);
+            return new DnsRawClientResponse(answerLength, query, answer);
         }
     }
 }

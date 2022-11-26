@@ -14,14 +14,14 @@ namespace Ae.Dns.Server
     {
         private readonly Socket _socket;
         private readonly ILogger<DnsTcpServer> _logger;
-        private readonly IDnsSingleBufferClient _dnsClient;
+        private readonly IDnsRawClient _dnsClient;
 
-        public DnsTcpServer(IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
+        public DnsTcpServer(IPEndPoint endpoint, IDnsRawClient dnsClient)
             : this(new NullLogger<DnsTcpServer>(), endpoint, dnsClient)
         {
         }
 
-        public DnsTcpServer(ILogger<DnsTcpServer> logger, IPEndPoint endpoint, IDnsSingleBufferClient dnsClient)
+        public DnsTcpServer(ILogger<DnsTcpServer> logger, IPEndPoint endpoint, IDnsRawClient dnsClient)
         {
             _socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             _socket.Bind(endpoint);
@@ -129,10 +129,10 @@ namespace Ae.Dns.Server
         {
             var stopwatch = Stopwatch.StartNew();
 
-            DnsSingleBufferClientResponse response;
+            DnsRawClientResponse response;
             try
             {
-                response = await _dnsClient.Query(buffer.Slice(2), queryLength, token);
+                response = await _dnsClient.Query(buffer.Slice(2), queryLength, socket.RemoteEndPoint, token);
             }
             catch (Exception e)
             {

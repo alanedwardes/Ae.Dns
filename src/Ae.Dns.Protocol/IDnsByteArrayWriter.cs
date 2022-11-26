@@ -12,7 +12,6 @@ namespace Ae.Dns.Protocol
         /// </summary>
         /// <param name="bytes">The byte array to read from.</param>
         /// <param name="offset">The offset to start at.</param>
-        /// <summary>
         void WriteBytes(Memory<byte> bytes, ref int offset);
     }
 }
