@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Ae.Dns.Client;
@@ -66,7 +67,7 @@ namespace Ae.Dns.Console
                         await WriteString(Environment.NewLine);
                     }
 
-                    foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value.OrderBy(x => x.Key) : statsSet.Value.OrderByDescending(x => x.Value).Take(25))
+                    foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value.OrderBy(x => x.Key) : statsSet.Value.OrderByDescending(x => x.Value).Take(50))
                     {
                         await WriteString($"{statistic.Key} = {statistic.Value}");
                         await WriteString(Environment.NewLine);
@@ -114,7 +115,9 @@ namespace Ae.Dns.Console
                 if (meterMap.TryGetValue(instrument.Name, out var domainCounts))
                 {
                     var query = GetObjectFromTags<DnsMessage>(tags, "Query");
-                    domainCounts.AddOrUpdate(query.Header.QueryType.ToString() + ' ' + query.Header.Host, 1, (id, count) => count + 1);
+                    var sourceEndpoint = query.Header.Tags.TryGetValue("Sender", out var rawEndpoint) && rawEndpoint is IPEndPoint endpoint ? endpoint : throw new Exception();
+
+                    domainCounts.AddOrUpdate(sourceEndpoint.Address.ToString() + ' ' + query.Header.QueryType.ToString() + ' ' + query.Header.Host, 1, (id, count) => count + 1);
                 }
             }
         }
