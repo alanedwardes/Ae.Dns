@@ -22,13 +22,6 @@ namespace Ae.Dns.Client
         private readonly IDnsClient _dnsClient;
 
         /// <summary>
-        /// Construct a new <see cref="DnsRebindMitigationClient"/> using the specified <see cref="IDnsClient"/>.
-        /// </summary>
-        public DnsRebindMitigationClient(IDnsClient dnsClient) : this(NullLogger<DnsRebindMitigationClient>.Instance, dnsClient)
-        {
-        }
-
-        /// <summary>
         /// Construct a new <see cref="DnsRebindMitigationClient"/> using the specified <see cref="ILogger"/> and <see cref="IDnsClient"/>.
         /// </summary>
         public DnsRebindMitigationClient(ILogger<DnsRebindMitigationClient> logger, IDnsClient dnsClient)

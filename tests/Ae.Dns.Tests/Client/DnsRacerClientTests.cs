@@ -1,5 +1,6 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Protocol;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ namespace Ae.Dns.Tests.Client
                 return new DnsMessage();
             });
 
-            var racer = new DnsRacerClient(new[] { fastClient, slowClient });
+            var racer = new DnsRacerClient(NullLogger< DnsRacerClient>.Instance, new[] { fastClient, slowClient });
 
             Assert.Same(expectedAnswer, await racer.Query(new DnsMessage(), CancellationToken.None));
         }
@@ -46,7 +47,7 @@ namespace Ae.Dns.Tests.Client
             using var successClient = new DnsTestClient(() => Task.FromResult(expectedAnswer));
             using var errorClient = new DnsTestClient(async () => throw new InvalidOperationException());
 
-            var racer = new DnsRacerClient(new[] { successClient, errorClient });
+            var racer = new DnsRacerClient(NullLogger<DnsRacerClient>.Instance, new[] { successClient, errorClient });
 
             for (int i = 0; i < 20; i++)
             {
@@ -59,7 +60,7 @@ namespace Ae.Dns.Tests.Client
         {
             using var errorClient = new DnsTestClient(async () => throw new InvalidOperationException());
 
-            var racer = new DnsRacerClient(new[] { errorClient, errorClient });
+            var racer = new DnsRacerClient(NullLogger<DnsRacerClient>.Instance, new[] { errorClient, errorClient });
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => racer.Query(new DnsMessage(), CancellationToken.None));
         }

@@ -22,11 +22,6 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public DnsRawClient(IDnsClient dnsClient) : this(NullLogger<DnsRawClient>.Instance, dnsClient)
-        {
-        }
-
-        /// <inheritdoc/>
         public void Dispose() => _dnsClient.Dispose();
 
         /// <inheritdoc/>

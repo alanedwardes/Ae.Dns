@@ -18,14 +18,6 @@ namespace Ae.Dns.Client
         private readonly IDnsClient _dnsClient;
 
         /// <summary>
-        /// Create a new filter client using the specified <see cref="IDnsFilter"/> and <see cref="IDnsClient"/>.
-        /// </summary>
-        public DnsFilterClient(IDnsFilter dnsFilter, IDnsClient dnsClient)
-            : this(new NullLogger<DnsFilterClient>(), dnsFilter, dnsClient)
-        {
-        }
-
-        /// <summary>
         /// Create a new filter client using the specified logger, <see cref="IDnsFilter"/> and <see cref="IDnsClient"/>.
         /// </summary>
         public DnsFilterClient(ILogger<DnsFilterClient> logger, IDnsFilter dnsFilter, IDnsClient dnsClient)

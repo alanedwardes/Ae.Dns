@@ -1,9 +1,8 @@
 ﻿using Ae.Dns.Protocol;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,17 +13,14 @@ namespace Ae.Dns.Server
     {
         private readonly Socket _socket;
         private readonly ILogger<DnsTcpServer> _logger;
+        private readonly DnsTcpServerOptions _options;
         private readonly IDnsRawClient _dnsClient;
 
-        public DnsTcpServer(IPEndPoint endpoint, IDnsRawClient dnsClient)
-            : this(new NullLogger<DnsTcpServer>(), endpoint, dnsClient)
+        public DnsTcpServer(ILogger<DnsTcpServer> logger, IOptions<DnsTcpServerOptions> options, IDnsRawClient dnsClient)
         {
-        }
-
-        public DnsTcpServer(ILogger<DnsTcpServer> logger, IPEndPoint endpoint, IDnsRawClient dnsClient)
-        {
-            _socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            _socket.Bind(endpoint);
+            _options = options.Value;
+            _socket = new Socket(_options.Endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _socket.Bind(_options.Endpoint);
             _logger = logger;
             _dnsClient = dnsClient;
         }
@@ -46,9 +42,9 @@ namespace Ae.Dns.Server
         {
             token.Register(() => _socket.Close());
 
-            _socket.Listen(1024);
+            _socket.Listen(_options.Backlog);
 
-            _logger.LogInformation("Server now listening");
+            _logger.LogInformation("Now listening on: {Endpoint} (Backlog: {Backlog})", "tcp://" + _options.Endpoint, _options.Backlog);
 
             while (!token.IsCancellationRequested)
             {

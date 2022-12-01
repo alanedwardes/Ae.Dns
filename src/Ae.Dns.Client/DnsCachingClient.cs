@@ -39,17 +39,6 @@ namespace Ae.Dns.Client
         private readonly ObjectCache _objectCache;
 
         /// <summary>
-        /// Construct a new caching DNS client using the specified client to
-        /// forward requests to, and the specified memory cache.
-        /// </summary>
-        /// <param name="dnsClient">The see <see cref="IDnsClient"/> to delegate uncached requests to.</param>
-        /// <param name="objectCache">The in-memory cache to use.</param>
-        public DnsCachingClient(IDnsClient dnsClient, ObjectCache objectCache) :
-            this(new NullLogger<DnsCachingClient>(), dnsClient, objectCache)
-        {
-        }
-
-        /// <summary>
         /// Construct a new caching DNS client using the specified logger,
         /// DNS client to forward requests to, and the specified memory cache.
         /// </summary>

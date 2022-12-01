@@ -36,12 +36,6 @@ namespace Ae.Dns.Client
             }
         }
 
-        /// <summary>
-        /// Create a new racer DNS client using the specified <see cref="IDnsClient"/> instances to delegate to.
-        /// </summary>
-        /// <param name="dnsClients">The enumerable of DNS clients to use.</param>
-        public DnsRacerClient(IEnumerable<IDnsClient> dnsClients) : this(NullLogger<DnsRacerClient>.Instance, dnsClients) { }
-
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token)
         {

@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -47,6 +48,8 @@ namespace Ae.Dns.Console
 
             var services = new ServiceCollection();
             services.AddLogging(x => x.AddSerilog(logger));
+            services.Configure<DnsUdpServerOptions>(configuration.GetSection("udpServer"));
+            services.Configure<DnsTcpServerOptions>(configuration.GetSection("tcpServer"));
 
             const string staticDnsResolverHttpClient = "StaticResolver";
 
@@ -58,7 +61,8 @@ namespace Ae.Dns.Console
             static DnsDelegatingHandler CreateDnsDelegatingHandler(IServiceProvider serviceProvider)
             {
                 var httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(staticDnsResolverHttpClient);
-                return new DnsDelegatingHandler(new DnsCachingClient(new DnsHttpClient(httpClient), serviceProvider.GetRequiredService<ObjectCache>()));
+                var cachingClient = ActivatorUtilities.CreateInstance<DnsCachingClient>(serviceProvider, new DnsHttpClient(httpClient));
+                return new DnsDelegatingHandler(cachingClient);
             }
 
             foreach (Uri httpsUpstream in dnsConfiguration.HttpsUpstreams)
@@ -104,9 +108,9 @@ namespace Ae.Dns.Console
 
             IDnsClient dnsClient = new DnsRacerClient(provider.GetRequiredService<ILogger<DnsRacerClient>>(), upstreams);
 
-            dnsClient = new DnsRebindMitigationClient(provider.GetRequiredService<ILogger<DnsRebindMitigationClient>>(), dnsClient);
+            dnsClient = ActivatorUtilities.CreateInstance<DnsRebindMitigationClient>(provider, dnsClient);
 
-            dnsClient = new DnsCachingClient(provider.GetRequiredService<ILogger<DnsCachingClient>>(), dnsClient, new MemoryCache("MainCache"));
+            dnsClient = ActivatorUtilities.CreateInstance<DnsCachingClient>(provider, dnsClient, new MemoryCache("MainCache"));
 
             selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 
@@ -126,7 +130,7 @@ namespace Ae.Dns.Console
             // The domain must pass one of these filters to be allowed
             var compositeFilter = new DnsCompositeOrFilter(denyFilter, allowListFilter);
 
-            dnsClient = new DnsFilterClient(provider.GetRequiredService<ILogger<DnsFilterClient>>(), compositeFilter, dnsClient);
+            dnsClient = ActivatorUtilities.CreateInstance<DnsFilterClient>(provider, compositeFilter, dnsClient);
 
             var metricsBuilder = new MetricsBuilder();
 
@@ -180,9 +184,11 @@ namespace Ae.Dns.Console
             dnsClient = new DnsMetricsClient(dnsClient);
             dnsClient = new DnsAppMetricsClient(metrics, dnsClient);
 
-            IDnsServer tcpServer = new DnsTcpServer(provider.GetRequiredService<ILogger<DnsTcpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsRawClient(provider.GetRequiredService<ILogger<DnsRawClient>>(), dnsClient));
+            // Create a "raw" client which deals with buffers directly
+            var rawClient = ActivatorUtilities.CreateInstance<DnsRawClient>(provider, dnsClient);
 
-            IDnsServer udpServer = new DnsUdpServer(provider.GetRequiredService<ILogger<DnsUdpServer>>(), new IPEndPoint(IPAddress.Any, 53), new DnsRawClient(provider.GetRequiredService<ILogger<DnsRawClient>>(), dnsClient));
+            IDnsServer tcpServer = ActivatorUtilities.CreateInstance<DnsTcpServer>(provider, rawClient);
+            IDnsServer udpServer = ActivatorUtilities.CreateInstance<DnsUdpServer>(provider, rawClient);
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()

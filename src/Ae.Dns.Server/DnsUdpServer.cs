@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Protocol;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
 using System.Net;
@@ -13,20 +14,16 @@ namespace Ae.Dns.Server
     public sealed class DnsUdpServer : IDnsServer
     {
         private static readonly EndPoint _anyEndpoint = new IPEndPoint(IPAddress.Any, 0);
+        private readonly DnsUdpServerOptions _options;
         private readonly Socket _socket;
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly IDnsRawClient _dnsClient;
-        private const uint DefaultDatagramSize = 512;
 
-        public DnsUdpServer(IPEndPoint endpoint, IDnsRawClient dnsClient)
-            : this(new NullLogger<DnsUdpServer>(), endpoint, dnsClient)
+        public DnsUdpServer(ILogger<DnsUdpServer> logger, IOptions<DnsUdpServerOptions> options, IDnsRawClient dnsClient)
         {
-        }
-
-        public DnsUdpServer(ILogger<DnsUdpServer> logger, IPEndPoint endpoint, IDnsRawClient dnsClient)
-        {
-            _socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-            _socket.Bind(endpoint);
+            _options = options.Value;
+            _socket = new Socket(_options.Endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            _socket.Bind(_options.Endpoint);
             _logger = logger;
             _dnsClient = dnsClient;
         }
@@ -48,7 +45,7 @@ namespace Ae.Dns.Server
         {
             token.Register(() => _socket.Close());
 
-            _logger.LogInformation("Server now listening");
+            _logger.LogInformation("Now listening on: {Endpoint} (DefaultMaximumDatagramSize: {DefaultMaximumDatagramSize})", "udp://" + _options.Endpoint, _options.DefaultMaximumDatagramSize);
 
             while (!token.IsCancellationRequested)
             {
@@ -77,7 +74,7 @@ namespace Ae.Dns.Server
 
         private void TruncateAnswer(Memory<byte> buffer, DnsRawClientResponse response, ref int answerLength)
         {
-            var maximumDatagramLength = Math.Max(response.Query.GetMaxUdpMessageSize() ?? 0, DefaultDatagramSize);
+            var maximumDatagramLength = Math.Max(response.Query.GetMaxUdpMessageSize() ?? 0, _options.DefaultMaximumDatagramSize);
             if (answerLength < maximumDatagramLength)
             {
                 // Within acceptable size, do nothing

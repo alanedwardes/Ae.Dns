@@ -22,20 +22,6 @@ namespace Ae.Dns.Client.Filters
         private readonly HttpClient _httpClient;
 
         /// <summary>
-        /// Create a new DNS remote set filter instance with a null logger.
-        /// </summary>
-        public DnsRemoteSetFilter() : this(new NullLogger<DnsRemoteSetFilter>())
-        {
-        }
-
-        /// <summary>
-        /// Create a new DNS remote set filter instance with the specified logger.
-        /// </summary>
-        public DnsRemoteSetFilter(ILogger<DnsRemoteSetFilter> logger) : this(logger, new HttpClient())
-        {
-        }
-
-        /// <summary>
         /// Create a new DNS remote set filter instance with the specified logger and HttpClient.
         /// </summary>
         public DnsRemoteSetFilter(ILogger<DnsRemoteSetFilter> logger, HttpClient httpClient)
