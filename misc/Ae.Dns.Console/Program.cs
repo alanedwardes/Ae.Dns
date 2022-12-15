@@ -170,6 +170,11 @@ namespace Ae.Dns.Console
                 staticLookupSources.Add(new HostsFileDnsLookupSource(provider.GetRequiredService<ILogger<HostsFileDnsLookupSource>>(), new FileInfo(hostFile)));
             }
 
+            if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdConfigFile))
+            {
+                staticLookupSources.Add(new DhcpdConfigDnsLookupSource(provider.GetRequiredService<ILogger<DhcpdConfigDnsLookupSource>>(), new FileInfo(dnsConfiguration.DhcpdConfigFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
+            }
+
             if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdLeasesFile))
             {
                 staticLookupSources.Add(new DhcpdLeasesDnsLookupSource(provider.GetRequiredService<ILogger<DhcpdLeasesDnsLookupSource>>(), new FileInfo(dnsConfiguration.DhcpdLeasesFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
