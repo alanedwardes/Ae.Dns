@@ -1,8 +1,10 @@
 ﻿using Ae.Dns.Client.Exceptions;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
@@ -40,32 +42,23 @@ namespace Ae.Dns.Client
 
         private readonly ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>> _pending = new ConcurrentDictionary<MessageId, TaskCompletionSource<byte[]>>();
         private readonly ILogger<DnsUdpClient> _logger;
-        private readonly IPEndPoint _endpoint;
+        private readonly DnsUdpClientOptions _options;
         private readonly Socket _socket;
         private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
-        public DnsUdpClient(IPAddress address) :
-            this(new NullLogger<DnsUdpClient>(), address)
-        {
-        }
-
-        public DnsUdpClient(IPEndPoint endpoint) :
-            this(new NullLogger<DnsUdpClient>(), endpoint)
-        {
-        }
-
-        public DnsUdpClient(ILogger<DnsUdpClient> logger, IPAddress address) :
-            this(logger, new IPEndPoint(address, 53))
-        {
-        }
-
-        public DnsUdpClient(ILogger<DnsUdpClient> logger, IPEndPoint endpoint)
+        [ActivatorUtilitiesConstructor]
+        public DnsUdpClient(ILogger<DnsUdpClient> logger, IOptions<DnsUdpClientOptions> options)
         {
             _logger = logger;
-            _endpoint = endpoint;
-            _socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            _options = options.Value;
+            _socket = new Socket(options.Value.Endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             _task = Task.Run(ReceiveTask);
+        }
+
+        public DnsUdpClient(DnsUdpClientOptions options)
+            : this(NullLogger<DnsUdpClient>.Instance, Options.Create(options))
+        {
         }
 
         private async Task ReceiveTask()
@@ -107,7 +100,7 @@ namespace Ae.Dns.Client
             }
             catch (Exception e)
             {
-                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _endpoint, buffer);
+                _logger.LogCritical(e, "Received bad DNS response from {0}: {1}", _options.Endpoint, buffer);
                 return;
             }
 
@@ -134,7 +127,7 @@ namespace Ae.Dns.Client
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
-                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _endpoint);
+                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _options.Endpoint);
                 completionSource.SetException(exception);
             }
         }
@@ -142,7 +135,7 @@ namespace Ae.Dns.Client
         private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, ReadOnlyMemory<byte> raw, CancellationToken token)
         {
             _ = RemoveFailedRequest(messageId, token);
-            _ = _socket.DnsSendToAsync(raw, _endpoint, token);
+            _ = _socket.DnsSendToAsync(raw, _options.Endpoint, token);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
@@ -174,6 +167,6 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"udp://{_endpoint}/";
+        public override string ToString() => $"udp://{_options.Endpoint}/";
     }
 }

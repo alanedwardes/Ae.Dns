@@ -1,5 +1,7 @@
 ﻿using Ae.Dns.Protocol;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
@@ -16,6 +18,10 @@ namespace Ae.Dns.Server
         private readonly DnsTcpServerOptions _options;
         private readonly IDnsRawClient _dnsClient;
 
+        /// <summary>
+        /// Construct a new <see cref="DnsTcpServer"/> with a custom logger, options and a <see cref="IDnsRawClient"/> to delegate to.
+        /// </summary>
+        [ActivatorUtilitiesConstructor]
         public DnsTcpServer(ILogger<DnsTcpServer> logger, IOptions<DnsTcpServerOptions> options, IDnsRawClient dnsClient)
         {
             _options = options.Value;
@@ -23,6 +29,13 @@ namespace Ae.Dns.Server
             _socket.Bind(_options.Endpoint);
             _logger = logger;
             _dnsClient = dnsClient;
+        }
+
+        /// <summary>
+        /// A convenience constructor where only the <see cref="IDnsRawClient"/> is mandated.
+        /// </summary>
+        public DnsTcpServer(IDnsRawClient dnsClient, DnsTcpServerOptions options = null) : this(NullLogger<DnsTcpServer>.Instance, Options.Create(options ?? new DnsTcpServerOptions()), dnsClient)
+        {
         }
 
         public void Dispose()

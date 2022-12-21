@@ -13,7 +13,7 @@ namespace Ae.Dns.Tests.Client
         [ClassData(typeof(LookupTestCases))]
         public async Task TestLookupWithCloudFlare(string domain, DnsQueryType type)
         {
-            using var client = new DnsTcpClient(new NullLogger<DnsTcpClient>(), IPAddress.Parse("1.1.1.1"));
+            using var client = new DnsTcpClient(IPAddress.Parse("1.1.1.1"));
             await client.RunQuery(domain, type, type == DnsQueryType.ANY ? DnsResponseCode.NotImp : DnsResponseCode.NoError);
         }
 
@@ -21,7 +21,7 @@ namespace Ae.Dns.Tests.Client
         [ClassData(typeof(LookupTestCases))]
         public async Task TestLookupWithGoogle(string domain, DnsQueryType type)
         {
-            using var client = new DnsTcpClient(new NullLogger<DnsTcpClient>(), IPAddress.Parse("8.8.8.8"));
+            using var client = new DnsTcpClient(IPAddress.Parse("8.8.8.8"));
             await client.RunQuery(domain, type);
         }
     }

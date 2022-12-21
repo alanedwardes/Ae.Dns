@@ -1,4 +1,5 @@
 ﻿using Ae.Dns.Protocol;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -19,6 +20,10 @@ namespace Ae.Dns.Server
         private readonly ILogger<DnsUdpServer> _logger;
         private readonly IDnsRawClient _dnsClient;
 
+        /// <summary>
+        /// Construct a new <see cref="DnsUdpServer"/> with a custom logger, options and a <see cref="IDnsRawClient"/> to delegate to.
+        /// </summary>
+        [ActivatorUtilitiesConstructor]
         public DnsUdpServer(ILogger<DnsUdpServer> logger, IOptions<DnsUdpServerOptions> options, IDnsRawClient dnsClient)
         {
             _options = options.Value;
@@ -26,6 +31,14 @@ namespace Ae.Dns.Server
             _socket.Bind(_options.Endpoint);
             _logger = logger;
             _dnsClient = dnsClient;
+        }
+
+        /// <summary>
+        /// A convenience constructor where only the <see cref="IDnsRawClient"/> is mandated.
+        /// </summary>
+        public DnsUdpServer(IDnsRawClient dnsClient, DnsUdpServerOptions options = null)
+            : this(NullLogger<DnsUdpServer>.Instance, Options.Create(options ?? new DnsUdpServerOptions()), dnsClient)
+        {
         }
 
         public void Dispose()

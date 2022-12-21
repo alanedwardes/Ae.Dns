@@ -1,8 +1,9 @@
 ﻿using Ae.Dns.Protocol;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using System;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,28 +17,18 @@ namespace Ae.Dns.Client
     public sealed class DnsTcpClient : IDnsClient
     {
         private readonly ILogger<DnsTcpClient> _logger;
-        private readonly IPEndPoint _endpoint;
+        private readonly DnsTcpClientOptions _options;
         private bool _isDisposed;
 
-        public DnsTcpClient(IPAddress address) :
-            this(new NullLogger<DnsTcpClient>(), address)
-        {
-        }
-
-        public DnsTcpClient(IPEndPoint endpoint) :
-            this(new NullLogger<DnsTcpClient>(), endpoint)
-        {
-        }
-
-        public DnsTcpClient(ILogger<DnsTcpClient> logger, IPAddress address) :
-            this(logger, new IPEndPoint(address, 53))
-        {
-        }
-
-        public DnsTcpClient(ILogger<DnsTcpClient> logger, IPEndPoint endpoint)
+        [ActivatorUtilitiesConstructor]
+        public DnsTcpClient(ILogger<DnsTcpClient> logger, IOptions<DnsTcpClientOptions> options)
         {
             _logger = logger;
-            _endpoint = endpoint;
+            _options = options.Value;
+        }
+
+        public DnsTcpClient(DnsTcpClientOptions options) : this(NullLogger<DnsTcpClient>.Instance, Options.Create(options))
+        {
         }
 
         /// <inheritdoc/>
@@ -51,9 +42,9 @@ namespace Ae.Dns.Client
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
-            using var socket = new Socket(_endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            using var socket = new Socket(_options.Endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            await socket.ConnectAsync(_endpoint);
+            await socket.ConnectAsync(_options.Endpoint);
 
             var buffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
 
@@ -87,6 +78,6 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"tcp://{_endpoint}/";
+        public override string ToString() => $"tcp://{_options.Endpoint}/";
     }
 }
