@@ -1,6 +1,5 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Protocol.Enums;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Net;
 using System.Threading.Tasks;
 using Xunit;

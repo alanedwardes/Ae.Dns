@@ -13,7 +13,6 @@ namespace Ae.Dns.Client
     /// <summary>
     /// An experimental DNS TCP client.
     /// </summary>
-    [Obsolete("This class is experimental.")]
     public sealed class DnsTcpClient : IDnsClient
     {
         private readonly ILogger<DnsTcpClient> _logger;

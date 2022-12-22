@@ -2,7 +2,6 @@
 using Ae.Dns.Client.Exceptions;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
