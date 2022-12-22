@@ -111,12 +111,10 @@ namespace Ae.Dns.Client
 
         private async Task RemoveFailedRequest(MessageId messageId, CancellationToken token)
         {
-            var timeout = TimeSpan.FromSeconds(2);
-
-            Exception exception = new DnsClientTimeoutException(timeout, messageId.Name);
+            Exception exception = new DnsClientTimeoutException(_options.Timeout, messageId.Name);
             try
             {
-                await Task.Delay(timeout, token);
+                await Task.Delay(_options.Timeout, token);
             }
             catch (OperationCanceledException e)
             {
@@ -126,7 +124,7 @@ namespace Ae.Dns.Client
 
             if (_pending.TryRemove(messageId, out TaskCompletionSource<byte[]> completionSource))
             {
-                _logger.LogError("Timed out DNS request for {0} from {1}", messageId, _options.Endpoint);
+                _logger.LogError("Timed out DNS request for {0} from {1} in {2}", messageId, _options.Endpoint, _options.Timeout);
                 completionSource.SetException(exception);
             }
         }

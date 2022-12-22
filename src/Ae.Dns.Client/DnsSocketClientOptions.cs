@@ -1,9 +1,11 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 
 namespace Ae.Dns.Client
 {
     public abstract class DnsSocketClientOptions
     {
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
         public EndPoint Endpoint { get; set; }
     }
 

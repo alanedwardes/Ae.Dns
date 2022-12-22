@@ -41,6 +41,9 @@ namespace Ae.Dns.Client
                 throw new ObjectDisposedException(GetType().FullName);
             }
 
+            using var timeoutCancellation = new CancellationTokenSource(_options.Timeout);
+            using var compositeCancellation = CancellationTokenSource.CreateLinkedTokenSource(timeoutCancellation.Token, token);
+
             using var socket = new Socket(_options.Endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             await socket.ConnectAsync(_options.Endpoint);
@@ -55,16 +58,16 @@ namespace Ae.Dns.Client
 
             var sendBuffer = buffer.Slice(0, sendOffset);
 
-            await socket.SendAsync(sendBuffer, SocketFlags.None, token);
+            await socket.SendAsync(sendBuffer, SocketFlags.None, compositeCancellation.Token);
 
-            var received = await socket.ReceiveAsync(buffer, SocketFlags.None, token);
+            var received = await socket.ReceiveAsync(buffer, SocketFlags.None, compositeCancellation.Token);
 
             var offset = 0;
             var answerLength = DnsByteExtensions.ReadUInt16(buffer, ref offset);
 
             while (received < answerLength)
             {
-                received += await socket.ReceiveAsync(buffer.Slice(received), SocketFlags.None, token);
+                received += await socket.ReceiveAsync(buffer.Slice(received), SocketFlags.None, compositeCancellation.Token);
             }
 
             socket.Close();
