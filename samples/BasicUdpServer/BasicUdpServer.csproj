@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>10.0</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Ae.Dns.Client\Ae.Dns.Client.csproj" />
+		<ProjectReference Include="..\..\src\Ae.Dns.Server\Ae.Dns.Server.csproj" />
+	</ItemGroup>
+
+</Project>
