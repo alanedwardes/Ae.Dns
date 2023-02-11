@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <IsPackable>flase</IsPackable>
+    <IsPackable>false</IsPackable>
     <WarningsAsErrors>true</WarningsAsErrors>
   </PropertyGroup>
 
