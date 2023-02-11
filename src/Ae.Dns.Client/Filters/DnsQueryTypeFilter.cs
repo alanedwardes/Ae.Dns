@@ -16,7 +16,7 @@ namespace Ae.Dns.Client.Filters
         /// Create a new <see cref="DnsQueryTypeFilter"/> with the provided set of <see cref="DnsQueryType"/> to block.
         /// </summary>
         /// <param name="disallowedQueryTypes"></param>
-        public DnsQueryTypeFilter(IEnumerable<DnsQueryType> disallowedQueryTypes) => _disallowedQueryTypes = disallowedQueryTypes.ToHashSet();
+        public DnsQueryTypeFilter(IEnumerable<DnsQueryType> disallowedQueryTypes) => _disallowedQueryTypes = new HashSet<DnsQueryType>(disallowedQueryTypes);
 
         /// <inheritdoc/>
         public bool IsPermitted(DnsMessage query) => !_disallowedQueryTypes.Contains(query.Header.QueryType);

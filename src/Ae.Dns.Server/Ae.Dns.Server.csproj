@@ -1,24 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
-    <Version>0.0.17</Version>
-    <WarningsAsErrors>true</WarningsAsErrors>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Authors>alanedwardes</Authors>
-    <Description>DNS UDP server with filtering for .NET Core</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/alanedwardes/Ae.Dns</PackageProjectUrl>
-    <PackageTags>DNS;DNS Server;DNS UDP Server;DNS Filter</PackageTags>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+		<Version>0.0.17</Version>
+		<WarningsAsErrors>true</WarningsAsErrors>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<Authors>alanedwardes</Authors>
+		<Description>DNS UDP server with filtering for .NET Core</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/alanedwardes/Ae.Dns</PackageProjectUrl>
+		<PackageTags>DNS;DNS Server;DNS UDP Server;DNS Filter</PackageTags>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.8" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.8" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.8" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="3.1.8" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Ae.Dns.Protocol\Ae.Dns.Protocol.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Ae.Dns.Protocol\Ae.Dns.Protocol.csproj" />
+	</ItemGroup>
 
 </Project>
