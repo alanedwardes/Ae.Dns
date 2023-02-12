@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Protocol
 {
-    internal static class DnsSocketExtensions
+    internal static class SocketTaskExtensions
+
     {
 #if NETSTANDARD2_0
-        public static Task<int> DnsSendToAsync(this Socket socket, ReadOnlyMemory<byte> buffer, EndPoint remoteEP, CancellationToken token)
+        public static Task<int> SendToAsync(this Socket socket, ReadOnlyMemory<byte> buffer, EndPoint remoteEP, CancellationToken token)
         {
             var tcs = new TaskCompletionSource<int>(socket);
             var arraySegment = new ArraySegment<byte>(buffer.Span.ToArray());
@@ -22,12 +23,12 @@ namespace Ae.Dns.Protocol
             return tcs.Task;
         }
 #elif NETSTANDARD2_1
-        public static async Task<int> DnsSendToAsync(this Socket socket, ReadOnlyMemory<byte> buffer, EndPoint remoteEP, CancellationToken token)
+        public static async Task<int> SendToAsync(this Socket socket, ReadOnlyMemory<byte> buffer, EndPoint remoteEP, CancellationToken token)
         {
             return await socket.SendToAsync(buffer.ToArray(), SocketFlags.None, remoteEP);
         }
 #else
-        public static async Task<int> DnsSendToAsync(this Socket socket, ReadOnlyMemory<byte> buffer, EndPoint remoteEP, CancellationToken token)
+        public static async Task<int> SendToAsync(this Socket socket, ReadOnlyMemory<byte> buffer, EndPoint remoteEP, CancellationToken token)
         {
             return await socket.SendToAsync(buffer, SocketFlags.None, remoteEP, token);
         }
@@ -37,9 +38,10 @@ namespace Ae.Dns.Protocol
         public static Task<int> ReceiveAsync(this Socket socket, Memory<byte> buffer, SocketFlags socketFlags, CancellationToken token)
         {
             var tcs = new TaskCompletionSource<int>(socket);
-            var arraySegment = new ArraySegment<byte>(buffer.Span.ToArray());
-            socket.BeginReceive(arraySegment.Array, arraySegment.Offset, arraySegment.Count, socketFlags, iar =>
+            var arraySegment = new byte[buffer.Length];
+            socket.BeginReceive(arraySegment, 0, arraySegment.Length, socketFlags, iar =>
             {
+                arraySegment.CopyTo(buffer);
                 var innerTcs = (TaskCompletionSource<int>)iar.AsyncState;
                 try { innerTcs.TrySetResult(((Socket)innerTcs.Task.AsyncState).EndReceive(iar)); }
                 catch (Exception e) { innerTcs.TrySetException(e); }
@@ -58,6 +60,16 @@ namespace Ae.Dns.Protocol
                 catch (Exception e) { innerTcs.TrySetException(e); }
             }, tcs);
             return tcs.Task;
+        }
+
+        public static ArraySegment<byte> Slice(this ArraySegment<byte> buffer, int start, int length)
+        {
+            return new ArraySegment<byte>(buffer.Array, start, length);
+        }
+
+        public static ArraySegment<byte> Slice(this ArraySegment<byte> buffer, int length)
+        {
+            return Slice(buffer, 0, length);
         }
 #endif
     }

@@ -64,6 +64,15 @@ namespace Ae.Dns.Client
         {
             while (!_cancel.IsCancellationRequested)
             {
+#if NETSTANDARD2_0
+                if (!_socket.IsBound)
+                {
+                    // Calling recieve before the socket is bound leads
+                    // to an SocketException (with InvalidArgument)
+                    continue;
+                }
+#endif
+
                 var buffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
 
                 int recieved;
@@ -132,7 +141,7 @@ namespace Ae.Dns.Client
         private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, ReadOnlyMemory<byte> raw, CancellationToken token)
         {
             _ = RemoveFailedRequest(messageId, token);
-            _ = _socket.DnsSendToAsync(raw, _options.Endpoint, token);
+            _ = _socket.SendToAsync(raw, _options.Endpoint, token);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 

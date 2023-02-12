@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System.Buffers;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -36,9 +37,15 @@ namespace Ae.Dns.Server.Http
                 return;
             }
 
+#if NETCOREAPP2_1
+            using var ms = new MemoryStream();
+            await context.Request.Body.CopyToAsync(ms, context.RequestAborted);
+            ms.Position = 0;
+            var buffer = ms.ToArray();
+#else
             var ms = await context.Request.BodyReader.ReadAsync(context.RequestAborted);
-
             var buffer = ms.Buffer.ToArray();
+#endif
 
             var header = DnsByteExtensions.FromBytes<DnsMessage>(buffer);
 
@@ -46,7 +53,14 @@ namespace Ae.Dns.Server.Http
 
             context.Response.Headers.Add("Content-Type", new StringValues(DnsMessageType));
 
-            await context.Response.BodyWriter.WriteAsync(DnsByteExtensions.AllocateAndWrite(answer).ToArray(), context.RequestAborted);
+            var answerBuffer = DnsByteExtensions.AllocateAndWrite(answer);
+
+#if NETCOREAPP2_1
+            using var ms2 = new MemoryStream(answerBuffer.ToArray());
+            await ms2.CopyToAsync(context.Response.Body);
+#else
+            await context.Response.BodyWriter.WriteAsync(answerBuffer.ToArray(), context.RequestAborted);
+#endif
         }
     }
 }
