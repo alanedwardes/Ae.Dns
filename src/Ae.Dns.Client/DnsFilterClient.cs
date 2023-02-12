@@ -1,7 +1,9 @@
 ﻿using Ae.Dns.Client.Filters;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,11 +21,20 @@ namespace Ae.Dns.Client
         /// <summary>
         /// Create a new filter client using the specified logger, <see cref="IDnsFilter"/> and <see cref="IDnsClient"/>.
         /// </summary>
+        [ActivatorUtilitiesConstructor]
         public DnsFilterClient(ILogger<DnsFilterClient> logger, IDnsFilter dnsFilter, IDnsClient dnsClient)
         {
             _logger = logger;
             _dnsFilter = dnsFilter;
             _dnsClient = dnsClient;
+        }
+
+        /// <summary>
+        /// Create a new filter client using the specified <see cref="IDnsFilter"/> and <see cref="IDnsClient"/>.
+        /// </summary>
+        public DnsFilterClient(IDnsFilter dnsFilter, IDnsClient dnsClient)
+            : this(NullLogger<DnsFilterClient>.Instance, dnsFilter, dnsClient)
+        {
         }
 
         /// <inheritdoc/>

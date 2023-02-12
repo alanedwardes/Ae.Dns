@@ -1,5 +1,7 @@
 ﻿using Ae.Dns.Protocol;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -23,10 +25,18 @@ namespace Ae.Dns.Client.Filters
         /// <summary>
         /// Create a new DNS remote set filter instance with the specified logger and HttpClient.
         /// </summary>
+        [ActivatorUtilitiesConstructor]
         public DnsRemoteSetFilter(ILogger<DnsRemoteSetFilter> logger, HttpClient httpClient)
         {
             _logger = logger;
             _httpClient = httpClient;
+        }
+
+        /// <summary>
+        /// Create a new DNS remote set filter instance with the specified HttpClient.
+        /// </summary>
+        public DnsRemoteSetFilter(HttpClient httpClient) : this(NullLogger<DnsRemoteSetFilter>.Instance, httpClient)
+        {
         }
 
         private async Task AddRemoteList(Uri fileUri, bool allow)

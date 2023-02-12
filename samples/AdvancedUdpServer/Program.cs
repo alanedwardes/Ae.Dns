@@ -15,12 +15,12 @@ using IDnsClient google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
 using IDnsClient roundRobinClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
 
 // Add the caching layer
-using IDnsClient cacheClient = new DnsCachingClient(NullLogger<DnsCachingClient>.Instance, roundRobinClient, new MemoryCache("dns"));
+using IDnsClient cacheClient = new DnsCachingClient(roundRobinClient, new MemoryCache("dns"));
 
 using var httpClient = new HttpClient();
 
 // Create a remote blocklist filter
-var remoteSetFilter = new DnsRemoteSetFilter(NullLogger<DnsRemoteSetFilter>.Instance, httpClient);
+var remoteSetFilter = new DnsRemoteSetFilter(httpClient);
 
 // Block all domains from https://github.com/StevenBlack/hosts
 // don't await the task to allow the server to start (class is thread safe)
@@ -28,7 +28,7 @@ var hostsFile = new Uri("https://raw.githubusercontent.com/StevenBlack/hosts/mas
 _ = remoteSetFilter.AddRemoteBlockList(hostsFile);
 
 // Add the filtering layer
-using IDnsClient filterClient = new DnsFilterClient(NullLogger<DnsFilterClient>.Instance, remoteSetFilter, cacheClient);
+using IDnsClient filterClient = new DnsFilterClient(remoteSetFilter, cacheClient);
 
 // Listen on 127.0.0.1
 var serverOptions = new DnsUdpServerOptions
@@ -37,7 +37,7 @@ var serverOptions = new DnsUdpServerOptions
 };
 
 // Create a "raw" client (efficiently deals with network buffers)
-using IDnsRawClient rawClient = new DnsRawClient(NullLogger<DnsRawClient>.Instance, filterClient);
+using IDnsRawClient rawClient = new DnsRawClient(filterClient);
 
 // Create the server using the caching client and remote set filter
 using IDnsServer server = new DnsUdpServer(rawClient, serverOptions);

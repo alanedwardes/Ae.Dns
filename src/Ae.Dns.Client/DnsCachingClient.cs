@@ -1,5 +1,7 @@
 ﻿using Ae.Dns.Protocol;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Linq;
 using System.Runtime.Caching;
@@ -44,11 +46,23 @@ namespace Ae.Dns.Client
         /// <param name="logger">The <see cref="ILogger"/> instance to use.</param>
         /// <param name="dnsClient">The see <see cref="IDnsClient"/> to delegate uncached requests to.</param>
         /// <param name="objectCache">The in-memory cache to use.</param>
+        [ActivatorUtilitiesConstructor]
         public DnsCachingClient(ILogger<DnsCachingClient> logger, IDnsClient dnsClient, ObjectCache objectCache)
         {
             _logger = logger;
             _dnsClient = dnsClient;
             _objectCache = objectCache;
+        }
+
+        /// <summary>
+        /// Construct a new caching DNS client using the specified
+        /// DNS client to forward requests to, and the specified memory cache.
+        /// </summary>
+        /// <param name="dnsClient">The see <see cref="IDnsClient"/> to delegate uncached requests to.</param>
+        /// <param name="objectCache">The in-memory cache to use.</param>
+        public DnsCachingClient(IDnsClient dnsClient, ObjectCache objectCache)
+            : this(NullLogger<DnsCachingClient>.Instance, dnsClient, objectCache)
+        {
         }
 
         private string GetCacheKey(DnsMessage header)

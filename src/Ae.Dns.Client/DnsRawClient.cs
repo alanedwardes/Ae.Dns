@@ -1,5 +1,7 @@
 ﻿using Ae.Dns.Protocol;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Net;
 using System.Threading;
@@ -14,10 +16,16 @@ namespace Ae.Dns.Client
         private readonly IDnsClient _dnsClient;
 
         /// <inheritdoc/>
+        [ActivatorUtilitiesConstructor]
         public DnsRawClient(ILogger<DnsRawClient> logger, IDnsClient dnsClient)
         {
             _logger = logger;
             _dnsClient = dnsClient;
+        }
+
+        /// <inheritdoc/>
+        public DnsRawClient(IDnsClient dnsClient) : this(NullLogger<DnsRawClient>.Instance, dnsClient)
+        {
         }
 
         /// <inheritdoc/>

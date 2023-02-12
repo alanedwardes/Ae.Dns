@@ -1,7 +1,6 @@
 ﻿using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Ae.Dns.Client.Filters
 {
