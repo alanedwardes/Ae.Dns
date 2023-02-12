@@ -86,7 +86,7 @@ namespace Ae.Dns.Client.Filters
                 if (query.Header.Host.EndsWith(".in-addr.arpa"))
                 {
                     var ipParts = hostParts.Take(4).Reverse();
-                    if (IPAddress.TryParse(string.Join('.', ipParts), out var address) && IpAddressExtensions.IsPrivate(address))
+                    if (IPAddress.TryParse(string.Join(".", ipParts), out var address) && IpAddressExtensions.IsPrivate(address))
                     {
                         return false;
                     }

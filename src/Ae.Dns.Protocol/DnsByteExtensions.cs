@@ -71,7 +71,11 @@ namespace Ae.Dns.Protocol
         {
             byte labelLength = bytes.Span[offset];
             offset += 1;
+#if NETSTANDARD2_0
+            var str = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength).ToArray());
+#else
             var str = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength).Span);
+#endif
             offset += labelLength;
             return str;
         }
@@ -118,15 +122,33 @@ namespace Ae.Dns.Protocol
             var buffer = AllocatePinnedNetworkBuffer();
             var offset = 0;
             writer.WriteBytes(buffer, ref offset);
+#if NETSTANDARD2_0
+            return buffer.AsMemory().Slice(0, offset);
+#else
             return buffer.Slice(0, offset);
+#endif
         }
 
-#if NETSTANDARD2_1
-        public static ArraySegment<byte> AllocatePinnedNetworkBuffer() => new byte[65527];
+#if NETSTANDARD2_0
+        public static ArraySegment<byte> Slice(this ArraySegment<byte> buffer, int start, int length)
+        {
+            return new ArraySegment<byte>(buffer.Array, start, length);
+        }
+
+        public static ArraySegment<byte> Slice(this ArraySegment<byte> buffer, int start)
+        {
+            return Slice(buffer, start, buffer.Count - start);
+        }
+#endif
+
+        private const int NetworkBufferSize = 65527;
+
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+        public static ArraySegment<byte> AllocatePinnedNetworkBuffer() => new ArraySegment<byte>(new byte[NetworkBufferSize]);
 #else
         // Allocate a buffer which will be used for the incoming query, and re-used to send the answer.
         // Also make it pinned, see https://enclave.io/high-performance-udp-sockets-net6/
-        public static Memory<byte> AllocatePinnedNetworkBuffer() => GC.AllocateArray<byte>(65527, true);
+        public static Memory<byte> AllocatePinnedNetworkBuffer() => GC.AllocateArray<byte>(NetworkBufferSize, true);
 #endif
 
         public static TReader FromBytes<TReader>(ReadOnlyMemory<byte> bytes) where TReader : IDnsByteArrayReader, new()
@@ -148,7 +170,13 @@ namespace Ae.Dns.Protocol
             for (int i = 0; i < strings.Length; i++)
             {
                 // First write the value 1 byte from the offset to leave room for the length byte
+#if NETSTANDARD2_0
+                var stringBytes = Encoding.ASCII.GetBytes(strings[i]);
+                stringBytes.CopyTo(buffer.Slice(offset + 1, strings[i].Length));
+                var length = stringBytes.Length;
+#else
                 var length = Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset + 1, strings[i].Length).Span);
+#endif
 
                 // Then write the length before the value
                 buffer.Span[offset] = (byte)length;

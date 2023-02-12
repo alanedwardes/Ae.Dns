@@ -1,24 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.0.17</Version>
-    <WarningsAsErrors>true</WarningsAsErrors>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Authors>alanedwardes</Authors>
-    <Description>AppMetrics support for Ae.Dns.</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/alanedwardes/Ae.Dns</PackageProjectUrl>
-    <PackageTags>DNS;DoH;DNS Client;DNS UDP;DNS HTTP;DNS HTTPS</PackageTags>
-    <LangVersion>8.0</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+		<Version>0.0.18</Version>
+		<WarningsAsErrors>true</WarningsAsErrors>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<Authors>alanedwardes</Authors>
+		<Description>AppMetrics support for Ae.Dns.</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/alanedwardes/Ae.Dns</PackageProjectUrl>
+		<PackageTags>DNS;DoH;DNS Client;DNS UDP;DNS HTTP;DNS HTTPS</PackageTags>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="App.Metrics.Abstractions" Version="4.3.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="App.Metrics.Abstractions" Version="4.3.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Ae.Dns.Protocol\Ae.Dns.Protocol.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Ae.Dns.Protocol\Ae.Dns.Protocol.csproj" />
+	</ItemGroup>
 
 </Project>

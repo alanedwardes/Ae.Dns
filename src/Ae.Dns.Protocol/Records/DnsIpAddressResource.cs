@@ -29,7 +29,16 @@ namespace Ae.Dns.Protocol.Records
         public override int GetHashCode() => HashCode.Combine(IPAddress);
 
         /// <inheritdoc/>
-        public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length) => IPAddress = new IPAddress(DnsByteExtensions.ReadBytes(bytes, length, ref offset).Span);
+        public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
+        {
+            var raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset);
+
+#if NETSTANDARD2_0
+            IPAddress = new IPAddress(raw.ToArray());
+#else
+            IPAddress = new IPAddress(raw.Span);
+#endif
+        }
 
         /// <inheritdoc/>
         public IEnumerable<IEnumerable<byte>> WriteBytes()

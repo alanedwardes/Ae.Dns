@@ -1,4 +1,5 @@
-﻿using Ae.Dns.Protocol;
+﻿#if !NETSTANDARD2_0
+using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -104,3 +105,4 @@ namespace Ae.Dns.Client
         }
     }
 }
+#endif

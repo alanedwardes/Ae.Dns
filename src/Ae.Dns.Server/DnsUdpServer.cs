@@ -66,7 +66,7 @@ namespace Ae.Dns.Server
 
                 try
                 {
-#if NETSTANDARD2_1
+#if NETSTANDARD2_0 || NETSTANDARD2_1
                     var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint);
 #else
                     var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint, token);
@@ -133,7 +133,7 @@ namespace Ae.Dns.Server
             try
             {
                 // Send the part of the buffer containing the answer
-                await _socket.DnsSendToAsync(buffer.Slice(0, answerLength), sender, token);
+                await _socket.SendToAsync(buffer.Slice(0, answerLength), SocketFlags.None, sender, token);
             }
             catch (Exception e)
             {

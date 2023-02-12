@@ -30,7 +30,11 @@ namespace Ae.Dns.Client
             var queryBufferLength = 0;
             query.WriteBytes(queryBuffer, ref queryBufferLength);
 
+#if NETSTANDARD2_0
+            using var content = new ByteArrayContent(queryBuffer.Array, 0, queryBufferLength);
+#else
             using var content = new ReadOnlyMemoryContent(queryBuffer.Slice(0, queryBufferLength));
+#endif
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);
 
             using var request = new HttpRequestMessage(HttpMethod.Post, "/dns-query") { Content = content };
@@ -39,7 +43,7 @@ namespace Ae.Dns.Client
             using var response = await _httpClient.SendAsync(request, token);
             response.EnsureSuccessStatusCode();
 
-#if NETSTANDARD2_1
+#if NETSTANDARD2_0 || NETSTANDARD2_1
             var buffer = await response.Content.ReadAsByteArrayAsync();
 #else
             var buffer = await response.Content.ReadAsByteArrayAsync(token);
