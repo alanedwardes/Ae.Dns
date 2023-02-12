@@ -141,7 +141,7 @@ namespace Ae.Dns.Client
         private TaskCompletionSource<byte[]> SendQueryInternal(MessageId messageId, ReadOnlyMemory<byte> raw, CancellationToken token)
         {
             _ = RemoveFailedRequest(messageId, token);
-            _ = _socket.SendToAsync(raw, _options.Endpoint, token);
+            _ = _socket.SendToAsync(raw, SocketFlags.None, _options.Endpoint, token);
             return new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
