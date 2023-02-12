@@ -105,7 +105,7 @@ namespace Ae.Dns.Console
 
             selfLogger.LogInformation("Using {UpstreamCount} DNS upstreams", upstreams.Length);
 
-            IDnsClient dnsClient = new DnsRacerClient(provider.GetRequiredService<ILogger<DnsRacerClient>>(), upstreams);
+            IDnsClient dnsClient = ActivatorUtilities.CreateInstance<DnsRacerClient>(provider, upstreams.AsEnumerable());
 
             dnsClient = ActivatorUtilities.CreateInstance<DnsRebindMitigationClient>(provider, dnsClient);
 
@@ -166,17 +166,17 @@ namespace Ae.Dns.Console
 
             foreach (var hostFile in dnsConfiguration.HostFiles)
             {
-                staticLookupSources.Add(new HostsFileDnsLookupSource(provider.GetRequiredService<ILogger<HostsFileDnsLookupSource>>(), new FileInfo(hostFile)));
+                staticLookupSources.Add(ActivatorUtilities.CreateInstance<HostsFileDnsLookupSource>(provider, new FileInfo(hostFile)));
             }
 
             if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdConfigFile))
             {
-                staticLookupSources.Add(new DhcpdConfigDnsLookupSource(provider.GetRequiredService<ILogger<DhcpdConfigDnsLookupSource>>(), new FileInfo(dnsConfiguration.DhcpdConfigFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
+                staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdConfigDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdConfigFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
             }
 
             if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdLeasesFile))
             {
-                staticLookupSources.Add(new DhcpdLeasesDnsLookupSource(provider.GetRequiredService<ILogger<DhcpdLeasesDnsLookupSource>>(), new FileInfo(dnsConfiguration.DhcpdLeasesFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
+                staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdLeasesDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdLeasesFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
             }
 
             if (staticLookupSources.Count > 0)

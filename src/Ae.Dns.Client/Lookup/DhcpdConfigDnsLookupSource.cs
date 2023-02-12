@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,10 +20,19 @@ namespace Ae.Dns.Client.Lookup
         /// <summary>
         /// Construct a new <see cref="DhcpdLeasesDnsLookupSource"/> using the specified <see cref="FileInfo"/> and suffix string (for example, local).
         /// </summary>
+        [ActivatorUtilitiesConstructor]
         public DhcpdConfigDnsLookupSource(ILogger<DhcpdConfigDnsLookupSource> logger, FileInfo file, string hostnameSuffix = null) : base(logger, file)
         {
             _hostnameSuffix = hostnameSuffix;
             ReloadFile();
+        }
+
+        /// <summary>
+        /// Construct a new <see cref="DhcpdLeasesDnsLookupSource"/> using the specified <see cref="FileInfo"/> and suffix string (for example, local).
+        /// </summary>
+        public DhcpdConfigDnsLookupSource(FileInfo file, string hostnameSuffix = null)
+            : this(NullLogger<DhcpdConfigDnsLookupSource>.Instance, file, hostnameSuffix)
+        {
         }
 
         /// <inheritdoc/>

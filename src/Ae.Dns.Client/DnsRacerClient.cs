@@ -1,5 +1,7 @@
 ﻿using Ae.Dns.Protocol;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,10 +22,11 @@ namespace Ae.Dns.Client
         private readonly ILogger<DnsRacerClient> _logger;
 
         /// <summary>
-        /// Create a new recer DNS client using the specified <see cref="IDnsClient"/> instances to delegate to.
+        /// Create a new racer DNS client using the specified <see cref="IDnsClient"/> instances to delegate to.
         /// </summary>
         /// <param name="logger">The logger instance to use.</param>
         /// <param name="dnsClients">The enumerable of DNS clients to use.</param>
+        [ActivatorUtilitiesConstructor]
         public DnsRacerClient(ILogger<DnsRacerClient> logger, IEnumerable<IDnsClient> dnsClients)
         {
             _logger = logger;
@@ -33,6 +36,15 @@ namespace Ae.Dns.Client
             {
                 throw new InvalidOperationException("Must use at least two DNS clients");
             }
+        }
+
+        /// <summary>
+        /// Create a new racer DNS client using the specified <see cref="IDnsClient"/> instances to delegate to.
+        /// </summary>
+        /// <param name="dnsClients">The enumerable of DNS clients to use.</param>
+        public DnsRacerClient(params IDnsClient[] dnsClients)
+            : this(NullLogger<DnsRacerClient>.Instance, dnsClients)
+        {
         }
 
         /// <inheritdoc/>
