@@ -4,6 +4,6 @@ namespace Ae.Dns.Server.Http
 {
     public interface IDnsMiddlewareConfig
     {
-        PathString Path { get; }
+        public PathString Path { get; }
     }
 }

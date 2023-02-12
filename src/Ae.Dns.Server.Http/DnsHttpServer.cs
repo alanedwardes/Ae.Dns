@@ -38,9 +38,6 @@ namespace Ae.Dns.Server.Http
         /// <inheritdoc/>
         public async Task Listen(CancellationToken token)
         {
-
-#if NETCOREAPP2_1
-#else
             var builder = Host.CreateDefaultBuilder()
                 .ConfigureWebHostDefaults(x => 
                 {
@@ -48,8 +45,8 @@ namespace Ae.Dns.Server.Http
                     x.UseStartup<DnsStartup>();
                     x.ConfigureServices(y => y.AddSingleton(_dnsClient).AddSingleton(_middlewareConfig));
                 });
+
             await builder.Build().RunAsync(token);
-#endif
         }
     }
 }
