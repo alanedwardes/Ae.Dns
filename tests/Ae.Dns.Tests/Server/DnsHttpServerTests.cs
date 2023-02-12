@@ -1,4 +1,5 @@
-﻿using Ae.Dns.Client;
+﻿#if !NETCOREAPP2_1
+using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server.Http;
 using Microsoft.AspNetCore.Hosting;
@@ -11,7 +12,6 @@ using Xunit;
 
 namespace Ae.Dns.Tests.Server
 {
-#if !NETCOREAPP2_1
     public class DnsHttpServerTests
     {
         public static IPEndPoint GenerateEndPoint() => new IPEndPoint(IPAddress.Loopback, new Random().Next(1024, IPEndPoint.MaxPort));
@@ -63,5 +63,5 @@ namespace Ae.Dns.Tests.Server
             }
         }
     }
-#endif
 }
+#endif

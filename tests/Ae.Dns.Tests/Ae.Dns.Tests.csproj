@@ -19,8 +19,11 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\Ae.Dns.Client\Ae.Dns.Client.csproj" />
-		<ProjectReference Include="..\..\src\Ae.Dns.Server.Http\Ae.Dns.Server.Http.csproj" />
 		<ProjectReference Include="..\..\src\Ae.Dns.Server\Ae.Dns.Server.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp2.1'">
+		<ProjectReference Include="..\..\src\Ae.Dns.Server.Http\Ae.Dns.Server.Http.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;netcoreapp2.1</TargetFrameworks>
+		<TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
 		<Version>0.0.17</Version>
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -13,14 +13,9 @@
 		<LangVersion>8.0</LangVersion>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-		<PackageReference Include="Microsoft.AspNetCore" Version="2.1.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="2.1.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
+	</ItemGroup>		
 
 	<ItemGroup>
 		<ProjectReference Include="..\Ae.Dns.Protocol\Ae.Dns.Protocol.csproj" />
