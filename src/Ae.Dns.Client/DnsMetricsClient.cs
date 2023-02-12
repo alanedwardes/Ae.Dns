@@ -1,8 +1,9 @@
-﻿using Ae.Dns.Protocol;
+﻿#if !NETSTANDARD2_0
+using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using System.Collections.Generic;
 using System.Diagnostics;
-//using System.Diagnostics.Metrics;
+using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -43,12 +44,12 @@ namespace Ae.Dns.Client
         /// </summary>
         public static readonly string ExceptionErrorCounterName = "ExceptionError";
 
-        //private static readonly Meter _meter = new Meter(MeterName);
-        //private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>(SuccessCounterName);
-        //private static readonly Counter<int> _missingCounter = _meter.CreateCounter<int>(MissingErrorCounterName);
-        //private static readonly Counter<int> _refusedCounter = _meter.CreateCounter<int>(RefusedErrorCounterName);
-        //private static readonly Counter<int> _otherErrorCounter = _meter.CreateCounter<int>(OtherErrorCounterName);
-        //private static readonly Counter<int> _exceptionCounter = _meter.CreateCounter<int>(ExceptionErrorCounterName);
+        private static readonly Meter _meter = new Meter(MeterName);
+        private static readonly Counter<int> _successCounter = _meter.CreateCounter<int>(SuccessCounterName);
+        private static readonly Counter<int> _missingCounter = _meter.CreateCounter<int>(MissingErrorCounterName);
+        private static readonly Counter<int> _refusedCounter = _meter.CreateCounter<int>(RefusedErrorCounterName);
+        private static readonly Counter<int> _otherErrorCounter = _meter.CreateCounter<int>(OtherErrorCounterName);
+        private static readonly Counter<int> _exceptionCounter = _meter.CreateCounter<int>(ExceptionErrorCounterName);
 
         private readonly IDnsClient _dnsClient;
 
@@ -76,7 +77,7 @@ namespace Ae.Dns.Client
             }
             catch
             {
-                //_exceptionCounter.Add(1, queryTag);
+                _exceptionCounter.Add(1, queryTag);
                 throw;
             }
             finally
@@ -87,16 +88,16 @@ namespace Ae.Dns.Client
             switch (answer.Header.ResponseCode)
             {
                 case DnsResponseCode.NoError:
-                    //_successCounter.Add(1, queryTag);
+                    _successCounter.Add(1, queryTag);
                     break;
                 case DnsResponseCode.NXDomain:
-                    //_missingCounter.Add(1, queryTag);
+                    _missingCounter.Add(1, queryTag);
                     break;
                 case DnsResponseCode.Refused:
-                    //_refusedCounter.Add(1, queryTag);
+                    _refusedCounter.Add(1, queryTag);
                     break;
                 default:
-                    //_otherErrorCounter.Add(1, queryTag);
+                    _otherErrorCounter.Add(1, queryTag);
                     break;
             }
 
@@ -104,3 +105,4 @@ namespace Ae.Dns.Client
         }
     }
 }
+#endif
