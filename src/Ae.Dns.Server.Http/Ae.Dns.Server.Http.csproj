@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;netcoreapp3.1</TargetFrameworks>
-		<Version>0.0.18</Version>
+		<Version>0.0.19</Version>
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Authors>alanedwardes</Authors>

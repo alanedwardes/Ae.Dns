@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
-		<Version>0.0.18</Version>
+		<Version>0.0.19</Version>
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Authors>alanedwardes</Authors>

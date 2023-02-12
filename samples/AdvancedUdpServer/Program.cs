@@ -2,7 +2,6 @@
 using Ae.Dns.Client.Filters;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Net;
 using System.Runtime.Caching;
 
