@@ -17,6 +17,7 @@ namespace Ae.Dns.Protocol
 #endif
 
 #if NETSTANDARD2_0
+        // Implementations from https://github.com/dotnet/corefx/blob/v1.0.0/src/System.Net.Sockets/src/System/Net/Sockets/SocketTaskExtensions.cs
         public static Task<int> ReceiveAsync(this Socket socket, ArraySegment<byte> buffer, SocketFlags socketFlags)
         {
             return Task<int>.Factory.FromAsync(
@@ -40,7 +41,7 @@ namespace Ae.Dns.Protocol
 
         public static Task<int> ReceiveAsync(this Socket socket, Memory<byte> buffer, SocketFlags socketFlags, CancellationToken token)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("ReceiveAsync is not yet implemented under netstandard2.0 - PRs welcome :-)");
         }
 
         public static async Task<int> SendAsync(this Socket socket, ReadOnlyMemory<byte> buffer, SocketFlags socketFlags, CancellationToken token)
