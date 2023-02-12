@@ -1,12 +1,10 @@
-# Ae.Dns
+# Ae.Dns ![.NET Core](https://github.com/alanedwardes/Ae.Dns/workflows/.NET%20Core/badge.svg?branch=main)
 **API Documentation: https://alanedwardes.github.io/docs/Ae.Dns/**
-
-![.NET Core](https://github.com/alanedwardes/Ae.Dns/workflows/.NET%20Core/badge.svg?branch=main)
 
 A pure C# implementation of a DNS client, server and configurable caching/filtering layer. This project offers the following packages:
 * [Ae.Dns.Client](#aednsclient) - HTTP and UDP DNS clients with caching and round-robin capabilities
 * [Ae.Dns.Server](#aednsserver) - Standard UDP DNS server
-* [Ae.Dns.Server.Http](#aednsserverhttp) - Standard UDP DNS server
+* [Ae.Dns.Server.Http](#aednsserverhttp) - HTTP DNS server (if coupled with SSL, a DoH server)
 * [Ae.Dns.Protocol](#aednsprotocol) - Low level DNS wire protocol round-trip handling used on the client and server
 
 ## Ae.Dns.Client
@@ -76,13 +74,3 @@ See [samples/BasicHttpClientMiddleware/Program.cs](samples/BasicHttpClientMiddle
 #### Advanced DnsDelegatingHandler Dependency Injection Example
 
 See [samples/AdvancedHttpClientMiddleware/Program.cs](samples/AdvancedHttpClientMiddleware/Program.cs)
-
-Also see the following types:
-* DnsHeader
-* DnsAnswer
-* DnsResourceRecord
-* DnsIpAddressResource
-* DnsMxResource
-* DnsSoaResource
-* DnsTextResource
-* DnsUnknownResource
