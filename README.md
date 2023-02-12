@@ -31,6 +31,11 @@ This example uses multiple upstream `IDnsClient` implementations in a round-robi
 
 See [samples/RoundRobinClient/Program.cs](samples/RoundRobinClient/Program.cs)
 
+### Racer Client Usage
+This example uses multiple (two or more) upstream `IDnsClient` implementations and races them using `DnsRacerClient`. Two queries are sent in parallel, and the fastest result "wins" (is returned). If a query faults, the other query result is used. As with the round robin-client, multiple protocols can be mixed, both the `DnsUdpClient` and `DnsHttpClient` can be used here since they implement `IDnsClient`.
+
+See [samples/RacerClient/Program.cs](samples/RacerClient/Program.cs)
+
 ### Caching Client Usage
 This example uses the `DnsCachingClient` to cache queries into a `MemoryCache`, so that the answer is not retrieved from the upstream if the answer is within its TTL. Note that this can be combined with the `DnsRoundRobinClient`, so the cache can be backed by multiple upstream clients (it just accepts `IDnsClient`).
 
