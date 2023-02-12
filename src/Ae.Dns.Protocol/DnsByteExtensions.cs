@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Ae.Dns.Protocol
@@ -129,6 +128,18 @@ namespace Ae.Dns.Protocol
             return buffer.Slice(0, offset);
 #endif
         }
+
+#if NETSTANDARD2_0
+        public static ArraySegment<byte> Slice(this ArraySegment<byte> buffer, int start, int length)
+        {
+            return new ArraySegment<byte>(buffer.Array, start, length);
+        }
+
+        public static ArraySegment<byte> Slice(this ArraySegment<byte> buffer, int start)
+        {
+            return Slice(buffer, start, buffer.Count - start);
+        }
+#endif
 
         private const int NetworkBufferSize = 65527;
 

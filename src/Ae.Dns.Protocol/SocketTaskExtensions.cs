@@ -90,16 +90,6 @@ namespace Ae.Dns.Protocol
         {
             return await socket.SendToAsync(new ArraySegment<byte>(buffer.ToArray()), socketFlags, remoteEP);
         }
-
-        public static ArraySegment<byte> Slice(this ArraySegment<byte> buffer, int start, int length)
-        {
-            return new ArraySegment<byte>(buffer.Array, start, length);
-        }
-
-        public static ArraySegment<byte> Slice(this ArraySegment<byte> buffer, int length)
-        {
-            return Slice(buffer, 0, length);
-        }
 #endif
     }
 }
