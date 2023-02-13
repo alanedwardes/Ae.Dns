@@ -64,15 +64,6 @@ namespace Ae.Dns.Client
         {
             while (!_cancel.IsCancellationRequested)
             {
-#if NETSTANDARD2_0
-                if (!_socket.IsBound)
-                {
-                    // Calling recieve before the socket is bound leads
-                    // to an SocketException (with InvalidArgument)
-                    continue;
-                }
-#endif
-
                 var buffer = DnsByteExtensions.AllocatePinnedNetworkBuffer();
 
                 int recieved;

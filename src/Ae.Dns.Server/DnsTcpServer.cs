@@ -61,11 +61,7 @@ namespace Ae.Dns.Server
 
             while (!token.IsCancellationRequested)
             {
-#if NETSTANDARD2_0 || NETSTANDARD2_1
-                var socket = await _socket.AcceptAsync();
-#else
                 var socket = await _socket.AcceptAsync(token);
-#endif
                 Connect(socket, token);
             }
         }

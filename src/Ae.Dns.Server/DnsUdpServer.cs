@@ -66,11 +66,7 @@ namespace Ae.Dns.Server
 
                 try
                 {
-#if NETSTANDARD2_0 || NETSTANDARD2_1
-                    var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint);
-#else
                     var result = await _socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, _anyEndpoint, token);
-#endif
                     Respond(result.RemoteEndPoint, buffer, result.ReceivedBytes, token);
                 }
                 catch (ObjectDisposedException)

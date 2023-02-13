@@ -6,9 +6,20 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Protocol
 {
+#if NETSTANDARD2_0 || NETSTANDARD2_1
     internal static class SocketTaskExtensions
-
     {
+        public static async Task<SocketReceiveMessageFromResult> ReceiveMessageFromAsync(this Socket socket, ArraySegment<byte> buffer, SocketFlags socketFlags, EndPoint remoteEndPoint, CancellationToken token)
+        {
+            return await socket.ReceiveMessageFromAsync(buffer, socketFlags, remoteEndPoint);
+        }
+
+        public static async Task<Socket> AcceptAsync(this Socket socket, CancellationToken token)
+        {
+            return await socket.AcceptAsync();
+        }
+#endif
+
 #if NETSTANDARD2_1
         public static async Task<int> SendToAsync(this Socket socket, ReadOnlyMemory<byte> buffer, SocketFlags socketFlags, EndPoint remoteEP, CancellationToken token)
         {
@@ -92,5 +103,8 @@ namespace Ae.Dns.Protocol
             return await socket.SendToAsync(new ArraySegment<byte>(buffer.ToArray()), socketFlags, remoteEP);
         }
 #endif
+
+#if NETSTANDARD2_0 || NETSTANDARD2_1
     }
+#endif
 }

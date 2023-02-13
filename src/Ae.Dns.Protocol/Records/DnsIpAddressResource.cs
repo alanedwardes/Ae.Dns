@@ -32,12 +32,7 @@ namespace Ae.Dns.Protocol.Records
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             var raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset);
-
-#if NETSTANDARD2_0
             IPAddress = new IPAddress(raw.ToArray());
-#else
-            IPAddress = new IPAddress(raw.Span);
-#endif
         }
 
         /// <inheritdoc/>
