@@ -5,6 +5,7 @@ using Ae.Dns.Metrics.InfluxDb;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Server;
+using Ae.Dns.Server.Http;
 using App.Metrics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -201,6 +202,11 @@ namespace Ae.Dns.Console
                 {
                     webHostBuilder.UseStartup<Startup>();
                     webHostBuilder.UseConfiguration(configuration.GetSection("statsServer"));
+                })
+                .ConfigureServices(x =>
+                {
+                    x.AddSingleton<IDnsMiddlewareConfig>(new DnsMiddlewareConfig());
+                    x.AddSingleton(dnsClient);
                 });
 
             await Task.WhenAll(

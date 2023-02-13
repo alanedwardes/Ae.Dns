@@ -42,6 +42,8 @@ namespace Ae.Dns.Server.Http
 
             var header = DnsByteExtensions.FromBytes<DnsMessage>(buffer);
 
+            header.Header.Tags.Add("Sender", new IPEndPoint(context.Connection.RemoteIpAddress, context.Connection.RemotePort));
+
             var answer = await _dnsClient.Query(header, context.RequestAborted);
 
             context.Response.Headers.Add("Content-Type", new StringValues(DnsMessageType));

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
+using Ae.Dns.Server.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -30,6 +31,8 @@ namespace Ae.Dns.Console
             };
             meterListener.SetMeasurementEventCallback<int>(OnMeasurementRecorded);
             meterListener.Start();
+
+            app.UseMiddleware<DnsMiddleware>();
 
             app.Run(async context =>
             {
