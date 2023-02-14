@@ -50,11 +50,6 @@ namespace Ae.Dns.Protocol
             return await socket.ReceiveAsync(buffer, socketFlags);
         }
 
-        public static Task<int> ReceiveAsync(this Socket socket, Memory<byte> buffer, SocketFlags socketFlags, CancellationToken token)
-        {
-            throw new NotImplementedException("ReceiveAsync is not yet implemented under netstandard2.0 - PRs welcome :-)");
-        }
-
         public static async Task<int> SendAsync(this Socket socket, ReadOnlyMemory<byte> buffer, SocketFlags socketFlags, CancellationToken token)
         {
             return await socket.SendAsync(new ArraySegment<byte>(buffer.ToArray()), socketFlags);

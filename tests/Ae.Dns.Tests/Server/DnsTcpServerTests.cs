@@ -1,20 +1,17 @@
-﻿#if !NETCOREAPP2_1
-using Ae.Dns.Client;
+﻿using Ae.Dns.Client;
 using Ae.Dns.Client.Polly;
 using Ae.Dns.Protocol;
-using Ae.Dns.Server.Http;
-using Microsoft.AspNetCore.Hosting;
+using Ae.Dns.Server;
 using Polly;
 using System;
 using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace Ae.Dns.Tests.Server
 {
-    public class DnsHttpServerTests
+    public class DnsTcpServerTests
     {
         public static IPEndPoint GenerateEndPoint() => new IPEndPoint(IPAddress.Loopback, new Random().Next(1024, IPEndPoint.MaxPort));
 
@@ -23,7 +20,7 @@ namespace Ae.Dns.Tests.Server
         {
             using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
-            using var server = new DnsHttpServer(new DnsUdpClient(IPAddress.Loopback), x => x.ConfigureKestrel(y => y.Listen(GenerateEndPoint())));
+            using var server = new DnsTcpServer(null, new DnsTcpServerOptions { Endpoint = GenerateEndPoint() });
 
             await server.Listen(tokenSource.Token);
         }
@@ -41,14 +38,17 @@ namespace Ae.Dns.Tests.Server
             // Retry
             using var retry = new DnsPollyClient(upstream, Policy<DnsMessage>.Handle<Exception>().WaitAndRetryForeverAsync(x => TimeSpan.FromSeconds(x)));
 
+            // Create a raw client
+            using var rawClient = new DnsRawClient(retry);
+
             // Create a loopback server
-            using var server = new DnsHttpServer(retry, x => x.ConfigureKestrel(y => y.Listen(endpoint)));
+            using var server = new DnsTcpServer(rawClient, new DnsTcpServerOptions { Endpoint = endpoint });
 
             // Start recieving
             using var receiveTask = server.Listen(tokenSource.Token);
 
             // Create a loopback DNS client to talk to the server
-            using var client = new DnsHttpClient(new HttpClient { BaseAddress = new Uri($"http://{endpoint.Address}:{endpoint.Port}") });
+            using var client = new DnsTcpClient(endpoint);
 
             try
             {
@@ -69,4 +69,3 @@ namespace Ae.Dns.Tests.Server
         }
     }
 }
-#endif

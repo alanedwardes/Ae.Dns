@@ -18,7 +18,7 @@ namespace Ae.Dns.Tests.Server
         [Fact]
         public async Task TestStartupShutdown()
         {
-            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
             using var server = new DnsUdpServer(null, new DnsUdpServerOptions { Endpoint = GenerateEndPoint() });
 

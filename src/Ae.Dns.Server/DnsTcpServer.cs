@@ -9,6 +9,12 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if NETSTANDARD2_0
+using ByteBuffer = System.ArraySegment<byte>;
+#else
+using ByteBuffer = System.Memory<byte>;
+#endif
+
 namespace Ae.Dns.Server
 {
     public sealed class DnsTcpServer : IDnsServer
@@ -22,7 +28,7 @@ namespace Ae.Dns.Server
         /// Construct a new <see cref="DnsTcpServer"/> with a custom logger, options and a <see cref="IDnsRawClient"/> to delegate to.
         /// </summary>
         [ActivatorUtilitiesConstructor]
-        public DnsTcpServer(ILogger<DnsTcpServer> logger, IOptions<DnsTcpServerOptions> options, IDnsRawClient dnsClient)
+        public DnsTcpServer(ILogger<DnsTcpServer> logger, IDnsRawClient dnsClient, IOptions<DnsTcpServerOptions> options)
         {
             _options = options.Value;
             _socket = new Socket(_options.Endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -34,7 +40,8 @@ namespace Ae.Dns.Server
         /// <summary>
         /// A convenience constructor where only the <see cref="IDnsRawClient"/> is mandated.
         /// </summary>
-        public DnsTcpServer(IDnsRawClient dnsClient, DnsTcpServerOptions options = null) : this(NullLogger<DnsTcpServer>.Instance, Options.Create(options ?? new DnsTcpServerOptions()), dnsClient)
+        public DnsTcpServer(IDnsRawClient dnsClient, DnsTcpServerOptions options = null)
+            : this(NullLogger<DnsTcpServer>.Instance, dnsClient, Options.Create(options ?? new DnsTcpServerOptions()))
         {
         }
 
@@ -61,8 +68,19 @@ namespace Ae.Dns.Server
 
             while (!token.IsCancellationRequested)
             {
-                var socket = await _socket.AcceptAsync(token);
-                Connect(socket, token);
+                try
+                {
+                    var socket = await _socket.AcceptAsync(token);
+                    Connect(socket, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Cancellation is OK
+                }
+                catch (SocketException e) when (e.SocketErrorCode == SocketError.OperationAborted)
+                {
+                    // Aborted connections are OK
+                }
             }
         }
 
@@ -101,9 +119,9 @@ namespace Ae.Dns.Server
             }
         }
 
-        private async Task<int> Receive(Socket socket, Memory<byte> buffer, CancellationToken token)
+        private async Task<int> Receive(Socket socket, ByteBuffer buffer, CancellationToken token)
         {
-            async Task<int> DoReceive(Memory<byte> bufferPart)
+            async Task<int> DoReceive(ByteBuffer bufferPart)
             {
                 var receivedBytes = await socket.ReceiveAsync(bufferPart, SocketFlags.None, token);
                 if (receivedBytes == 0)
@@ -130,7 +148,7 @@ namespace Ae.Dns.Server
             return queryLength;
         }
 
-        private async Task Respond(Socket socket, Memory<byte> buffer, int queryLength, CancellationToken token)
+        private async Task Respond(Socket socket, ByteBuffer buffer, int queryLength, CancellationToken token)
         {
             var stopwatch = Stopwatch.StartNew();
 
