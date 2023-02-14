@@ -18,8 +18,4 @@
 		<PackageReference Include="System.Memory" Version="4.5.5" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <PackageReference Include="Polly" Version="7.2.3" />
-	</ItemGroup>
-
 </Project>
