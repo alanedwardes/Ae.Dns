@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,6 +39,14 @@ namespace Ae.Dns.Client.Lookup
             _watcher.Changed += OnFilechanged;
             _logger = logger;
             _file = file;
+        }
+
+        /// <summary>
+        /// Construct a <see cref="FileDnsLookupSource"/> using the specified <see cref="FileInfo"/>.
+        /// </summary>
+        public FileDnsLookupSource(FileInfo file)
+            : this(NullLogger<FileDnsLookupSource>.Instance, file)
+        {
         }
 
         private void OnFilechanged(object sender, FileSystemEventArgs e)

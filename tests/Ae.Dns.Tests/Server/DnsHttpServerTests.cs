@@ -1,8 +1,10 @@
 ﻿#if !NETCOREAPP2_1
 using Ae.Dns.Client;
+using Ae.Dns.Client.Polly;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server.Http;
 using Microsoft.AspNetCore.Hosting;
+using Polly;
 using System;
 using System.Net;
 using System.Net.Http;
@@ -36,8 +38,11 @@ namespace Ae.Dns.Tests.Server
             // Create a real upstream DNS client to serve the request (todo: mock this)
             using var upstream = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
+            // Retry 6 times
+            using var retry = new DnsPollyClient(upstream, Policy<DnsMessage>.Handle<Exception>().WaitAndRetryAsync(6, x => TimeSpan.FromSeconds(x)));
+
             // Create a loopback server
-            using var server = new DnsHttpServer(upstream, x => x.ConfigureKestrel(y => y.Listen(endpoint)));
+            using var server = new DnsHttpServer(retry, x => x.ConfigureKestrel(y => y.Listen(endpoint)));
 
             // Start recieving
             using var receiveTask = server.Listen(tokenSource.Token);

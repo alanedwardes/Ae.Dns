@@ -156,9 +156,17 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public void Dispose()
         {
-            _cancel.Cancel();
-            _socket.Close();
-            _task.GetAwaiter().GetResult();
+            try
+            {
+                _cancel.Cancel();
+                _socket.Close();
+                _task.GetAwaiter().GetResult();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Prevent Dispose from throwing
+            }
+
             _socket.Dispose();
             _cancel.Dispose();
         }

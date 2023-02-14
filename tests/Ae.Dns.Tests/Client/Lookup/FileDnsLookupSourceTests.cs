@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Client.Lookup;
-using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,7 +40,7 @@ namespace Ae.Dns.Tests.Client.Lookup
 
         private sealed class TestFileDnsLookupSource : FileDnsLookupSource
         {
-            public TestFileDnsLookupSource(FileInfo file) : base(NullLogger<FileDnsLookupSource>.Instance, file)
+            public TestFileDnsLookupSource(FileInfo file) : base(file)
             {
                 ReloadFile();
             }

@@ -24,7 +24,7 @@ namespace Ae.Dns.Server
         /// Construct a new <see cref="DnsUdpServer"/> with a custom logger, options and a <see cref="IDnsRawClient"/> to delegate to.
         /// </summary>
         [ActivatorUtilitiesConstructor]
-        public DnsUdpServer(ILogger<DnsUdpServer> logger, IOptions<DnsUdpServerOptions> options, IDnsRawClient dnsClient)
+        public DnsUdpServer(ILogger<DnsUdpServer> logger, IDnsRawClient dnsClient, IOptions<DnsUdpServerOptions> options)
         {
             _options = options.Value;
             _socket = new Socket(_options.Endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
@@ -37,7 +37,7 @@ namespace Ae.Dns.Server
         /// A convenience constructor where only the <see cref="IDnsRawClient"/> is mandated.
         /// </summary>
         public DnsUdpServer(IDnsRawClient dnsClient, DnsUdpServerOptions options = null)
-            : this(NullLogger<DnsUdpServer>.Instance, Options.Create(options ?? new DnsUdpServerOptions()), dnsClient)
+            : this(NullLogger<DnsUdpServer>.Instance, dnsClient, Options.Create(options ?? new DnsUdpServerOptions()))
         {
         }
 

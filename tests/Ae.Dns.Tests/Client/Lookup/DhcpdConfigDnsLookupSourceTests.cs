@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Client.Lookup;
-using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.IO;
 using System.Net;
@@ -38,7 +37,7 @@ namespace Ae.Dns.Tests.Client.Lookup
                 sw.WriteLine();
             }
 
-            var source = new DhcpdConfigDnsLookupSource(NullLogger<DhcpdConfigDnsLookupSource>.Instance, _file);
+            var source = new DhcpdConfigDnsLookupSource(_file);
 
             Assert.False(source.TryReverseLookup(IPAddress.Parse("192.168.178.1"), out var _));
             Assert.False(source.TryReverseLookup(IPAddress.Broadcast, out var _));

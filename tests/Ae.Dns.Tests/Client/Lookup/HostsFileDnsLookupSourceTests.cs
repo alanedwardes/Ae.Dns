@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Client.Lookup;
-using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.IO;
 using System.Net;
@@ -25,7 +24,7 @@ namespace Ae.Dns.Tests.Client.Lookup
                 sw.WriteLine();
             }
 
-            var source = new HostsFileDnsLookupSource(NullLogger<HostsFileDnsLookupSource>.Instance, _file);
+            var source = new HostsFileDnsLookupSource(_file);
 
             Assert.True(source.TryReverseLookup(IPAddress.Loopback, out var actualHostname));
             Assert.Equal("localhost", actualHostname);

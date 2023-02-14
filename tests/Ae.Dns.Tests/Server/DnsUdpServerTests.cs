@@ -1,8 +1,8 @@
 ﻿using Ae.Dns.Client;
+using Ae.Dns.Client.Polly;
 using Ae.Dns.Protocol;
 using Ae.Dns.Server;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
+using Polly;
 using System;
 using System.Net;
 using System.Threading;
@@ -20,12 +20,12 @@ namespace Ae.Dns.Tests.Server
         {
             using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
-            using var server = new DnsUdpServer(NullLogger<DnsUdpServer>.Instance, Options.Create(new DnsUdpServerOptions { Endpoint = GenerateEndPoint() }), null);
+            using var server = new DnsUdpServer(null, new DnsUdpServerOptions { Endpoint = GenerateEndPoint() });
 
             await server.Listen(tokenSource.Token);
         }
 
-        [Fact(Skip = "Test is flaky")]
+        [Fact]
         public async Task TestQuery()
         {
             using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
@@ -35,8 +35,14 @@ namespace Ae.Dns.Tests.Server
             // Create a real upstream DNS client to serve the request (todo: mock this)
             using var upstream = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
+            // Retry 6 times
+            using var retry = new DnsPollyClient(upstream, Policy<DnsMessage>.Handle<Exception>().WaitAndRetryAsync(6, x => TimeSpan.FromSeconds(x)));
+
+            // Create a raw client
+            using var rawClient = new DnsRawClient(retry);
+
             // Create a loopback server
-            using var server = new DnsUdpServer(NullLogger<DnsUdpServer>.Instance, Options.Create(new DnsUdpServerOptions { Endpoint = endpoint }), new DnsRawClient(NullLogger<DnsRawClient>.Instance, upstream));
+            using var server = new DnsUdpServer(rawClient, new DnsUdpServerOptions { Endpoint = endpoint });
 
             // Start recieving
             using var receiveTask = server.Listen(tokenSource.Token);
