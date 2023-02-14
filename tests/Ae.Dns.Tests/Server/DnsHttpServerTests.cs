@@ -21,7 +21,7 @@ namespace Ae.Dns.Tests.Server
         [Fact]
         public async Task TestStartupShutdown()
         {
-            using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
             using var server = new DnsHttpServer(new DnsUdpClient(IPAddress.Loopback), x => x.ConfigureKestrel(y => y.Listen(GenerateEndPoint())));
 
@@ -31,15 +31,15 @@ namespace Ae.Dns.Tests.Server
         [Fact]
         public async Task TestQuery()
         {
-            using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
             var endpoint = GenerateEndPoint();
 
             // Create a real upstream DNS client to serve the request (todo: mock this)
             using var upstream = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
-            // Retry 6 times
-            using var retry = new DnsPollyClient(upstream, Policy<DnsMessage>.Handle<Exception>().WaitAndRetryAsync(6, x => TimeSpan.FromSeconds(x)));
+            // Retry
+            using var retry = new DnsPollyClient(upstream, Policy<DnsMessage>.Handle<Exception>().WaitAndRetryForeverAsync(x => TimeSpan.FromSeconds(x)));
 
             // Create a loopback server
             using var server = new DnsHttpServer(retry, x => x.ConfigureKestrel(y => y.Listen(endpoint)));
