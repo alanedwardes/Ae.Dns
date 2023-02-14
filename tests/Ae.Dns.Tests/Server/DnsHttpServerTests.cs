@@ -28,7 +28,7 @@ namespace Ae.Dns.Tests.Server
             await server.Listen(tokenSource.Token);
         }
 
-        [Fact(Skip = "Test is flaky")]
+        [Fact]
         public async Task TestQuery()
         {
             using var tokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
