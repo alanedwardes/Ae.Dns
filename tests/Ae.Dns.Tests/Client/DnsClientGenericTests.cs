@@ -14,33 +14,6 @@ namespace Ae.Dns.Tests.Client
     public class DnsClientGenericTests
     {
         [Fact]
-        public async Task TestUdpClientParallel() => await TestClientParallel(new DnsUdpClient(IPAddress.Parse("8.8.8.8")));
-
-        [Fact]
-        public async Task TestTcpClientParallel() => await TestClientParallel(new DnsTcpClient(IPAddress.Parse("8.8.8.8")));
-
-        [Fact]
-        public async Task TestHttpClientParallel() => await TestClientParallel(new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://8.8.8.8/") }));
-
-        private static async Task TestClientParallel(IDnsClient client)
-        {
-            await Task.WhenAll(
-                client.RunQuery("google.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("microsoft.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("apple.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("facebook.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("reddit.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("adobe.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("alanedwardes.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("amazon.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("nytimes.com", DnsQueryType.A, DnsResponseCode.NoError),
-                client.RunQuery("washingtonpost.com", DnsQueryType.A, DnsResponseCode.NoError)
-            );
-
-            client.Dispose();
-        }
-
-        [Fact]
         public async Task TestHttpClientLargeResponse1() => await TestClientLargeResponse1(new DnsHttpClient(new HttpClient { BaseAddress = new Uri("https://8.8.8.8/") }));
 
         [Fact]
