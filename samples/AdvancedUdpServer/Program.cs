@@ -11,10 +11,10 @@ using IDnsClient google1 = new DnsUdpClient(IPAddress.Parse("8.8.8.8"));
 using IDnsClient google2 = new DnsUdpClient(IPAddress.Parse("8.8.4.4"));
 
 // Aggregate all clients into one
-using IDnsClient roundRobinClient = new DnsRoundRobinClient(cloudFlare1, cloudFlare2, google1, google2);
+using IDnsClient randomClient = new DnsRandomClient(cloudFlare1, cloudFlare2, google1, google2);
 
 // Add the caching layer
-using IDnsClient cacheClient = new DnsCachingClient(roundRobinClient, new MemoryCache("dns"));
+using IDnsClient cacheClient = new DnsCachingClient(randomClient, new MemoryCache("dns"));
 
 using var httpClient = new HttpClient();
 

@@ -2,7 +2,7 @@
 **API Documentation: https://alanedwardes.github.io/docs/Ae.Dns/**
 
 A pure C# implementation of a DNS client, server and configurable caching/filtering layer. This project offers the following packages:
-* [Ae.Dns.Client](#aednsclient) - HTTP and UDP DNS clients with caching and round-robin capabilities
+* [Ae.Dns.Client](#aednsclient) - HTTP and UDP DNS clients with caching capabilities
 * [Ae.Dns.Server](#aednsserver) - Standard UDP DNS server
 * [Ae.Dns.Server.Http](#aednsserverhttp) - HTTP DNS server (if coupled with SSL, a DoH server)
 * [Ae.Dns.Protocol](#aednsprotocol) - Low level DNS wire protocol round-trip handling used on the client and server
@@ -10,7 +10,7 @@ A pure C# implementation of a DNS client, server and configurable caching/filter
 ## Ae.Dns.Client
 [![](https://img.shields.io/nuget/v/Ae.Dns.Client) ![](https://img.shields.io/badge/framework-netstandard2.0-blue)](https://www.nuget.org/packages/Ae.Dns.Client/) 
 
-Offers both HTTP(S) and UDP DNS clients, with a simple round robin client implementation.
+Offers both HTTP(S) and UDP DNS clients, with a simple random client implementation.
 ### Basic HTTPS Client Usage
 This example is a very simple setup of the `DnsHttpClient` using the CloudFlare DNS over HTTPS resolver.
 
@@ -26,18 +26,18 @@ This example is a basic setup of the `DnsUdpClient` using the primary CloudFlare
 
 See [samples/BasicUdpClient/Program.cs](samples/BasicUdpClient/Program.cs)
 
-### Round Robin Client Usage
-This example uses multiple upstream `IDnsClient` implementations in a round-robin fashion using `DnsRoundRobinClient`. Note that multiple protocols can be mixed, both the `DnsUdpClient` and `DnsHttpClient` can be used here since they implement `IDnsClient`.
+### Random Client Usage
+This example uses multiple upstream `IDnsClient` implementations in a random fashion using `DnsRandomClient`. Note that multiple protocols can be mixed, both the `DnsUdpClient` and `DnsHttpClient` can be used here since they implement `IDnsClient`.
 
-See [samples/RoundRobinClient/Program.cs](samples/RoundRobinClient/Program.cs)
+See [samples/RandomClient/Program.cs](samples/RandomClient/Program.cs)
 
 ### Racer Client Usage
-This example uses multiple (two or more) upstream `IDnsClient` implementations and races them using `DnsRacerClient`. Two queries are sent in parallel, and the fastest result "wins" (is returned). If a query faults, the other query result is used. As with the round robin-client, multiple protocols can be mixed, both the `DnsUdpClient` and `DnsHttpClient` can be used here since they implement `IDnsClient`.
+This example uses multiple (two or more) upstream `IDnsClient` implementations and races them using `DnsRacerClient`. Two queries are sent in parallel, and the fastest result "wins" (is returned). If a query faults, the other query result is used. As with the random client, multiple protocols can be mixed, both the `DnsUdpClient` and `DnsHttpClient` can be used here since they implement `IDnsClient`.
 
 See [samples/RacerClient/Program.cs](samples/RacerClient/Program.cs)
 
 ### Caching Client Usage
-This example uses the `DnsCachingClient` to cache queries into a `MemoryCache`, so that the answer is not retrieved from the upstream if the answer is within its TTL. Note that this can be combined with the `DnsRoundRobinClient`, so the cache can be backed by multiple upstream clients (it just accepts `IDnsClient`).
+This example uses the `DnsCachingClient` to cache queries into a `MemoryCache`, so that the answer is not retrieved from the upstream if the answer is within its TTL. Note that this can be combined with the `DnsRandomClient`, so the cache can be backed by multiple upstream clients (it just accepts `IDnsClient`).
 
 See [samples/CachingClient/Program.cs](samples/CachingClient/Program.cs)
 
@@ -52,7 +52,7 @@ A example UDP server which forwards all queries via UDP to the CloudFlare DNS re
 See [samples/BasicUdpServer/Program.cs](samples/BasicUdpServer/Program.cs)
 
 ### Advanced UDP Server
-A more advanced UDP server which uses the `DnsCachingClient` and `DnsRoundRobinClient` to cache DNS answers from multiple upstream clients, and the `RemoteSetFilter` to block domains from a remote hosts file.
+A more advanced UDP server which uses the `DnsCachingClient` and `DnsRandomClient` to cache DNS answers from multiple upstream clients, and the `RemoteSetFilter` to block domains from a remote hosts file.
 
 See [samples/AdvancedUdpServer/Program.cs](samples/AdvancedUdpServer/Program.cs)
 
