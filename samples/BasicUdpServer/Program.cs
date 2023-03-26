@@ -4,7 +4,7 @@ using Ae.Dns.Protocol;
 using Ae.Dns.Server;
 using System.Net;
 
-// Can use the HTTPS, UDP, round robin or caching clients - any IDnsClient
+// Can use the HTTPS, UDP, random or caching clients - any IDnsClient
 using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
 // Allow anything that isn't www.google.com
