@@ -94,7 +94,7 @@ namespace Ae.Dns.Protocol
         {
             if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                return string.Join(".", ipAddress.ToString().Replace(":", string.Empty).ToCharArray().Reverse()) + ".ip6.arpa";
+                return string.Join(".", string.Concat(ipAddress.GetAddressBytes().Select(x => x.ToString("x2"))).Reverse()) + ".ip6.arpa";
             }
             else if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
             {
