@@ -115,7 +115,7 @@ namespace Ae.Dns.Client.Lookup
             IsQueryResponse = true,
             RecursionAvailable = true,
             AnswerRecordCount = 1,
-            RecusionDesired = query.Header.RecusionDesired,
+            RecursionDesired = query.Header.RecursionDesired,
             Host = query.Header.Host,
             QueryClass = query.Header.QueryClass,
             QuestionCount = query.Header.QuestionCount,

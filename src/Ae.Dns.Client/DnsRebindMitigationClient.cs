@@ -58,7 +58,7 @@ namespace Ae.Dns.Client
                 ResponseCode = DnsResponseCode.Refused,
                 IsQueryResponse = true,
                 RecursionAvailable = true,
-                RecusionDesired = query.Header.RecusionDesired,
+                RecursionDesired = query.Header.RecursionDesired,
                 Host = query.Header.Host,
                 QueryClass = query.Header.QueryClass,
                 QuestionCount = query.Header.QuestionCount,

@@ -46,8 +46,8 @@ namespace Ae.Dns.Tests.Protocol
             Assert.True(header.RecursionAvailable);
             Assert.Equal(35972, header.Flags);
 
-            header.RecusionDesired = true;
-            Assert.True(header.RecusionDesired);
+            header.RecursionDesired = true;
+            Assert.True(header.RecursionDesired);
             Assert.Equal(36228, header.Flags);
         }
     }

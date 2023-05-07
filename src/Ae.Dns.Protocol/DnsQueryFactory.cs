@@ -39,7 +39,7 @@ namespace Ae.Dns.Protocol
                     QueryClass = DnsQueryClass.IN,
                     OperationCode = DnsOperationCode.QUERY,
                     QuestionCount = 1,
-                    RecusionDesired = true
+                    RecursionDesired = true
                 }
             };
         }
@@ -54,7 +54,7 @@ namespace Ae.Dns.Protocol
                 QueryClass = header.QueryClass,
                 OperationCode = header.OperationCode,
                 QuestionCount = header.QuestionCount,
-                RecusionDesired = header.RecusionDesired,
+                RecursionDesired = header.RecursionDesired,
                 AdditionalRecordCount = header.AdditionalRecordCount,
                 AnswerRecordCount = header.AnswerRecordCount,
                 AuthoritativeAnswer = header.AuthoritativeAnswer,
@@ -94,7 +94,7 @@ namespace Ae.Dns.Protocol
         {
             if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                return string.Join(".", ipAddress.ToString().Replace(":", string.Empty).ToCharArray().Reverse()) + ".ip6.arpa";
+                return string.Join(".", string.Concat(ipAddress.GetAddressBytes().Select(x => x.ToString("x2"))).Reverse()) + ".ip6.arpa";
             }
             else if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
             {

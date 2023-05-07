@@ -25,7 +25,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.False(header.IsQueryResponse);
             Assert.False(header.Truncation);
             Assert.False(header.RecursionAvailable);
-            Assert.True(header.RecusionDesired);
+            Assert.True(header.RecursionDesired);
             Assert.Equal(DnsResponseCode.NoError, header.ResponseCode);
 
             var header2 = new DnsHeader
@@ -33,7 +33,7 @@ namespace Ae.Dns.Tests.Protocol
                 Id = header.Id,
                 QueryClass = DnsQueryClass.IN,
                 QueryType = DnsQueryType.A,
-                RecusionDesired = true,
+                RecursionDesired = true,
                 Labels = header.Labels,
                 QuestionCount = 1,
             };
