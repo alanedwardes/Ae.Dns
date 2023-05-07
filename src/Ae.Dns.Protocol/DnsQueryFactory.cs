@@ -39,7 +39,7 @@ namespace Ae.Dns.Protocol
                     QueryClass = DnsQueryClass.IN,
                     OperationCode = DnsOperationCode.QUERY,
                     QuestionCount = 1,
-                    RecusionDesired = true
+                    RecursionDesired = true
                 }
             };
         }
@@ -54,7 +54,7 @@ namespace Ae.Dns.Protocol
                 QueryClass = header.QueryClass,
                 OperationCode = header.OperationCode,
                 QuestionCount = header.QuestionCount,
-                RecusionDesired = header.RecusionDesired,
+                RecursionDesired = header.RecursionDesired,
                 AdditionalRecordCount = header.AdditionalRecordCount,
                 AnswerRecordCount = header.AnswerRecordCount,
                 AuthoritativeAnswer = header.AuthoritativeAnswer,
