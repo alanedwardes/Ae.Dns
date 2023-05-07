@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,6 +32,14 @@ namespace Ae.Dns.Protocol
         // Implementations from https://github.com/dotnet/corefx/blob/v1.0.0/src/System.Net.Sockets/src/System/Net/Sockets/SocketTaskExtensions.cs
         public static Task<int> ReceiveAsync(this Socket socket, ArraySegment<byte> buffer, SocketFlags socketFlags)
         {
+            if (!socket.IsBound && socket.SocketType == SocketType.Dgram)
+            {
+                // Addresses a problem under NETSTANDARD2_0
+                // where calling receieve when the socket is not "connected"
+                // continually throws an exception (and creates log spam)
+                return Task.Delay(TimeSpan.FromMilliseconds(1)).ContinueWith(x => 0);
+            }
+
             return Task<int>.Factory.FromAsync(
                 (targetBuffer, flags, callback, state) => ((Socket)state).BeginReceive(
                                                               targetBuffer.Array,
