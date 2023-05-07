@@ -117,17 +117,17 @@ namespace Ae.Dns.Protocol
         }
 
         /// <summary>
-        /// Indicates whether recrusion is desired on this DNS query.
+        /// Indicates whether recursion is desired on this DNS query.
         /// If this is an answer, indicates whether the original query requested recursion.
         /// </summary>
-        public bool RecusionDesired
+        public bool RecursionDesired
         {
             get => (Flags & 0x0100) == 0x0100;
             set => Flags = value ? (ushort)(Flags | 0x0100) : (ushort)(Flags & (~0x0100));
         }
 
         /// <summary>
-        /// Indicates whether recusion is available.
+        /// Indicates whether recursion is available.
         /// </summary>
         public bool RecursionAvailable
         {

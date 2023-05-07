@@ -28,7 +28,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(DnsQueryType.CNAME, header.Header.QueryType);
             Assert.Equal(DnsOperationCode.QUERY, header.Header.OperationCode);
             Assert.Equal(1, header.Header.QuestionCount);
-            Assert.True(header.Header.RecusionDesired);
+            Assert.True(header.Header.RecursionDesired);
         }
 
         [Fact]
@@ -42,7 +42,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
             Assert.Equal(DnsOperationCode.QUERY, header.Header.OperationCode);
             Assert.Equal(1, header.Header.QuestionCount);
-            Assert.True(header.Header.RecusionDesired);
+            Assert.True(header.Header.RecursionDesired);
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
             Assert.Equal(DnsOperationCode.QUERY, header.Header.OperationCode);
             Assert.Equal(1, header.Header.QuestionCount);
-            Assert.True(header.Header.RecusionDesired);
+            Assert.True(header.Header.RecursionDesired);
         }
 
         [Fact]
@@ -70,7 +70,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
             Assert.Equal(DnsOperationCode.QUERY, header.Header.OperationCode);
             Assert.Equal(1, header.Header.QuestionCount);
-            Assert.True(header.Header.RecusionDesired);
+            Assert.True(header.Header.RecursionDesired);
         }
 
         [Fact]
@@ -84,7 +84,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
             Assert.Equal(DnsOperationCode.QUERY, header.Header.OperationCode);
             Assert.Equal(1, header.Header.QuestionCount);
-            Assert.True(header.Header.RecusionDesired);
+            Assert.True(header.Header.RecursionDesired);
         }
 
         [Fact]
@@ -98,7 +98,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
             Assert.Equal(DnsOperationCode.QUERY, header.Header.OperationCode);
             Assert.Equal(1, header.Header.QuestionCount);
-            Assert.True(header.Header.RecusionDesired);
+            Assert.True(header.Header.RecursionDesired);
         }
 
         [Fact]
@@ -112,7 +112,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
             Assert.Equal(DnsOperationCode.QUERY, header.Header.OperationCode);
             Assert.Equal(1, header.Header.QuestionCount);
-            Assert.True(header.Header.RecusionDesired);
+            Assert.True(header.Header.RecursionDesired);
         }
 
         [Fact]

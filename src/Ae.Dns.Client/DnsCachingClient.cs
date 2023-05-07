@@ -152,7 +152,7 @@ namespace Ae.Dns.Client
                     Id = query.Header.Id,
                     Host = query.Header.Host,
                     IsQueryResponse = false,
-                    RecusionDesired = query.Header.RecusionDesired,
+                    RecursionDesired = query.Header.RecursionDesired,
                     QueryClass = query.Header.QueryClass,
                     QueryType = query.Header.QueryType,
                     QuestionCount = query.Header.QuestionCount,
