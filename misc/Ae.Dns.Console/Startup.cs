@@ -36,11 +36,6 @@ namespace Ae.Dns.Console
 
             app.Run(async context =>
             {
-                context.Response.StatusCode = StatusCodes.Status200OK;
-                context.Response.ContentType = "text/plain; charset=utf-8";
-
-                var resolverCache = context.RequestServices.GetRequiredService<ObjectCache>();
-
                 async Task WriteHeader(string header)
                 {
                     await context.Response.WriteAsync(header);
@@ -49,37 +44,67 @@ namespace Ae.Dns.Console
                     await context.Response.WriteAsync(Environment.NewLine);
                 }
 
-                var statsSets = new Dictionary<string, IDictionary<string, int>>
+                var resolverCache = context.RequestServices.GetRequiredService<ObjectCache>();
+
+                if (context.Request.Path.StartsWithSegments("/cache"))
                 {
-                    { "Top Blocked Domains", _topBlockedDomains },
-                    { "Top Permitted Domains", _topPermittedDomains },
-                    { "Top Missing Domains", _topMissingDomains },
-                    { "Top Other Error Domains", _topOtherErrorDomains },
-                    { "Top Exception Error Domains", _topExceptionDomains }
-                };
+                    var cacheEntries = resolverCache.Where(x => x.Value is DnsCachingClient.DnsCacheEntry)
+                        .Select(x => KeyValuePair.Create(x.Key, (DnsCachingClient.DnsCacheEntry)x.Value))
+                        .OrderBy(x => x.Value.Expires)
+                        .ToList();
 
-                await WriteHeader(resolverCache.Name);
-                await context.Response.WriteAsync($"Cached Objects = {resolverCache.Count()}");
-                await context.Response.WriteAsync(Environment.NewLine);
-                await context.Response.WriteAsync(Environment.NewLine);
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    context.Response.ContentType = "text/plain; charset=utf-8";
 
-                foreach (var statsSet in statsSets)
-                {
-                    await WriteHeader(statsSet.Key);
-
-                    if (!statsSet.Value.Any())
-                    {
-                        await context.Response.WriteAsync("None");
-                        await context.Response.WriteAsync(Environment.NewLine);
-                    }
-
-                    foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value.OrderBy(x => x.Key) : statsSet.Value.OrderByDescending(x => x.Value).Take(50))
-                    {
-                        await context.Response.WriteAsync($"{statistic.Key} = {statistic.Value}");
-                        await context.Response.WriteAsync(Environment.NewLine);
-                    }
-
+                    await WriteHeader(resolverCache.Name);
+                    await context.Response.WriteAsync($"Cached Objects = {cacheEntries.Count()}");
                     await context.Response.WriteAsync(Environment.NewLine);
+                    await context.Response.WriteAsync(Environment.NewLine);
+
+                    foreach (var entry in cacheEntries)
+                    {
+                        await context.Response.WriteAsync($"Key={entry.Key}, Age={entry.Value.Age.TotalSeconds:N0}s, Expires={entry.Value.Expires.TotalSeconds:N0}s, Size={entry.Value.Data.Length}b");
+                        await context.Response.WriteAsync(Environment.NewLine);
+                    }
+                }
+
+                if (context.Request.Path == "/")
+                {
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    context.Response.ContentType = "text/plain; charset=utf-8";
+
+                    var statsSets = new Dictionary<string, IDictionary<string, int>>
+                    {
+                        { "Top Blocked Domains", _topBlockedDomains },
+                        { "Top Permitted Domains", _topPermittedDomains },
+                        { "Top Missing Domains", _topMissingDomains },
+                        { "Top Other Error Domains", _topOtherErrorDomains },
+                        { "Top Exception Error Domains", _topExceptionDomains }
+                    };
+
+                    await WriteHeader(resolverCache.Name);
+                    await context.Response.WriteAsync($"Cached Objects = {resolverCache.Count()}");
+                    await context.Response.WriteAsync(Environment.NewLine);
+                    await context.Response.WriteAsync(Environment.NewLine);
+
+                    foreach (var statsSet in statsSets)
+                    {
+                        await WriteHeader(statsSet.Key);
+
+                        if (!statsSet.Value.Any())
+                        {
+                            await context.Response.WriteAsync("None");
+                            await context.Response.WriteAsync(Environment.NewLine);
+                        }
+
+                        foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value.OrderBy(x => x.Key) : statsSet.Value.OrderByDescending(x => x.Value).Take(50))
+                        {
+                            await context.Response.WriteAsync($"{statistic.Key} = {statistic.Value}");
+                            await context.Response.WriteAsync(Environment.NewLine);
+                        }
+
+                        await context.Response.WriteAsync(Environment.NewLine);
+                    }
                 }
             });
         }

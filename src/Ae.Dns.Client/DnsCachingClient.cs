@@ -17,7 +17,7 @@ namespace Ae.Dns.Client
     /// </summary>
     public sealed class DnsCachingClient : IDnsClient
     {
-        private class DnsCacheEntry
+        internal sealed class DnsCacheEntry
         {
             public DnsCacheEntry(DnsMessage answer)
             {
