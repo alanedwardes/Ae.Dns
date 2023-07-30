@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net;
+using System.Runtime.Caching;
 using System.Text;
 using System.Threading.Tasks;
 using Ae.Dns.Client;
@@ -11,6 +12,7 @@ using Ae.Dns.Protocol;
 using Ae.Dns.Server.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Ae.Dns.Console
 {
@@ -38,6 +40,16 @@ namespace Ae.Dns.Console
                 context.Response.StatusCode = StatusCodes.Status200OK;
                 context.Response.ContentType = "text/plain; charset=utf-8";
 
+                var resolverCache = context.RequestServices.GetRequiredService<ObjectCache>();
+
+                async Task WriteHeader(string header)
+                {
+                    await context.Response.WriteAsync(header);
+                    await context.Response.WriteAsync(Environment.NewLine);
+                    await context.Response.WriteAsync(new string('=', header.Length));
+                    await context.Response.WriteAsync(Environment.NewLine);
+                }
+
                 var statsSets = new Dictionary<string, IDictionary<string, int>>
                 {
                     { "Top Blocked Domains", _topBlockedDomains },
@@ -47,12 +59,13 @@ namespace Ae.Dns.Console
                     { "Top Exception Error Domains", _topExceptionDomains }
                 };
 
+                await WriteHeader($"Cached Objects = {resolverCache.Count()}");
+                await context.Response.WriteAsync(Environment.NewLine);
+                await context.Response.WriteAsync(Environment.NewLine);
+
                 foreach (var statsSet in statsSets)
                 {
-                    await context.Response.WriteAsync(statsSet.Key);
-                    await context.Response.WriteAsync(Environment.NewLine);
-                    await context.Response.WriteAsync(new string('=', statsSet.Key.Length));
-                    await context.Response.WriteAsync(Environment.NewLine);
+                    await WriteHeader(statsSet.Key);
 
                     if (!statsSet.Value.Any())
                     {
