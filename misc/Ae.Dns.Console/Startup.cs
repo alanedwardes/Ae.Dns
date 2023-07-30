@@ -38,12 +38,6 @@ namespace Ae.Dns.Console
                 context.Response.StatusCode = StatusCodes.Status200OK;
                 context.Response.ContentType = "text/plain; charset=utf-8";
 
-                async Task WriteString(string str)
-                {
-                    await context.Response.BodyWriter.WriteAsync(Encoding.UTF8.GetBytes(str), context.RequestAborted);
-                    await context.Response.BodyWriter.FlushAsync(context.RequestAborted);
-                }
-
                 var statsSets = new Dictionary<string, IDictionary<string, int>>
                 {
                     { "Top Blocked Domains", _topBlockedDomains },
@@ -55,24 +49,24 @@ namespace Ae.Dns.Console
 
                 foreach (var statsSet in statsSets)
                 {
-                    await WriteString(statsSet.Key);
-                    await WriteString(Environment.NewLine);
-                    await WriteString(new string('=', statsSet.Key.Length));
-                    await WriteString(Environment.NewLine);
+                    await context.Response.WriteAsync(statsSet.Key);
+                    await context.Response.WriteAsync(Environment.NewLine);
+                    await context.Response.WriteAsync(new string('=', statsSet.Key.Length));
+                    await context.Response.WriteAsync(Environment.NewLine);
 
                     if (!statsSet.Value.Any())
                     {
-                        await WriteString("None");
-                        await WriteString(Environment.NewLine);
+                        await context.Response.WriteAsync("None");
+                        await context.Response.WriteAsync(Environment.NewLine);
                     }
 
                     foreach (var statistic in statsSet.Key == "Statistics" ? statsSet.Value.OrderBy(x => x.Key) : statsSet.Value.OrderByDescending(x => x.Value).Take(50))
                     {
-                        await WriteString($"{statistic.Key} = {statistic.Value}");
-                        await WriteString(Environment.NewLine);
+                        await context.Response.WriteAsync($"{statistic.Key} = {statistic.Value}");
+                        await context.Response.WriteAsync(Environment.NewLine);
                     }
 
-                    await WriteString(Environment.NewLine);
+                    await context.Response.WriteAsync(Environment.NewLine);
                 }
             });
         }
