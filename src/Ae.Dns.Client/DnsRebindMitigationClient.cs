@@ -43,7 +43,7 @@ namespace Ae.Dns.Client
 
             if (ipAddressResponses.Any(IpAddressExtensions.IsPrivate))
             {
-                _logger.LogWarning("DNS rebind attack mitigated for {query}", query);
+                _logger.LogInformation("DNS rebind attack mitigated for {query}", query);
                 return CreateNullHeader(query);
             }
 
