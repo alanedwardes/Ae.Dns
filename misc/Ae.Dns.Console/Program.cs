@@ -56,9 +56,7 @@ namespace Ae.Dns.Console
             services.AddHttpClient(staticDnsResolverHttpClient, x => x.BaseAddress = new Uri("https://1.1.1.1/"))
                     .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
-            ObjectCache resolverCache = new MemoryCache("ResolverCache");
-
-            services.AddSingleton(resolverCache);
+            services.AddSingleton<ObjectCache>(new MemoryCache("ResolverCache"));
 
             static DnsDelegatingHandler CreateDnsDelegatingHandler(IServiceProvider serviceProvider)
             {
@@ -112,7 +110,9 @@ namespace Ae.Dns.Console
 
             dnsClient = ActivatorUtilities.CreateInstance<DnsRebindMitigationClient>(provider, dnsClient);
 
-            dnsClient = ActivatorUtilities.CreateInstance<DnsCachingClient>(provider, dnsClient, new MemoryCache("MainCache"));
+            ObjectCache mainCache = new MemoryCache("MainCache");
+
+            dnsClient = ActivatorUtilities.CreateInstance<DnsCachingClient>(provider, dnsClient, mainCache);
 
             selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 
@@ -207,7 +207,7 @@ namespace Ae.Dns.Console
                 })
                 .ConfigureServices(x =>
                 {
-                    x.AddSingleton(resolverCache);
+                    x.AddSingleton(mainCache);
                     x.AddSingleton<IDnsMiddlewareConfig>(new DnsMiddlewareConfig());
                     x.AddSingleton(dnsClient);
                 });

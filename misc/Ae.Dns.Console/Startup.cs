@@ -58,7 +58,8 @@ namespace Ae.Dns.Console
                     { "Top Exception Error Domains", _topExceptionDomains }
                 };
 
-                await WriteHeader($"Cached Objects = {resolverCache.Count()}");
+                await WriteHeader(resolverCache.Name);
+                await context.Response.WriteAsync($"Cached Objects = {resolverCache.Count()}");
                 await context.Response.WriteAsync(Environment.NewLine);
                 await context.Response.WriteAsync(Environment.NewLine);
 
