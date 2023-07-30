@@ -5,7 +5,6 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net;
 using System.Runtime.Caching;
-using System.Text;
 using System.Threading.Tasks;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
