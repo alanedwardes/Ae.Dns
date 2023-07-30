@@ -21,7 +21,7 @@ namespace Ae.Dns.Client
         {
             public DnsCacheEntry(DnsMessage answer)
             {
-                var allRecords = new[] { answer.Answers, answer.Nameservers };
+                var allRecords = new[] { answer.Answers, answer.Nameservers, answer.Additional };
 
                 LowestRecordTimeToLive = TimeSpan.FromSeconds(allRecords.SelectMany(x => x).Min(x => x.TimeToLive));
                 Data = DnsByteExtensions.AllocateAndWrite(answer);
