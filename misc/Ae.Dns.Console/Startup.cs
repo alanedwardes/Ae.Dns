@@ -11,7 +11,6 @@ using Ae.Dns.Protocol;
 using Ae.Dns.Server.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 
 namespace Ae.Dns.Console
 {
@@ -36,9 +35,6 @@ namespace Ae.Dns.Console
 
             app.Run(async context =>
             {
-                var responseBufferingFeature = context.Features.Get<IHttpResponseBodyFeature>();
-                responseBufferingFeature?.DisableBuffering();
-
                 context.Response.StatusCode = StatusCodes.Status200OK;
                 context.Response.ContentType = "text/plain; charset=utf-8";
 
