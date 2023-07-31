@@ -46,6 +46,15 @@ namespace Ae.Dns.Console
 
                 var resolverCache = context.RequestServices.GetRequiredService<ObjectCache>();
 
+                if (context.Request.Path.StartsWithSegments("/cache/remove"))
+                {
+                    var cacheKeyToRemove = context.Request.Path.Value.Split("/").Last();
+                    resolverCache.Remove(cacheKeyToRemove);
+                    context.Response.StatusCode = StatusCodes.Status307TemporaryRedirect;
+                    context.Response.Headers.Location = "/cache";
+                    return;
+                }
+
                 if (context.Request.Path.StartsWithSegments("/cache"))
                 {
                     var cacheEntries = resolverCache.Where(x => x.Value is DnsCachingClient.DnsCacheEntry)
@@ -54,18 +63,40 @@ namespace Ae.Dns.Console
                         .ToList();
 
                     context.Response.StatusCode = StatusCodes.Status200OK;
-                    context.Response.ContentType = "text/plain; charset=utf-8";
+                    context.Response.ContentType = "text/html; charset=utf-8";
 
-                    await WriteHeader(resolverCache.Name);
-                    await context.Response.WriteAsync($"Cached Objects = {cacheEntries.Count()}");
-                    await context.Response.WriteAsync(Environment.NewLine);
-                    await context.Response.WriteAsync(Environment.NewLine);
+                    await context.Response.WriteAsync($"<h1>{resolverCache.Name}</h1>");
+                    await context.Response.WriteAsync($"<p>Cached Objects = {cacheEntries.Count()}</p>");
+
+                    await context.Response.WriteAsync("<table>");
+                    await context.Response.WriteAsync("<thead>");
+                    await context.Response.WriteAsync("<tr>");
+                    await context.Response.WriteAsync("<th>Cache Key</th>");
+                    await context.Response.WriteAsync("<th>Expires</th>");
+                    await context.Response.WriteAsync("<th>Hits</th>");
+                    await context.Response.WriteAsync("<th>Response Code</th>");
+                    await context.Response.WriteAsync("<th>Actions</th>");
+                    await context.Response.WriteAsync("</tr>");
+                    await context.Response.WriteAsync("</thead>");
+                    await context.Response.WriteAsync("<tbody>");
 
                     foreach (var entry in cacheEntries)
                     {
-                        await context.Response.WriteAsync($"Key={entry.Key}, Age={entry.Value.Age.TotalSeconds:N0}s, Expires={entry.Value.Expires.TotalSeconds:N0}s, Size={entry.Value.Data.Length}b");
-                        await context.Response.WriteAsync(Environment.NewLine);
+                        var message = new DnsMessage();
+                        var offset = 0;
+                        message.ReadBytes(entry.Value.Data, ref offset);
+
+                        await context.Response.WriteAsync("<tr>");
+                        await context.Response.WriteAsync($"<td>{entry.Key}</td>");
+                        await context.Response.WriteAsync($"<td>{entry.Value.Expires.TotalSeconds:N0}s</td>");
+                        await context.Response.WriteAsync($"<td>{entry.Value.Hits}</td>");
+                        await context.Response.WriteAsync($"<td>{message.Header.ResponseCode}</td>");
+                        await context.Response.WriteAsync($"<td><a href=\"/cache/remove/{entry.Key}\">🗑</a></td>");
+                        await context.Response.WriteAsync("</tr>");
                     }
+
+                    await context.Response.WriteAsync("</tbody>");
+                    await context.Response.WriteAsync("</table>");
                 }
 
                 if (context.Request.Path == "/")

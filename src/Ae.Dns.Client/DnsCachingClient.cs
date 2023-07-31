@@ -1,4 +1,5 @@
 ﻿using Ae.Dns.Protocol;
+using Ae.Dns.Protocol.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -19,20 +20,20 @@ namespace Ae.Dns.Client
     {
         internal sealed class DnsCacheEntry
         {
-            public DnsCacheEntry(DnsMessage answer)
+            public DnsCacheEntry(DnsMessage answer, TimeSpan timeToLive)
             {
-                var allRecords = new[] { answer.Answers, answer.Nameservers, answer.Additional };
-
-                LowestRecordTimeToLive = TimeSpan.FromSeconds(allRecords.SelectMany(x => x).Min(x => x.TimeToLive));
+                TimeToLive = timeToLive;
                 Data = DnsByteExtensions.AllocateAndWrite(answer);
             }
 
             public DateTimeOffset Time { get; } = DateTimeOffset.UtcNow;
             public ReadOnlyMemory<byte> Data { get; }
-            public TimeSpan LowestRecordTimeToLive { get; }
-            public DateTimeOffset Expiry => Time + LowestRecordTimeToLive;
+            public TimeSpan TimeToLive { get; }
+            public uint Hits { get; private set; }
+            public DateTimeOffset Expiry => Time + TimeToLive;
             public TimeSpan Age => DateTimeOffset.UtcNow - Time;
             public TimeSpan Expires => Expiry - DateTimeOffset.UtcNow;
+            public void RegisterHit() => Hits++;
         }
 
         private readonly ILogger<DnsCachingClient> _logger;
@@ -100,6 +101,8 @@ namespace Ae.Dns.Client
                 return null;
             }
 
+            cacheEntry.RegisterHit();
+
             _logger.LogTrace("Returned cached DNS result for {Domain} (expires in: {ExpiryTime})", query.Header.Host, cacheEntry.Expires);
 
             var answer = DnsByteExtensions.FromBytes<DnsMessage>(cacheEntry.Data);
@@ -163,9 +166,10 @@ namespace Ae.Dns.Client
 
             _logger.LogTrace("Returned fresh DNS result for {Domain}", query.Header.Host);
 
-            if (answer.Answers.Count + answer.Nameservers.Count + answer.Additional.Count > 0)
+            var cacheableTtl = answer.GetCachableTtl();
+            if (cacheableTtl.HasValue)
             {
-                var cacheEntry = new DnsCacheEntry(answer);
+                var cacheEntry = new DnsCacheEntry(answer, cacheableTtl.Value);
                 _objectCache.Add(GetCacheKey(query), cacheEntry, new CacheItemPolicy { AbsoluteExpiration = cacheEntry.Expiry });
             }
 
