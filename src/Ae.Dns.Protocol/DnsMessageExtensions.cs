@@ -16,14 +16,14 @@ namespace Ae.Dns.Protocol
         {
             if (message.Header.ResponseCode == DnsResponseCode.NoError)
             {
-                var allRecords = new[] { message.Answers, message.Nameservers, message.Additional };
+                var allRecords = new[] { message.Answers, message.Nameservers, message.Additional }.SelectMany(x => x).ToArray();
                 if (allRecords.Length == 0)
                 {
                     // There's nothing here to compute a TTL from
                     return null;
                 }
 
-                return TimeSpan.FromSeconds(allRecords.SelectMany(x => x).Min(x => x.TimeToLive));
+                return TimeSpan.FromSeconds(allRecords.Min(x => x.TimeToLive));
             }
 
             if (message.Header.ResponseCode == DnsResponseCode.NXDomain)
