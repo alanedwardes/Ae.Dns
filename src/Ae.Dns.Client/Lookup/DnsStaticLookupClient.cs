@@ -99,7 +99,7 @@ namespace Ae.Dns.Client.Lookup
                         Host = query.Header.Host,
                         Resource = new DnsTextResource
                         {
-                            Entries = new [] { foundHost }
+                            Entries = foundHost.Split('.')
                         },
                         Type = DnsQueryType.PTR,
                         TimeToLive = 3600
