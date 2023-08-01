@@ -95,6 +95,14 @@ namespace Ae.Dns.Client.Filters
                 // TODO: IPv6 lookups
             }
 
+            // See https://www.ietf.org/archive/id/draft-pauly-add-resolver-discovery-01.html
+            // If you're running your own server on a local network, you probably don't want clients
+            // bypassing the server and going directly to the upstream (if one happens to respond to this)
+            if (query.Header.QueryType == DnsQueryType.SVCB && query.Header.Host == "_dns.resolver.arpa")
+            {
+                return false;
+            }
+
             return true;
         }
     }
