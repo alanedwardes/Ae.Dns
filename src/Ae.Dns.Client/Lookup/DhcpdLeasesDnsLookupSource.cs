@@ -60,7 +60,12 @@ namespace Ae.Dns.Client.Lookup
 
                     var hostname = parts[1].Trim(new char[] { '"', ';' });
 
-                    yield return (_hostnameSuffix == null ? hostname : hostname + '.' + _hostnameSuffix, address);
+                    if (_hostnameSuffix != null)
+                    {
+                        yield return ($"{hostname}.{_hostnameSuffix}", address);
+                    }
+
+                    yield return (hostname, address);
                 }
             }
         }
