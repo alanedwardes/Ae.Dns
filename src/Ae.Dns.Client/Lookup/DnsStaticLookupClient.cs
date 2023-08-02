@@ -78,7 +78,7 @@ namespace Ae.Dns.Client.Lookup
                     {
                         Class = DnsQueryClass.IN,
                         Host = query.Header.Host,
-                        Resource = new DnsIpAddressResource{IPAddress = address},
+                        Resource = new DnsIpAddressResource { IPAddress = address },
                         Type = address.AddressFamily == AddressFamily.InterNetworkV6 ? DnsQueryType.AAAA : DnsQueryType.A,
                         TimeToLive = 3600
                     }
@@ -97,10 +97,7 @@ namespace Ae.Dns.Client.Lookup
                     {
                         Class = DnsQueryClass.IN,
                         Host = query.Header.Host,
-                        Resource = new DnsTextResource
-                        {
-                            Entries = foundHost.Split('.')
-                        },
+                        Resource = new DnsTextResource { Entries = foundHost.Split('.') },
                         Type = DnsQueryType.PTR,
                         TimeToLive = 3600
                     }
@@ -115,6 +112,7 @@ namespace Ae.Dns.Client.Lookup
             IsQueryResponse = true,
             RecursionAvailable = true,
             AnswerRecordCount = 1,
+            AuthoritativeAnswer = true,
             RecursionDesired = query.Header.RecursionDesired,
             Host = query.Header.Host,
             QueryClass = query.Header.QueryClass,
