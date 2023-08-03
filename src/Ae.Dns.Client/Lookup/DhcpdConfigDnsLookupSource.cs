@@ -64,8 +64,10 @@ namespace Ae.Dns.Client.Lookup
                     {
                         yield return ($"{hostname}.{_hostnameSuffix}", address);
                     }
-
-                    yield return (hostname, address);
+                    else
+                    {
+                        yield return (hostname, address);
+                    }
                 }
             }
         }
