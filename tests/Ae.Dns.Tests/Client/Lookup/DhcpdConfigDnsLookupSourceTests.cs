@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Client.Lookup;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using Xunit;
 
@@ -42,11 +43,11 @@ namespace Ae.Dns.Tests.Client.Lookup
             Assert.False(source.TryReverseLookup(IPAddress.Parse("192.168.178.1"), out var _));
             Assert.False(source.TryReverseLookup(IPAddress.Broadcast, out var _));
             Assert.True(source.TryReverseLookup(IPAddress.Parse("192.168.178.9"), out var actualHostname));
-            Assert.Equal("core", actualHostname);
+            Assert.Equal("core", actualHostname.Single());
 
             Assert.False(source.TryForwardLookup("wibble", out var _));
             Assert.True(source.TryForwardLookup("cOrE", out var actualAddress));
-            Assert.Equal(IPAddress.Parse("192.168.178.9"), actualAddress);
+            Assert.Equal(IPAddress.Parse("192.168.178.9"), actualAddress.Single());
         }
     }
 }

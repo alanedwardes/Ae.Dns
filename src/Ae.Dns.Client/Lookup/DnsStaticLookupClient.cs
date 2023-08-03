@@ -46,20 +46,26 @@ namespace Ae.Dns.Client.Lookup
                 foreach (var source in _sources)
                 {
                     var addressStringFromHost = string.Join(".", query.Header.Host.Split('.').Take(4).Reverse());
-                    if (IPAddress.TryParse(addressStringFromHost, out var address) && source.TryReverseLookup(address, out var foundHost))
+                    if (IPAddress.TryParse(addressStringFromHost, out var address) && source.TryReverseLookup(address, out var foundHosts))
                     {
-                        return ReturnPointer(query, foundHost, source);
+                        return ReturnPointer(query, foundHosts, source);
                     }
                 }
             }
 
             if (query.Header.QueryType == DnsQueryType.A || query.Header.QueryType == DnsQueryType.AAAA)
             {
+                var addressFamily = query.Header.QueryType == DnsQueryType.A ? AddressFamily.InterNetwork : AddressFamily.InterNetworkV6;
+
                 foreach (var source in _sources)
                 {
-                    if (source.TryForwardLookup(query.Header.Host, out IPAddress address))
+                    if (source.TryForwardLookup(query.Header.Host, out IList<IPAddress> addresses))
                     {
-                        return ReturnAddress(query, address, source);
+                        var appropriateAddresses = addresses.Where(x => x.AddressFamily == addressFamily);
+                        if (appropriateAddresses.Any())
+                        {
+                            return ReturnAddresses(query, appropriateAddresses, source);
+                        }
                     }
                 }
             }
@@ -67,41 +73,35 @@ namespace Ae.Dns.Client.Lookup
             return await _dnsClient.Query(query, token);
         }
 
-        private DnsMessage ReturnAddress(DnsMessage query, IPAddress address, IDnsLookupSource lookupSource)
+        private DnsMessage ReturnAddresses(DnsMessage query, IEnumerable<IPAddress> addresses, IDnsLookupSource lookupSource)
         {
             return new DnsMessage
             {
                 Header = CreateAnswer(query, lookupSource),
-                Answers = new List<DnsResourceRecord>
+                Answers = addresses.Select(address => new DnsResourceRecord
                 {
-                    new DnsResourceRecord
-                    {
-                        Class = DnsQueryClass.IN,
-                        Host = query.Header.Host,
-                        Resource = new DnsIpAddressResource { IPAddress = address },
-                        Type = address.AddressFamily == AddressFamily.InterNetworkV6 ? DnsQueryType.AAAA : DnsQueryType.A,
-                        TimeToLive = 3600
-                    }
-                }
+                    Class = DnsQueryClass.IN,
+                    Host = query.Header.Host,
+                    Resource = new DnsIpAddressResource { IPAddress = address },
+                    Type = address.AddressFamily == AddressFamily.InterNetworkV6 ? DnsQueryType.AAAA : DnsQueryType.A,
+                    TimeToLive = 3600
+                }).ToList()
             };
         }
 
-        private DnsMessage ReturnPointer(DnsMessage query, string foundHost, IDnsLookupSource lookupSource)
+        private DnsMessage ReturnPointer(DnsMessage query, IEnumerable<string> foundHosts, IDnsLookupSource lookupSource)
         {
             return new DnsMessage
             {
                 Header = CreateAnswer(query, lookupSource),
-                Answers = new List<DnsResourceRecord>
+                Answers = foundHosts.Select(foundHost => new DnsResourceRecord
                 {
-                    new DnsResourceRecord
-                    {
-                        Class = DnsQueryClass.IN,
-                        Host = query.Header.Host,
-                        Resource = new DnsTextResource { Entries = foundHost.Split('.') },
-                        Type = DnsQueryType.PTR,
-                        TimeToLive = 3600
-                    }
-                }
+                    Class = DnsQueryClass.IN,
+                    Host = query.Header.Host,
+                    Resource = new DnsTextResource { Entries = foundHost.Split('.') },
+                    Type = DnsQueryType.PTR,
+                    TimeToLive = 3600
+                }).ToList()
             };
         }
 

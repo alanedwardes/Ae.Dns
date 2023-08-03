@@ -15,8 +15,8 @@ namespace Ae.Dns.Client.Lookup
     public abstract class FileDnsLookupSource : IDnsLookupSource
     {
         private readonly object _swapLock = new object();
-        private IDictionary<string, IPAddress> _hostsToAddresses = new Dictionary<string, IPAddress>();
-        private IDictionary<IPAddress, string> _addressesToHosts = new Dictionary<IPAddress, string>();
+        private IDictionary<string, IList<IPAddress>> _hostsToAddresses = new Dictionary<string, IList<IPAddress>>();
+        private IDictionary<IPAddress, IList<string>> _addressesToHosts = new Dictionary<IPAddress, IList<string>>();
         private readonly FileSystemWatcher _watcher;
         private readonly ILogger<FileDnsLookupSource> _logger;
         private readonly FileInfo _file;
@@ -73,13 +73,28 @@ namespace Ae.Dns.Client.Lookup
         {
             using var sr = ReadFileWithRetries();
 
-            var hostsToAddresses = new Dictionary<string, IPAddress>(StringComparer.InvariantCultureIgnoreCase);
-            var addressesToHosts = new Dictionary<IPAddress, string>();
+            var hostsToAddresses = new Dictionary<string, IList<IPAddress>>(StringComparer.InvariantCultureIgnoreCase);
+            var addressesToHosts = new Dictionary<IPAddress, IList<string>>();
 
             foreach (var (hostname, address) in LoadLookup(sr))
             {
-                hostsToAddresses[hostname] = address;
-                addressesToHosts[address] = hostname;
+                if (hostsToAddresses.ContainsKey(hostname))
+                {
+                    hostsToAddresses[hostname].Add(address);
+                }
+                else
+                {
+                    hostsToAddresses[hostname] = new List<IPAddress> { address };
+                }
+
+                if (addressesToHosts.ContainsKey(address))
+                {
+                    addressesToHosts[address].Add(hostname);
+                }
+                else
+                {
+                    addressesToHosts[address] = new List<string> { hostname };
+                }
             }
 
             lock (_swapLock)
@@ -114,10 +129,16 @@ namespace Ae.Dns.Client.Lookup
         public void Dispose() => _watcher.Dispose();
 
         /// <inheritdoc/>
-        public bool TryForwardLookup(string hostname, out IPAddress address) => _hostsToAddresses.TryGetValue(hostname, out address);
+        public bool TryForwardLookup(string hostname, out IList<IPAddress> addresses)
+        {
+            return _hostsToAddresses.TryGetValue(hostname, out addresses);
+        }
 
         /// <inheritdoc/>
-        public bool TryReverseLookup(IPAddress address, out string hostname) => _addressesToHosts.TryGetValue(address, out hostname);
+        public bool TryReverseLookup(IPAddress address, out IList<string> hostnames)
+        {
+            return _addressesToHosts.TryGetValue(address, out hostnames);
+        }
 
         /// <inheritdoc/>
         public override string ToString() => _file.Name;

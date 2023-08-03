@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Client.Lookup;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using Xunit;
 
@@ -27,10 +28,10 @@ namespace Ae.Dns.Tests.Client.Lookup
             var source = new HostsFileDnsLookupSource(_file);
 
             Assert.True(source.TryReverseLookup(IPAddress.Loopback, out var actualHostname));
-            Assert.Equal("localhost", actualHostname);
+            Assert.Equal("localhost", actualHostname.Single());
 
             Assert.True(source.TryForwardLookup("localhost", out var actualAddress));
-            Assert.Equal(IPAddress.Loopback, actualAddress);
+            Assert.Equal(IPAddress.Loopback, actualAddress.Single());
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace Ae.Dns.Client.Lookup
@@ -11,10 +12,10 @@ namespace Ae.Dns.Client.Lookup
         /// <summary>
         /// Try to resolve the specified hostname to an <see cref="IPAddress"/>.
         /// </summary>
-        bool TryForwardLookup(string hostname, out IPAddress address);
+        bool TryForwardLookup(string hostname, out IList<IPAddress> addresses);
         /// <summary>
         /// Try to resolve the specified <see cref="IPAddress"/> to a hostname.
         /// </summary>
-        bool TryReverseLookup(IPAddress address, out string hostname);
+        bool TryReverseLookup(IPAddress address, out IList<string> hostnames);
     }
 }
