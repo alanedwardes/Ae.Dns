@@ -77,7 +77,7 @@ namespace Ae.Dns.Client.Lookup
         {
             return new DnsMessage
             {
-                Header = CreateAnswer(query, lookupSource),
+                Header = CreateAnswer(query, lookupSource, (short)addresses.Count()),
                 Answers = addresses.Select(address => new DnsResourceRecord
                 {
                     Class = DnsQueryClass.IN,
@@ -93,7 +93,7 @@ namespace Ae.Dns.Client.Lookup
         {
             return new DnsMessage
             {
-                Header = CreateAnswer(query, lookupSource),
+                Header = CreateAnswer(query, lookupSource, (short)foundHosts.Count()),
                 Answers = foundHosts.Select(foundHost => new DnsResourceRecord
                 {
                     Class = DnsQueryClass.IN,
@@ -105,13 +105,13 @@ namespace Ae.Dns.Client.Lookup
             };
         }
 
-        private DnsHeader CreateAnswer(DnsMessage query, IDnsLookupSource lookupSource) => new DnsHeader
+        private DnsHeader CreateAnswer(DnsMessage query, IDnsLookupSource lookupSource, short answers) => new DnsHeader
         {
             Id = query.Header.Id,
             ResponseCode = DnsResponseCode.NoError,
             IsQueryResponse = true,
             RecursionAvailable = true,
-            AnswerRecordCount = 1,
+            AnswerRecordCount = answers,
             AuthoritativeAnswer = true,
             RecursionDesired = query.Header.RecursionDesired,
             Host = query.Header.Host,
