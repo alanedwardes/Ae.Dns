@@ -3,6 +3,7 @@ using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using Moq;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
@@ -11,9 +12,11 @@ using Xunit;
 
 namespace Ae.Dns.Tests.Client.Lookup
 {
-    public sealed class DnsStaticLookupClientTests
+    public sealed class DnsStaticLookupClientTests : IDisposable
     {
         private readonly MockRepository _mockRepository = new MockRepository(MockBehavior.Strict);
+
+        public void Dispose() => _mockRepository.VerifyAll();
 
         [Fact]
         public async Task TestLookup()
