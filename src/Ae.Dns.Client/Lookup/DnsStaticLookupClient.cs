@@ -55,11 +55,15 @@ namespace Ae.Dns.Client.Lookup
 
             if (query.Header.QueryType == DnsQueryType.A || query.Header.QueryType == DnsQueryType.AAAA)
             {
+                var addressFamily = query.Header.QueryType == DnsQueryType.A ? AddressFamily.InterNetwork : AddressFamily.InterNetworkV6;
+
                 foreach (var source in _sources)
                 {
                     if (source.TryForwardLookup(query.Header.Host, out IList<IPAddress> addresses))
                     {
-                        return ReturnAddresses(query, addresses, source);
+                        // This might return zero addresses, but that's OK. We must not return an error.
+                        // For reasoning behind this, see https://www.rfc-editor.org/rfc/rfc4074#section-3
+                        return ReturnAddresses(query, addresses.Where(x => x.AddressFamily == addressFamily), source);
                     }
                 }
             }
