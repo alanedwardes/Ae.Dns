@@ -38,6 +38,16 @@ namespace Ae.Dns.Client.Lookup
             }
         }
 
+        private AddressFamily ToAddressFamily(DnsQueryType queryType)
+        {
+            return queryType switch
+            {
+                DnsQueryType.A => AddressFamily.InterNetwork,
+                DnsQueryType.AAAA => AddressFamily.InterNetworkV6,
+                _ => AddressFamily.Unknown,
+            };
+        }
+
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
@@ -53,18 +63,13 @@ namespace Ae.Dns.Client.Lookup
                 }
             }
 
-            if (query.Header.QueryType == DnsQueryType.A || query.Header.QueryType == DnsQueryType.AAAA)
+            foreach (var source in _sources)
             {
-                var addressFamily = query.Header.QueryType == DnsQueryType.A ? AddressFamily.InterNetwork : AddressFamily.InterNetworkV6;
-
-                foreach (var source in _sources)
+                if (source.TryForwardLookup(query.Header.Host, out IList<IPAddress> addresses))
                 {
-                    if (source.TryForwardLookup(query.Header.Host, out IList<IPAddress> addresses))
-                    {
-                        // This might return zero addresses, but that's OK. We must not return an error.
-                        // For reasoning behind this, see https://www.rfc-editor.org/rfc/rfc4074#section-3
-                        return ReturnAddresses(query, addresses.Where(x => x.AddressFamily == addressFamily), source);
-                    }
+                    // This might return zero addresses, but that's OK. We must not return an error.
+                    // For reasoning behind this, see https://www.rfc-editor.org/rfc/rfc4074#section-3
+                    return ReturnAddresses(query, addresses.Where(x => x.AddressFamily == ToAddressFamily(query.Header.QueryType)), source);
                 }
             }
 
