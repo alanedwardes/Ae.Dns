@@ -1,7 +1,6 @@
 ﻿using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -51,12 +50,11 @@ namespace Ae.Dns.Client.Lookup
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
-            if (query.Header.QueryType == DnsQueryType.PTR)
+            if (query.TryParseIpAddressFromReverseLookup(out var reverseLookupAddress))
             {
                 foreach (var source in _sources)
                 {
-                    var addressStringFromHost = string.Join(".", query.Header.Host.Split('.').Take(4).Reverse());
-                    if (IPAddress.TryParse(addressStringFromHost, out var address) && source.TryReverseLookup(address, out var foundHosts))
+                    if (source.TryReverseLookup(reverseLookupAddress, out var foundHosts))
                     {
                         return ReturnPointer(query, foundHosts, source);
                     }
@@ -65,7 +63,7 @@ namespace Ae.Dns.Client.Lookup
 
             foreach (var source in _sources)
             {
-                if (source.TryForwardLookup(query.Header.Host, out IList<IPAddress> addresses))
+                if (source.TryForwardLookup(query.Header.Host, out var addresses))
                 {
                     // This might return zero addresses, but that's OK. We must not return an error.
                     // For reasoning behind this, see https://www.rfc-editor.org/rfc/rfc4074#section-3

@@ -58,8 +58,7 @@ namespace Ae.Dns.Client.Filters
                 return false;
             }
 
-            // Sometimes misconfigured applications can send
-            // queries beginning with a protocol
+            // Sometimes misconfigured applications can send queries beginning with a protocol
             if (query.Header.Host.StartsWith("https://") || query.Header.Host.StartsWith("http://"))
             {
                 return false;
