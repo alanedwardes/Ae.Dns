@@ -80,19 +80,10 @@ namespace Ae.Dns.Client.Filters
                 return false;
             }
 
-            // Disallow reverse DNS lookups for local IP addresses
-            if (query.Header.QueryType == DnsQueryType.PTR)
+            // Disallow reverse DNS lookups for private IP addresses
+            if (query.TryParseIpAddressFromReverseLookup(out var address) && IpAddressExtensions.IsPrivate(address))
             {
-                if (query.Header.Host.EndsWith(".in-addr.arpa"))
-                {
-                    var ipParts = hostParts.Take(4).Reverse();
-                    if (IPAddress.TryParse(string.Join(".", ipParts), out var address) && IpAddressExtensions.IsPrivate(address))
-                    {
-                        return false;
-                    }
-                }
-
-                // TODO: IPv6 lookups
+                return false;
             }
 
             // See https://www.ietf.org/archive/id/draft-pauly-add-resolver-discovery-01.html

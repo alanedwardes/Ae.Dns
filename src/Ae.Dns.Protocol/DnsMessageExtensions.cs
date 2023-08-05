@@ -1,7 +1,10 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace Ae.Dns.Protocol
 {
@@ -40,6 +43,57 @@ namespace Ae.Dns.Protocol
             }
 
             return null;
+        }
+
+        public static bool TryParseIpAddressFromReverseLookup(this DnsMessage message, out IPAddress address)
+        {
+            if (message.Header.QueryType == DnsQueryType.PTR)
+            {
+                var hostParts = message.Header.Host.Split('.');
+                if (message.Header.Host.EndsWith(".in-addr.arpa"))
+                {
+                    return IPAddress.TryParse(string.Join(".", hostParts.Take(4).Reverse()), out address);
+                }
+
+                if (message.Header.Host.EndsWith(".ip6.arpa"))
+                {
+                    return IPAddress.TryParse(string.Join(":", Chunk(hostParts.Take(32).Reverse(), 4).Select(x => string.Concat(x))), out address);
+                }
+            }
+
+            address = null;
+            return false;
+        }
+
+        private static IEnumerable<TSource[]> Chunk<TSource>(IEnumerable<TSource> source, int size)
+        {
+#if NET6_0_OR_GREATER
+            return source.Chunk(size);
+#else
+            using IEnumerator<TSource> e = source.GetEnumerator();
+            while (e.MoveNext())
+            {
+                TSource[] chunk = new TSource[size];
+                chunk[0] = e.Current;
+
+                int i = 1;
+                for (; i < chunk.Length && e.MoveNext(); i++)
+                {
+                    chunk[i] = e.Current;
+                }
+
+                if (i == chunk.Length)
+                {
+                    yield return chunk;
+                }
+                else
+                {
+                    Array.Resize(ref chunk, i);
+                    yield return chunk;
+                    yield break;
+                }
+            }
+#endif
         }
     }
 }
