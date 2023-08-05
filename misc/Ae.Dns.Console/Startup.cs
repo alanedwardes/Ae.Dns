@@ -81,9 +81,14 @@ namespace Ae.Dns.Console
                         table.Columns.Add(heading);
                     }
 
-                    foreach (var group in groups.OrderByDescending(x => x.Count()).Take(20))
+                    table.Columns.Add("Percentage");
+
+                    var itemCounts = groups.Select(x => KeyValuePair.Create(x.Key, x.Count())).ToList();
+                    var totalCount = itemCounts.Sum(x => x.Value);
+
+                    foreach (var group in itemCounts.OrderByDescending(x => x.Key).Take(20))
                     {
-                        table.Rows.Add(group.Key, group.Count());
+                        table.Rows.Add(group.Key, group.Value, (int)((group.Value / (double)totalCount) * (double)100d) + "%");
                     }
                     await WriteTable(table);
                 }
@@ -184,12 +189,8 @@ namespace Ae.Dns.Console
                     var notAnsweredQueries = filteredQueries.Where(x => x.Answer == null).ToArray();
 
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");
-                    await context.Response.WriteAsync($"<p>" +
-                        $"Metrics since {startTimestamp} (current time is {DateTime.UtcNow}). " +
-                        $"There were {filteredQueries.Length} total queries, and there are {resolverCache.Count()} cache entries. " +
-                        $"Of those queries, {successfulQueries.Length} were successful, {missingQueries.Length} were missing, " +
-                        $"{refusedQueries.Length} were refused, and {notAnsweredQueries.Length} were not answered." +
-                        $"</p>");
+                    await context.Response.WriteAsync($"<p>Metrics since {startTimestamp} (current time is {DateTime.UtcNow}).</p>");
+                    await context.Response.WriteAsync($"<p>There were {filteredQueries.Length} total queries, and there are {resolverCache.Count()} cache entries. {notAnsweredQueries.Length} queries were not answered.</p>");
                     await context.Response.WriteAsync($"<p>Filter: Last <a href=\"/?period=hour\">hour</a>, <a href=\"/?period=day\">day</a>, <a href=\"/?period=week\">week</a>, <a href=\"/?period=month\">month</a>. Actions: <a href=\"/reset\" onclick=\"return confirm('Are you sure?')\">Reset statistics</a></p>");
 
                     await context.Response.WriteAsync($"<h2>Top Top Level Domains</h2>");
@@ -247,8 +248,6 @@ namespace Ae.Dns.Console
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
-            var metricId = $"{instrument.Meter.Name}.{instrument.Name}";
-
             static TObject GetObjectFromTags<TObject>(ReadOnlySpan<KeyValuePair<string, object>> _tags, string name)
             {
                 foreach (var tag in _tags)
