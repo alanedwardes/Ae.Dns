@@ -83,12 +83,12 @@ namespace Ae.Dns.Console
 
                     table.Columns.Add("Percentage");
 
-                    var itemCounts = groups.Select(x => KeyValuePair.Create(x.Key, x.Count())).ToList();
+                    var itemCounts = groups.Select(x => KeyValuePair.Create(x.Key, x.Count())).OrderByDescending(x => x.Value).ToList();
                     var totalCount = itemCounts.Sum(x => x.Value);
 
                     int CalculatePercentage(int count) => (int)(count / (double)totalCount * (double)100d);
 
-                    foreach (var group in itemCounts.OrderByDescending(x => x.Value).Take(20))
+                    foreach (var group in itemCounts.Take(20))
                     {
                         table.Rows.Add(group.Key, group.Value, CalculatePercentage(group.Value) + "%");
                     }
