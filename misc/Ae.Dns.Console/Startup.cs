@@ -13,9 +13,7 @@ using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Server.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace Ae.Dns.Console
 {
@@ -180,9 +178,9 @@ namespace Ae.Dns.Console
 
                     var filteredQueries = _queries.Where(x => x.Created > startTimestamp).ToArray();
                     var answeredQueries = filteredQueries.Where(x => x.Answer != null);
-                    var missingQueries = answeredQueries.Where(x => x.Answer.Header.ResponseCode == DnsResponseCode.NXDomain).ToArray();
-                    var successfulQueries = answeredQueries.Where(x => x.Answer.Header.ResponseCode == DnsResponseCode.NoError).ToArray();
-                    var refusedQueries = answeredQueries.Where(x => x.Answer.Header.ResponseCode == DnsResponseCode.Refused).ToArray();
+                    var missingQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.NXDomain).ToArray();
+                    var successfulQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.NoError).ToArray();
+                    var refusedQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.Refused).ToArray();
                     var notAnsweredQueries = filteredQueries.Where(x => x.Answer == null).ToArray();
 
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");
@@ -196,19 +194,19 @@ namespace Ae.Dns.Console
 
                     await context.Response.WriteAsync($"<h2>Top Top Level Domains</h2>");
                     await context.Response.WriteAsync($"<p>Top level domains (permitted and refused).</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => string.Join('.', x.Query.Header.Host.Split('.').Reverse().First())), "Top Level Domain", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().First())), "Top Level Domain", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Refused Root Domains</h2>");
                     await context.Response.WriteAsync($"<p>Top domain names which were refused.</p>");
-                    await GroupToTable(refusedQueries.GroupBy(x => string.Join('.', x.Query.Header.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
+                    await GroupToTable(refusedQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Permitted Root Domains</h2>");
                     await context.Response.WriteAsync($"<p>Top domain names which were permitted.</p>");
-                    await GroupToTable(successfulQueries.GroupBy(x => string.Join('.', x.Query.Header.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
+                    await GroupToTable(successfulQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Missing Root Domains</h2>");
                     await context.Response.WriteAsync($"<p>Root domain names which were missing (NXDomain).</p>");
-                    await GroupToTable(missingQueries.GroupBy(x => string.Join('.', x.Query.Header.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
+                    await GroupToTable(missingQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Clients</h2>");
                     await context.Response.WriteAsync($"<p>Top DNS clients.</p>");
@@ -216,23 +214,23 @@ namespace Ae.Dns.Console
 
                     await context.Response.WriteAsync($"<h2>Top Responses</h2>");
                     await context.Response.WriteAsync($"<p>Top response codes for all queries.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => x.Answer?.Header.ResponseCode.ToString()), "Response Code", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => x.Answer?.ResponseCode.ToString()), "Response Code", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Query Types</h2>");
                     await context.Response.WriteAsync($"<p>Top query types across all queries.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => x.Query.Header.QueryType.ToString()), "Query Type", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => x.Query.QueryType.ToString()), "Query Type", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
-                    await GroupToTable(answeredQueries.GroupBy(x => (x.Answer.Header.Tags.ContainsKey("Resolver") ? x.Answer.Header.Tags["Resolver"] : "<none>").ToString()), "Answer Source", "Hits");
+                    await GroupToTable(answeredQueries.GroupBy(x => (x.Answer.Tags.ContainsKey("Resolver") ? x.Answer.Tags["Resolver"] : "<none>").ToString()), "Answer Source", "Hits");
                 }
             });
         }
 
         private sealed class DnsQuery
         {
-            public DnsMessage Query { get; set; }
-            public DnsMessage? Answer { get; set; }
+            public DnsHeader Query { get; set; }
+            public DnsHeader? Answer { get; set; }
             public IPEndPoint Sender { get; set; }
             public TimeSpan? Elapsed { get; set; }
             public DateTime Created { get; set; }
@@ -279,8 +277,8 @@ namespace Ae.Dns.Console
 
                 _queries.Add(new DnsQuery
                 {
-                    Query = query,
-                    Answer = answer,
+                    Query = query.Header,
+                    Answer = answer?.Header,
                     Sender = sender,
                     Elapsed = elapsed,
                     Created = DateTime.UtcNow
