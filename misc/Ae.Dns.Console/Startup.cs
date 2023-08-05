@@ -158,24 +158,45 @@ namespace Ae.Dns.Console
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     context.Response.ContentType = "text/html; charset=utf-8";
 
-                    var answeredQueries = _queries.Where(x => x.Answer != null);
+                    var startTimestamp = _lastReset;
+                    if (context.Request.Query.ContainsKey("period"))
+                    {
+                        switch (context.Request.Query["period"])
+                        {
+                            case "hour":
+                                startTimestamp = DateTime.UtcNow.AddHours(-1);
+                                break;
+                            case "day":
+                                startTimestamp = DateTime.UtcNow.AddDays(-1);
+                                break;
+                            case "week":
+                                startTimestamp = DateTime.UtcNow.AddDays(-7);
+                                break;
+                            case "month":
+                                startTimestamp = DateTime.UtcNow.AddMonths(-1);
+                                break;
+                        }
+                    }
+
+                    var filteredQueries = _queries.Where(x => x.Created > startTimestamp).ToArray();
+                    var answeredQueries = filteredQueries.Where(x => x.Answer != null);
                     var missingQueries = answeredQueries.Where(x => x.Answer.Header.ResponseCode == DnsResponseCode.NXDomain).ToArray();
                     var successfulQueries = answeredQueries.Where(x => x.Answer.Header.ResponseCode == DnsResponseCode.NoError).ToArray();
                     var refusedQueries = answeredQueries.Where(x => x.Answer.Header.ResponseCode == DnsResponseCode.Refused).ToArray();
-                    var notAnsweredQueries = _queries.Where(x => x.Answer == null).ToArray();
+                    var notAnsweredQueries = filteredQueries.Where(x => x.Answer == null).ToArray();
 
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");
                     await context.Response.WriteAsync($"<p>" +
-                        $"Metrics since {_lastReset} (current time is {DateTime.UtcNow}). " +
-                        $"There were {_queries.Count} total queries, and there are {resolverCache.Count()} cache entries. " +
+                        $"Metrics since {startTimestamp} (current time is {DateTime.UtcNow}). " +
+                        $"There were {filteredQueries.Length} total queries, and there are {resolverCache.Count()} cache entries. " +
                         $"Of those queries, {successfulQueries.Length} were successful, {missingQueries.Length} were missing, " +
                         $"{refusedQueries.Length} were refused, and {notAnsweredQueries.Length} were not answered." +
                         $"</p>");
-                    await context.Response.WriteAsync($"<p><a href=\"/reset\">Reset statistics</a></p>");
+                    await context.Response.WriteAsync($"<p>Filter: Last <a href=\"/?period=hour\">hour</a>, <a href=\"/?period=day\">day</a>, <a href=\"/?period=week\">week</a>, <a href=\"/?period=month\">month</a>. Actions: <a href=\"/reset\" onclick=\"return confirm('Are you sure?')\">Reset statistics</a></p>");
 
                     await context.Response.WriteAsync($"<h2>Top Top Level Domains</h2>");
                     await context.Response.WriteAsync($"<p>Top level domains (permitted and refused).</p>");
-                    await GroupToTable(_queries.GroupBy(x => string.Join('.', x.Query.Header.Host.Split('.').Reverse().First())), "Top Level Domain", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => string.Join('.', x.Query.Header.Host.Split('.').Reverse().First())), "Top Level Domain", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Refused Root Domains</h2>");
                     await context.Response.WriteAsync($"<p>Top domain names which were refused.</p>");
@@ -191,15 +212,15 @@ namespace Ae.Dns.Console
 
                     await context.Response.WriteAsync($"<h2>Top Clients</h2>");
                     await context.Response.WriteAsync($"<p>Top DNS clients.</p>");
-                    await GroupToTable(_queries.GroupBy(x => x.Sender.Address.ToString()), "Client Address", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => x.Sender.Address.ToString()), "Client Address", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Responses</h2>");
                     await context.Response.WriteAsync($"<p>Top response codes for all queries.</p>");
-                    await GroupToTable(_queries.GroupBy(x => x.Answer?.Header.ResponseCode.ToString()), "Response Code", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => x.Answer?.Header.ResponseCode.ToString()), "Response Code", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Query Types</h2>");
                     await context.Response.WriteAsync($"<p>Top query types across all queries.</p>");
-                    await GroupToTable(_queries.GroupBy(x => x.Query.Header.QueryType.ToString()), "Query Type", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => x.Query.Header.QueryType.ToString()), "Query Type", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
@@ -214,6 +235,7 @@ namespace Ae.Dns.Console
             public DnsMessage? Answer { get; set; }
             public IPEndPoint Sender { get; set; }
             public TimeSpan? Elapsed { get; set; }
+            public DateTime Created { get; set; }
         }
 
         private readonly ConcurrentBag<DnsQuery> _queries = new ConcurrentBag<DnsQuery>();
@@ -260,7 +282,8 @@ namespace Ae.Dns.Console
                     Query = query,
                     Answer = answer,
                     Sender = sender,
-                    Elapsed = elapsed
+                    Elapsed = elapsed,
+                    Created = DateTime.UtcNow
                 });
             }
         }
