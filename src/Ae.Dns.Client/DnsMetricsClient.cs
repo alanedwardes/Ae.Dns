@@ -85,19 +85,22 @@ namespace Ae.Dns.Client
                 sw.Stop();
             }
 
+            var answerTag = new KeyValuePair<string, object>("Answer", answer);
+            var elapsedTag = new KeyValuePair<string, object>("Elapsed", sw.Elapsed);
+
             switch (answer.Header.ResponseCode)
             {
                 case DnsResponseCode.NoError:
-                    _successCounter.Add(1, queryTag);
+                    _successCounter.Add(1, queryTag, answerTag, elapsedTag);
                     break;
                 case DnsResponseCode.NXDomain:
-                    _missingCounter.Add(1, queryTag);
+                    _missingCounter.Add(1, queryTag, answerTag, elapsedTag);
                     break;
                 case DnsResponseCode.Refused:
-                    _refusedCounter.Add(1, queryTag);
+                    _refusedCounter.Add(1, queryTag, answerTag, elapsedTag);
                     break;
                 default:
-                    _otherErrorCounter.Add(1, queryTag);
+                    _otherErrorCounter.Add(1, queryTag, answerTag, elapsedTag);
                     break;
             }
 
