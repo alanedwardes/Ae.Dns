@@ -220,7 +220,7 @@ namespace Ae.Dns.Console
 
                     await context.Response.WriteAsync($"<h2>Top Clients</h2>");
                     await context.Response.WriteAsync($"<p>Top DNS clients.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => x.Sender.Address.ToString()), "Client Address", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => x.Sender.ToString()), "Client Address", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Responses</h2>");
                     await context.Response.WriteAsync($"<p>Top response codes for all queries.</p>");
@@ -232,16 +232,32 @@ namespace Ae.Dns.Console
 
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
-                    await GroupToTable(answeredQueries.GroupBy(x => (x.Answer.Tags.ContainsKey("Resolver") ? x.Answer.Tags["Resolver"] : "<none>").ToString()), "Answer Source", "Hits");
+                    await GroupToTable(answeredQueries.GroupBy(x => x.Answer.Resolver ?? "<none>"), "Answer Source", "Hits");
                 }
             });
         }
 
+        private sealed class DnsHeaderLight
+        {
+            public DnsHeaderLight(DnsHeader header)
+            {
+                ResponseCode = header.ResponseCode;
+                QueryType = header.QueryType;
+                Host = header.Host;
+                Resolver = header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : null;
+            }
+
+            public DnsResponseCode ResponseCode { get; }
+            public DnsQueryType QueryType { get; }
+            public string Host { get; }
+            public string? Resolver { get; }
+        }
+
         private sealed class DnsQuery
         {
-            public DnsHeader Query { get; set; }
-            public DnsHeader? Answer { get; set; }
-            public IPEndPoint Sender { get; set; }
+            public DnsHeaderLight Query { get; set; }
+            public DnsHeaderLight? Answer { get; set; }
+            public IPAddress Sender { get; set; }
             public TimeSpan? Elapsed { get; set; }
             public DateTime Created { get; set; }
         }
@@ -285,9 +301,9 @@ namespace Ae.Dns.Console
 
                 _queries.Add(new DnsQuery
                 {
-                    Query = query.Header,
-                    Answer = answer?.Header,
-                    Sender = sender,
+                    Query = new DnsHeaderLight(query.Header),
+                    Answer = new DnsHeaderLight(answer?.Header),
+                    Sender = sender.Address,
                     Elapsed = elapsed,
                     Created = DateTime.UtcNow
                 });
