@@ -113,14 +113,6 @@ namespace Ae.Dns.Console
                     return;
                 }
 
-                if (context.Request.Path.StartsWithSegments("/reset"))
-                {
-                    Reset();
-                    context.Response.StatusCode = StatusCodes.Status307TemporaryRedirect;
-                    context.Response.Headers.Location = "/";
-                    return;
-                }
-
                 if (context.Request.Path.StartsWithSegments("/cache"))
                 {
                     var cacheEntries = resolverCache.Where(x => x.Value is DnsCachingClient.DnsCacheEntry)
@@ -170,27 +162,48 @@ namespace Ae.Dns.Console
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     context.Response.ContentType = "text/html; charset=utf-8";
 
-                    var startTimestamp = _lastReset;
+                    IEnumerable<DnsQuery> query = _queries;
+
                     if (context.Request.Query.ContainsKey("period"))
                     {
                         switch (context.Request.Query["period"])
                         {
                             case "hour":
-                                startTimestamp = DateTime.UtcNow.AddHours(-1);
+                                query = query.Where(x => x.Created > DateTime.UtcNow.AddHours(-1));
                                 break;
                             case "day":
-                                startTimestamp = DateTime.UtcNow.AddDays(-1);
+                                query = query.Where(x => x.Created > DateTime.UtcNow.AddDays(-1));
                                 break;
                             case "week":
-                                startTimestamp = DateTime.UtcNow.AddDays(-7);
+                                query = query.Where(x => x.Created > DateTime.UtcNow.AddDays(-7));
                                 break;
                             case "month":
-                                startTimestamp = DateTime.UtcNow.AddMonths(-1);
+                                query = query.Where(x => x.Created > DateTime.UtcNow.AddMonths(-1));
                                 break;
                         }
                     }
 
-                    var filteredQueries = _queries.Where(x => x.Created > startTimestamp).ToArray();
+                    if (context.Request.Query.ContainsKey("sender") && IPAddress.TryParse(context.Request.Query["sender"], out IPAddress sender))
+                    {
+                        query = query.Where(x => x.Sender.Equals(sender));
+                    }
+
+                    if (context.Request.Query.ContainsKey("response") && Enum.TryParse(context.Request.Query["response"], out DnsResponseCode response))
+                    {
+                        query = query.Where(x => x.Answer?.ResponseCode == response);
+                    }
+
+                    if (context.Request.Query.ContainsKey("type") && Enum.TryParse(context.Request.Query["type"], out DnsQueryType type))
+                    {
+                        query = query.Where(x => x.Query.QueryType == type);
+                    }
+
+                    if (context.Request.Query.ContainsKey("resolver"))
+                    {
+                        query = query.Where(x => x.Answer?.Resolver == context.Request.Query["resolver"]);
+                    }
+
+                    var filteredQueries = query.ToArray();
                     var answeredQueries = filteredQueries.Where(x => x.Answer != null);
                     var missingQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.NXDomain).ToArray();
                     var successfulQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.NoError).ToArray();
@@ -198,41 +211,35 @@ namespace Ae.Dns.Console
                     var notAnsweredQueries = filteredQueries.Where(x => x.Answer == null).ToArray();
 
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");
-                    await context.Response.WriteAsync($"<p>Metrics since {startTimestamp} (current time is {DateTime.UtcNow}).</p>");
-                    await context.Response.WriteAsync($"<p>There were {filteredQueries.Length} total queries, and there are {resolverCache.Count()} cache entries. {notAnsweredQueries.Length} queries were not answered.</p>");
-                    await context.Response.WriteAsync($"<p>Filter: Last <a href=\"/?period=hour\">hour</a>, <a href=\"/?period=day\">day</a>, <a href=\"/?period=week\">week</a>, <a href=\"/?period=month\">month</a>. Actions: <a href=\"/reset\" onclick=\"return confirm('Are you sure?')\">Reset statistics</a></p>");
+                    await context.Response.WriteAsync($"<p>Earliest tracked query was {filteredQueries.Select(x => x.Created).OrderBy(x => x).FirstOrDefault()} (current time is {DateTime.UtcNow}).</p>");
+                    await context.Response.WriteAsync($"<p>There are {resolverCache.Count()} <a href=\"/cache\">cache entries</a>. {notAnsweredQueries.Length} queries were not answered.</p>");
+                    await context.Response.WriteAsync($"<p>Filter: Last <a href=\"/?period=hour\">hour</a>, <a href=\"/?period=day\">day</a>, <a href=\"/?period=week\">week</a>, <a href=\"/?period=month\">month</a>.</p>");
 
-                    await context.Response.WriteAsync($"<h2>Top Top Level Domains</h2>");
-                    await context.Response.WriteAsync($"<p>Top level domains (permitted and refused).</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().First())), "Top Level Domain", "Hits");
+                    var domainParts = 1;
+                    if (context.Request.Query.ContainsKey("parts") && int.TryParse(context.Request.Query["parts"], out var parts))
+                    {
+                        domainParts = parts;
+                    }
 
-                    await context.Response.WriteAsync($"<h2>Top Refused Root Domains</h2>");
-                    await context.Response.WriteAsync($"<p>Top domain names which were refused.</p>");
-                    await GroupToTable(refusedQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
-
-                    await context.Response.WriteAsync($"<h2>Top Permitted Root Domains</h2>");
-                    await context.Response.WriteAsync($"<p>Top domain names which were permitted.</p>");
-                    await GroupToTable(successfulQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
-
-                    await context.Response.WriteAsync($"<h2>Top Missing Root Domains</h2>");
-                    await context.Response.WriteAsync($"<p>Root domain names which were missing (NXDomain).</p>");
-                    await GroupToTable(missingQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(2).Reverse())), "Root Domain", "Hits");
+                    await context.Response.WriteAsync($"<h2>Top Domains</h2>");
+                    await context.Response.WriteAsync($"<p>Showing the last {domainParts} parts of the domain. <a href=\"?parts={domainParts+1}\">More parts</a></p>");
+                    await GroupToTable(filteredQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(domainParts).Reverse())), "Domain", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Clients</h2>");
                     await context.Response.WriteAsync($"<p>Top DNS clients.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => x.Sender.ToString()), "Client Address", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"?sender={x.Sender}\">{x.Sender}</a>"), "Client Address", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Responses</h2>");
                     await context.Response.WriteAsync($"<p>Top response codes for all queries.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => x.Answer?.ResponseCode.ToString()), "Response Code", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"?response={x.Answer?.ResponseCode}\">{x.Answer?.ResponseCode}</a>"), "Response Code", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Query Types</h2>");
                     await context.Response.WriteAsync($"<p>Top query types across all queries.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => x.Query.QueryType.ToString()), "Query Type", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"?type={x.Query.QueryType}\">{x.Query.QueryType}</a>"), "Query Type", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
-                    await GroupToTable(answeredQueries.GroupBy(x => x.Answer.Resolver ?? "<none>"), "Answer Source", "Hits");
+                    await GroupToTable(answeredQueries.GroupBy(x => $"<a href=\"?resolver={x.Answer.Resolver}\">{x.Answer.Resolver}</a>"), "Answer Source", "Hits");
                 }
             });
         }
@@ -262,14 +269,7 @@ namespace Ae.Dns.Console
             public DateTime Created { get; set; }
         }
 
-        private readonly ConcurrentBag<DnsQuery> _queries = new ConcurrentBag<DnsQuery>();
-        private DateTime _lastReset = DateTime.UtcNow;
-
-        private void Reset()
-        {
-            _queries.Clear();
-            _lastReset = DateTime.UtcNow;
-        }
+        private readonly ConcurrentQueue<DnsQuery> _queries = new();
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
@@ -293,13 +293,7 @@ namespace Ae.Dns.Console
                 var elapsed = GetObjectFromTags<TimeSpan?>(tags, "Elapsed");
                 var sender = query.Header.Tags.TryGetValue("Sender", out var rawEndpoint) && rawEndpoint is IPEndPoint endpoint ? endpoint : throw new Exception();
 
-                // Ensure we don't run out of memory
-                if (_queries.Count > 1_000_000)
-                {
-                    Reset();
-                }
-
-                _queries.Add(new DnsQuery
+                _queries.Enqueue(new DnsQuery
                 {
                     Query = new DnsHeaderLight(query.Header),
                     Answer = new DnsHeaderLight(answer?.Header),
@@ -307,6 +301,11 @@ namespace Ae.Dns.Console
                     Elapsed = elapsed,
                     Created = DateTime.UtcNow
                 });
+
+                if (_queries.Count > 100_000)
+                {
+                    _queries.TryDequeue(out DnsQuery _);
+                }
             }
         }
     }
