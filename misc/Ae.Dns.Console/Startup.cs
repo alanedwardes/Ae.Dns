@@ -177,7 +177,7 @@ namespace Ae.Dns.Console
                         return QueryHelpers.AddQueryString(context.Request.Path, filters);
                     }
 
-                    IEnumerable<DnsQuery> query = _queries;
+                    IEnumerable<DnsQuery> query = _queries.OrderByDescending(x => x.Created);
 
                     if (context.Request.Query.ContainsKey("sender") && IPAddress.TryParse(context.Request.Query["sender"], out IPAddress sender))
                     {
@@ -207,7 +207,7 @@ namespace Ae.Dns.Console
                     var notAnsweredQueries = filteredQueries.Where(x => x.Answer == null).ToArray();
 
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");
-                    await context.Response.WriteAsync($"<p>Earliest tracked query was {filteredQueries.Select(x => x.Created).OrderBy(x => x).FirstOrDefault()} (current time is {DateTime.UtcNow}).</p>");
+                    await context.Response.WriteAsync($"<p>Earliest tracked query was {filteredQueries.Select(x => x.Created).LastOrDefault()} (current time is {DateTime.UtcNow}).</p>");
                     await context.Response.WriteAsync($"<p>There are {resolverCache.Count()} <a href=\"/cache\">cache entries</a>. {notAnsweredQueries.Length} queries were not answered.</p>");
 
                     if (context.Request.Query.Count > 0)
@@ -240,6 +240,16 @@ namespace Ae.Dns.Console
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
                     await GroupToTable(answeredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("resolver", x.Answer.Resolver)}\">{x.Answer.Resolver}</a>"), "Answer Source", "Hits");
+
+                    var recentQueries = new DataTable { Columns = { "Timestamp", "Sender", "Duration", "Host", "Type", "Response" } };
+                    foreach (var dnsQuery in filteredQueries.Take(25))
+                    {
+                        recentQueries.Rows.Add(dnsQuery.Created, dnsQuery.Sender, dnsQuery.Elapsed?.TotalSeconds.ToString("F"), dnsQuery.Query.Host, dnsQuery.Query.QueryType, dnsQuery.Answer?.ResponseCode);
+                    }
+
+                    await context.Response.WriteAsync($"<h2>Recent Queries</h2>");
+                    await context.Response.WriteAsync($"<p>25 most recent queries / answers.</p>");
+                    await WriteTable(recentQueries);
                 }
             });
         }
