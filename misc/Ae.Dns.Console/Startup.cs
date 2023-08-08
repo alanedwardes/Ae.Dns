@@ -13,6 +13,8 @@ using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Server.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ae.Dns.Console
@@ -162,26 +164,20 @@ namespace Ae.Dns.Console
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     context.Response.ContentType = "text/html; charset=utf-8";
 
-                    IEnumerable<DnsQuery> query = _queries;
-
-                    if (context.Request.Query.ContainsKey("period"))
+                    string CreateQueryString(string name, object value)
                     {
-                        switch (context.Request.Query["period"])
-                        {
-                            case "hour":
-                                query = query.Where(x => x.Created > DateTime.UtcNow.AddHours(-1));
-                                break;
-                            case "day":
-                                query = query.Where(x => x.Created > DateTime.UtcNow.AddDays(-1));
-                                break;
-                            case "week":
-                                query = query.Where(x => x.Created > DateTime.UtcNow.AddDays(-7));
-                                break;
-                            case "month":
-                                query = query.Where(x => x.Created > DateTime.UtcNow.AddMonths(-1));
-                                break;
-                        }
+                        var filters = context.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToString());
+                        filters[name] = value.ToString();
+                        return QueryHelpers.AddQueryString(context.Request.Path, filters);
                     }
+
+                    string CreateQueryStringWithout(string name)
+                    {
+                        var filters = context.Request.Query.Where(x => x.Key != name).ToDictionary(x => x.Key, x => x.Value.ToString());
+                        return QueryHelpers.AddQueryString(context.Request.Path, filters);
+                    }
+
+                    IEnumerable<DnsQuery> query = _queries;
 
                     if (context.Request.Query.ContainsKey("sender") && IPAddress.TryParse(context.Request.Query["sender"], out IPAddress sender))
                     {
@@ -213,7 +209,11 @@ namespace Ae.Dns.Console
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");
                     await context.Response.WriteAsync($"<p>Earliest tracked query was {filteredQueries.Select(x => x.Created).OrderBy(x => x).FirstOrDefault()} (current time is {DateTime.UtcNow}).</p>");
                     await context.Response.WriteAsync($"<p>There are {resolverCache.Count()} <a href=\"/cache\">cache entries</a>. {notAnsweredQueries.Length} queries were not answered.</p>");
-                    await context.Response.WriteAsync($"<p>Filter: Last <a href=\"/?period=hour\">hour</a>, <a href=\"/?period=day\">day</a>, <a href=\"/?period=week\">week</a>, <a href=\"/?period=month\">month</a>.</p>");
+
+                    if (context.Request.Query.Count > 0)
+                    {
+                        await context.Response.WriteAsync($"<p>Filters applied: {string.Join(", ", context.Request.Query.Select(x => $"<a href=\"{CreateQueryStringWithout(x.Key)}\">{x.Key}={x.Value}</a>"))}.</p>");
+                    }
 
                     var domainParts = 1;
                     if (context.Request.Query.ContainsKey("parts") && int.TryParse(context.Request.Query["parts"], out var parts))
@@ -222,24 +222,24 @@ namespace Ae.Dns.Console
                     }
 
                     await context.Response.WriteAsync($"<h2>Top Domains</h2>");
-                    await context.Response.WriteAsync($"<p>Showing the last {domainParts} parts of the domain. <a href=\"?parts={domainParts+1}\">More parts</a></p>");
+                    await context.Response.WriteAsync($"<p>Showing the last {domainParts} parts of the domain. <a href=\"{CreateQueryString("parts", domainParts + 1)}\">More parts</a></p>");
                     await GroupToTable(filteredQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(domainParts).Reverse())), "Domain", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Clients</h2>");
                     await context.Response.WriteAsync($"<p>Top DNS clients.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"?sender={x.Sender}\">{x.Sender}</a>"), "Client Address", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("sender", x.Sender)}\">{x.Sender}</a>"), "Client Address", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Responses</h2>");
                     await context.Response.WriteAsync($"<p>Top response codes for all queries.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"?response={x.Answer?.ResponseCode}\">{x.Answer?.ResponseCode}</a>"), "Response Code", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("response", x.Answer?.ResponseCode)}\">{x.Answer?.ResponseCode}</a>"), "Response Code", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Query Types</h2>");
                     await context.Response.WriteAsync($"<p>Top query types across all queries.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"?type={x.Query.QueryType}\">{x.Query.QueryType}</a>"), "Query Type", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("type", x.Query.QueryType)}\">{x.Query.QueryType}</a>"), "Query Type", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
-                    await GroupToTable(answeredQueries.GroupBy(x => $"<a href=\"?resolver={x.Answer.Resolver}\">{x.Answer.Resolver}</a>"), "Answer Source", "Hits");
+                    await GroupToTable(answeredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("resolver", x.Answer.Resolver)}\">{x.Answer.Resolver}</a>"), "Answer Source", "Hits");
                 }
             });
         }
