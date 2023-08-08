@@ -199,6 +199,11 @@ namespace Ae.Dns.Console
                         query = query.Where(x => x.Answer?.Resolver == context.Request.Query["resolver"]);
                     }
 
+                    if (context.Request.Query.ContainsKey("host"))
+                    {
+                        query = query.Where(x => x.Query.Host.EndsWith(context.Request.Query["host"]));
+                    }
+
                     var filteredQueries = query.ToArray();
                     var answeredQueries = filteredQueries.Where(x => x.Answer != null);
                     var missingQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.NXDomain).ToArray();
@@ -221,30 +226,55 @@ namespace Ae.Dns.Console
                         domainParts = parts;
                     }
 
-                    await context.Response.WriteAsync($"<h2>Top Domains</h2>");
+                    string SenderFilter(DnsQuery dnsQuery)
+                    {
+                        return $"<a href=\"{CreateQueryString("sender", dnsQuery.Sender)}\">{dnsQuery.Sender}</a>";
+                    }
+
+                    string ResponseFilter(DnsQuery dnsQuery)
+                    {
+                        return $"<a href=\"{CreateQueryString("response", dnsQuery.Answer?.ResponseCode)}\">{dnsQuery.Answer?.ResponseCode}</a>";
+                    }
+
+                    string QueryTypeFilter(DnsQuery dnsQuery)
+                    {
+                        return $"<a href=\"{CreateQueryString("type", dnsQuery.Query.QueryType)}\">{dnsQuery.Query.QueryType}</a>";
+                    }
+
+                    string ResolverFilter(DnsQuery dnsQuery)
+                    {
+                        return $"<a href=\"{CreateQueryString("resolver", dnsQuery.Answer.Resolver)}\">{dnsQuery.Answer.Resolver}</a>";
+                    }
+
+                    string HostSuffixFilter(string host)
+                    {
+                        return $"<a href=\"{CreateQueryString("host", host)}\">{host}</a>";
+                    }
+
+                    await context.Response.WriteAsync($"<h2>Top Hosts</h2>");
                     await context.Response.WriteAsync($"<p>Showing the last {domainParts} parts of the domain. <a href=\"{CreateQueryString("parts", domainParts + 1)}\">More parts</a></p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => string.Join('.', x.Query.Host.Split('.').Reverse().Take(domainParts).Reverse())), "Domain", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(x => HostSuffixFilter(string.Join('.', x.Query.Host.Split('.').Reverse().Take(domainParts).Reverse()))), "Host", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Clients</h2>");
                     await context.Response.WriteAsync($"<p>Top DNS clients.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("sender", x.Sender)}\">{x.Sender}</a>"), "Client Address", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(SenderFilter), "Client Address", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Responses</h2>");
                     await context.Response.WriteAsync($"<p>Top response codes for all queries.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("response", x.Answer?.ResponseCode)}\">{x.Answer?.ResponseCode}</a>"), "Response Code", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(ResponseFilter), "Response Code", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Query Types</h2>");
                     await context.Response.WriteAsync($"<p>Top query types across all queries.</p>");
-                    await GroupToTable(filteredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("type", x.Query.QueryType)}\">{x.Query.QueryType}</a>"), "Query Type", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(QueryTypeFilter), "Query Type", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
-                    await GroupToTable(answeredQueries.GroupBy(x => $"<a href=\"{CreateQueryString("resolver", x.Answer.Resolver)}\">{x.Answer.Resolver}</a>"), "Answer Source", "Hits");
+                    await GroupToTable(answeredQueries.GroupBy(ResolverFilter), "Answer Source", "Hits");
 
                     var recentQueries = new DataTable { Columns = { "Timestamp", "Sender", "Duration", "Host", "Type", "Response" } };
-                    foreach (var dnsQuery in filteredQueries.Take(25))
+                    foreach (var dnsQuery in filteredQueries.Take(50))
                     {
-                        recentQueries.Rows.Add(dnsQuery.Created, dnsQuery.Sender, dnsQuery.Elapsed?.TotalSeconds.ToString("F"), dnsQuery.Query.Host, dnsQuery.Query.QueryType, dnsQuery.Answer?.ResponseCode);
+                        recentQueries.Rows.Add(dnsQuery.Created, SenderFilter(dnsQuery), dnsQuery.Elapsed?.TotalSeconds.ToString("F"), HostSuffixFilter(dnsQuery.Query.Host), QueryTypeFilter(dnsQuery), ResponseFilter(dnsQuery));
                     }
 
                     await context.Response.WriteAsync($"<h2>Recent Queries</h2>");
