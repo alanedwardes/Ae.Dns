@@ -173,8 +173,7 @@ namespace Ae.Dns.Console
 
                     string CreateQueryStringWithout(string name)
                     {
-                        var filters = context.Request.Query.Where(x => x.Key != name).ToDictionary(x => x.Key, x => x.Value.ToString());
-                        return QueryHelpers.AddQueryString(context.Request.Path, filters);
+                        return QueryHelpers.AddQueryString(context.Request.Path, context.Request.Query.Where(x => x.Key != name));
                     }
 
                     IEnumerable<DnsQuery> query = _queries.OrderByDescending(x => x.Created);
@@ -278,7 +277,7 @@ namespace Ae.Dns.Console
                     }
 
                     await context.Response.WriteAsync($"<h2>Recent Queries</h2>");
-                    await context.Response.WriteAsync($"<p>25 most recent queries / answers.</p>");
+                    await context.Response.WriteAsync($"<p>50 most recent queries / answers.</p>");
                     await WriteTable(recentQueries);
                 }
             });
