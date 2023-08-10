@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -18,7 +17,7 @@ namespace Ae.Dns.Client.Filters
     /// </summary>
     public sealed class DnsRemoteSetFilter : IDnsFilter
     {
-        private readonly ConcurrentDictionary<string, bool> _domains = new ConcurrentDictionary<string, bool>();
+        private readonly IDictionary<Uri, ISet<string>> _filterSets = new Dictionary<Uri, ISet<string>>();
         private readonly ILogger<DnsRemoteSetFilter> _logger;
         private readonly HttpClient _httpClient;
 
@@ -73,12 +72,10 @@ namespace Ae.Dns.Client.Filters
 
             _logger.LogTrace("Found {Count} domains in {FilterUri}", set.Count, fileUri);
 
-            foreach (var domain in set)
+            lock (_filterSets)
             {
-                _domains[domain] = allow;
+                _filterSets.Add(fileUri, set);
             }
-
-            _logger.LogInformation("Filter list now contains {Count} domains", _domains.Count);
         }
 
         /// <summary>
@@ -94,10 +91,13 @@ namespace Ae.Dns.Client.Filters
         /// <inheritdoc/>
         public bool IsPermitted(DnsMessage query)
         {
-            if (_domains.TryGetValue(query.Header.Host, out bool allowed) && !allowed)
+            foreach (var filterSet in _filterSets)
             {
-                query.Header.Tags["BlockReason"] = "Remote set filter";
-                return false;
+                if (filterSet.Value.Contains(query.Header.Host))
+                {
+                    query.Header.Tags["BlockReason"] = $"{nameof(DnsRemoteSetFilter)}({filterSet.Key})";
+                    return false;
+                }
             }
 
             return true;

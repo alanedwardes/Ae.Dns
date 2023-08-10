@@ -28,7 +28,7 @@ namespace Ae.Dns.Client.Filters
             {
                 if (query.Header.Host.EndsWith(suffix))
                 {
-                    query.Header.Tags["BlockReason"] = "Suffix filter";
+                    query.Header.Tags["BlockReason"] = nameof(DnsDomainSuffixFilter);
                     return false;
                 }
             }

@@ -42,28 +42,28 @@ namespace Ae.Dns.Client.Filters
             // Very unlikely localhost got this far, though just in case it did
             if (query.Header.Host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
             {
-                query.Header.Tags["BlockReason"] = "Host is \"localhost\"";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Host is localhost)";
                 return false;
             }
 
             // Do not permit DNS-SD (service discovery) queries
             if (_reservedDnsServiceDiscoveryPrefixes.Any(x => query.Header.Host.StartsWith(x, StringComparison.InvariantCultureIgnoreCase)))
             {
-                query.Header.Tags["BlockReason"] = "DNS-SD (service discovery)";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(DNS-SD (service discovery)";
                 return false;
             }
 
             // Do not permit reserved top level domain names
             if (_reservedTopLevelDomainNames.Any(x => query.Header.Host.EndsWith(x, StringComparison.InvariantCultureIgnoreCase)))
             {
-                query.Header.Tags["BlockReason"] = "Reserved local network TLD";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Reserved local network TLD)";
                 return false;
             }
 
             // Sometimes misconfigured applications can send queries beginning with a protocol
             if (query.Header.Host.StartsWith("https://") || query.Header.Host.StartsWith("http://"))
             {
-                query.Header.Tags["BlockReason"] = "Host contains protocol prefix (misconfiguration)";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Host contains http:// prefix)";
                 return false;
             }
 
@@ -72,7 +72,7 @@ namespace Ae.Dns.Client.Filters
             // Disallow a TLD containing an underscore
             if (hostParts.Last().Contains("_"))
             {
-                query.Header.Tags["BlockReason"] = "TLD contains underscore";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(TLD contains underscore)";
                 return false;
             }
 
@@ -80,14 +80,14 @@ namespace Ae.Dns.Client.Filters
             // Note: sometimes this is valid, but it's so rare it's not worth allowing
             if (hostParts.Length < 2)
             {
-                query.Header.Tags["BlockReason"] = "No TLD";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(No TLD)";
                 return false;
             }
 
             // Disallow reverse DNS lookups for private IP addresses
             if (query.TryParseIpAddressFromReverseLookup(out var address) && IpAddressExtensions.IsPrivate(address))
             {
-                query.Header.Tags["BlockReason"] = "Reverse lookup for private IP address";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Reverse lookup for private IP address)";
                 return false;
             }
 
@@ -96,7 +96,7 @@ namespace Ae.Dns.Client.Filters
             // bypassing the server and going directly to the upstream (if one happens to respond to this)
             if (query.Header.QueryType == DnsQueryType.SVCB && query.Header.Host == "_dns.resolver.arpa")
             {
-                query.Header.Tags["BlockReason"] = "DNS resolver discovery";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(DNS resolver discovery)";
                 return false;
             }
 

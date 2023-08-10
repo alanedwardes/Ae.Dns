@@ -22,7 +22,7 @@ namespace Ae.Dns.Client.Filters
         {
             if (_disallowedQueryTypes.Contains(query.Header.QueryType))
             {
-                query.Header.Tags["BlockReason"] = "Query type filter";
+                query.Header.Tags["BlockReason"] = nameof(DnsQueryTypeFilter);
                 return false;
             }
 
