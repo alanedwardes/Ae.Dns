@@ -94,9 +94,10 @@ namespace Ae.Dns.Client.Filters
         /// <inheritdoc/>
         public bool IsPermitted(DnsMessage query)
         {
-            if (_domains.TryGetValue(query.Header.Host, out bool allowed))
+            if (_domains.TryGetValue(query.Header.Host, out bool allowed) && !allowed)
             {
-                return allowed;
+                query.Header.Tags["BlockReason"] = "Remote set filter";
+                return false;
             }
 
             return true;

@@ -13,7 +13,6 @@ using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Server.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -198,6 +197,11 @@ namespace Ae.Dns.Console
                         query = query.Where(x => x.Answer?.Resolver == context.Request.Query["resolver"]);
                     }
 
+                    if (context.Request.Query.ContainsKey("blockReason"))
+                    {
+                        query = query.Where(x => x.Query.BlockReason == context.Request.Query["blockReason"]);
+                    }
+
                     if (context.Request.Query.ContainsKey("host"))
                     {
                         query = query.Where(x => x.Query.Host.EndsWith(context.Request.Query["host"]));
@@ -216,7 +220,7 @@ namespace Ae.Dns.Console
 
                     if (context.Request.Query.Count > 0)
                     {
-                        await context.Response.WriteAsync($"<p>Filters applied: {string.Join(", ", context.Request.Query.Select(x => $"<a href=\"{CreateQueryStringWithout(x.Key)}\">{x.Key}={x.Value}</a>"))}.</p>");
+                        await context.Response.WriteAsync($"<p>Filters applied: {string.Join(", ", context.Request.Query.Select(x => $"<a href=\"{CreateQueryStringWithout(x.Key)}\">{x.Key} is {x.Value}</a>"))}.</p>");
                     }
 
                     var domainParts = 1;
@@ -243,6 +247,11 @@ namespace Ae.Dns.Console
                     string ResolverFilter(DnsQuery dnsQuery)
                     {
                         return $"<a href=\"{CreateQueryString("resolver", dnsQuery.Answer.Resolver)}\">{dnsQuery.Answer.Resolver}</a>";
+                    }
+
+                    string BlockReasonFilter(DnsQuery dnsQuery)
+                    {
+                        return $"<a href=\"{CreateQueryString("blockReason", dnsQuery.Query.BlockReason)}\">{dnsQuery.Query.BlockReason}</a>";
                     }
 
                     string HostSuffixFilter(string host)
@@ -276,6 +285,10 @@ namespace Ae.Dns.Console
                         recentQueries.Rows.Add(dnsQuery.Created, SenderFilter(dnsQuery), dnsQuery.Elapsed?.TotalSeconds.ToString("F"), HostSuffixFilter(dnsQuery.Query.Host), QueryTypeFilter(dnsQuery), ResponseFilter(dnsQuery));
                     }
 
+                    await context.Response.WriteAsync($"<h2>Top Block Reasons</h2>");
+                    await context.Response.WriteAsync($"<p>Top reasons queries are blocked.</p>");
+                    await GroupToTable(refusedQueries.GroupBy(BlockReasonFilter), "Block Reason", "Hits");
+
                     await context.Response.WriteAsync($"<h2>Recent Queries</h2>");
                     await context.Response.WriteAsync($"<p>50 most recent queries / answers.</p>");
                     await WriteTable(recentQueries);
@@ -291,12 +304,14 @@ namespace Ae.Dns.Console
                 QueryType = header.QueryType;
                 Host = header.Host;
                 Resolver = header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : null;
+                BlockReason = header.Tags.ContainsKey("BlockReason") ? header.Tags["BlockReason"].ToString() : null;
             }
 
             public DnsResponseCode ResponseCode { get; }
             public DnsQueryType QueryType { get; }
             public string Host { get; }
             public string? Resolver { get; }
+            public string? BlockReason { get; }
         }
 
         private sealed class DnsQuery

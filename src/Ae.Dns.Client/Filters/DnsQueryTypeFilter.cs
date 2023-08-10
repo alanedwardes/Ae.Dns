@@ -18,6 +18,15 @@ namespace Ae.Dns.Client.Filters
         public DnsQueryTypeFilter(IEnumerable<DnsQueryType> disallowedQueryTypes) => _disallowedQueryTypes = new HashSet<DnsQueryType>(disallowedQueryTypes);
 
         /// <inheritdoc/>
-        public bool IsPermitted(DnsMessage query) => !_disallowedQueryTypes.Contains(query.Header.QueryType);
+        public bool IsPermitted(DnsMessage query)
+        {
+            if (_disallowedQueryTypes.Contains(query.Header.QueryType))
+            {
+                query.Header.Tags["BlockReason"] = "Query type filter";
+                return false;
+            }
+
+            return true;
+        }
     }
 }
