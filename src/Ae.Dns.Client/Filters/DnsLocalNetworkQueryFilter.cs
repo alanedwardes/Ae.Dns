@@ -49,7 +49,7 @@ namespace Ae.Dns.Client.Filters
             // Do not permit DNS-SD (service discovery) queries
             if (_reservedDnsServiceDiscoveryPrefixes.Any(x => query.Header.Host.StartsWith(x, StringComparison.InvariantCultureIgnoreCase)))
             {
-                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(DNS-SD (service discovery)";
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(DNS service discovery)";
                 return false;
             }
 
