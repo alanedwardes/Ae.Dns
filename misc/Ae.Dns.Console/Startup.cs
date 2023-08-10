@@ -287,7 +287,7 @@ namespace Ae.Dns.Console
 
                     await context.Response.WriteAsync($"<h2>Top Block Reasons</h2>");
                     await context.Response.WriteAsync($"<p>Top reasons queries are blocked.</p>");
-                    await GroupToTable(refusedQueries.GroupBy(BlockReasonFilter), "Block Reason", "Hits");
+                    await GroupToTable(refusedQueries.Where(x => x.Query.BlockReason != null).GroupBy(BlockReasonFilter), "Block Reason", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Recent Queries</h2>");
                     await context.Response.WriteAsync($"<p>50 most recent queries / answers.</p>");
