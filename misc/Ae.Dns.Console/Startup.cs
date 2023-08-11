@@ -208,15 +208,10 @@ namespace Ae.Dns.Console
                     }
 
                     var filteredQueries = query.ToArray();
-                    var answeredQueries = filteredQueries.Where(x => x.Answer != null);
-                    var missingQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.NXDomain).ToArray();
-                    var successfulQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.NoError).ToArray();
-                    var refusedQueries = answeredQueries.Where(x => x.Answer.ResponseCode == DnsResponseCode.Refused).ToArray();
-                    var notAnsweredQueries = filteredQueries.Where(x => x.Answer == null).ToArray();
 
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");
                     await context.Response.WriteAsync($"<p>Earliest tracked query was {filteredQueries.Select(x => x.Created).LastOrDefault()} (current time is {DateTime.UtcNow}).</p>");
-                    await context.Response.WriteAsync($"<p>There are {resolverCache.Count()} <a href=\"/cache\">cache entries</a>. {notAnsweredQueries.Length} queries were not answered.</p>");
+                    await context.Response.WriteAsync($"<p>There are {resolverCache.Count()} <a href=\"/cache\">cache entries</a>. {filteredQueries.Count(x => x.Answer == null)} queries were not answered.</p>");
 
                     if (context.Request.Query.Count > 0)
                     {
@@ -277,7 +272,7 @@ namespace Ae.Dns.Console
 
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
-                    await GroupToTable(answeredQueries.GroupBy(ResolverFilter), "Answer Source", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(ResolverFilter), "Answer Source", "Hits");
 
                     var recentQueries = new DataTable { Columns = { "Timestamp", "Sender", "Duration", "Host", "Type", "Response" } };
                     foreach (var dnsQuery in filteredQueries.Take(50))
@@ -287,7 +282,7 @@ namespace Ae.Dns.Console
 
                     await context.Response.WriteAsync($"<h2>Top Block Reasons</h2>");
                     await context.Response.WriteAsync($"<p>Top reasons queries are blocked.</p>");
-                    await GroupToTable(refusedQueries.Where(x => x.Query.BlockReason != null).GroupBy(BlockReasonFilter), "Block Reason", "Hits");
+                    await GroupToTable(filteredQueries.GroupBy(BlockReasonFilter), "Block Reason", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Recent Queries</h2>");
                     await context.Response.WriteAsync($"<p>50 most recent queries / answers.</p>");
@@ -303,15 +298,15 @@ namespace Ae.Dns.Console
                 ResponseCode = header.ResponseCode;
                 QueryType = header.QueryType;
                 Host = header.Host;
-                Resolver = header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : null;
-                BlockReason = header.Tags.ContainsKey("BlockReason") ? header.Tags["BlockReason"].ToString() : null;
+                Resolver = header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : "Unknown";
+                BlockReason = header.Tags.ContainsKey("BlockReason") ? header.Tags["BlockReason"].ToString() : "None";
             }
 
             public DnsResponseCode ResponseCode { get; }
             public DnsQueryType QueryType { get; }
             public string Host { get; }
-            public string? Resolver { get; }
-            public string? BlockReason { get; }
+            public string Resolver { get; }
+            public string BlockReason { get; }
         }
 
         private sealed class DnsQuery
