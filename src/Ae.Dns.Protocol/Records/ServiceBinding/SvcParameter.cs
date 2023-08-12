@@ -35,6 +35,10 @@
         /// </summary>
         IPv6Hint = 6,
         /// <summary>
+        /// DNS over HTTPS path template
+        /// </summary>
+        Dohpath = 7,
+        /// <summary>
         /// Reserved ("Invalid key")
         /// </summary>
         Invalid = 65535

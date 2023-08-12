@@ -54,6 +54,7 @@ namespace Ae.Dns.Protocol.Records
                 DnsQueryType.MX => new DnsMxResource(),
                 DnsQueryType.OPT => new DnsOptResource(),
                 DnsQueryType.HTTPS => new DnsHttpsResource(),
+                DnsQueryType.SVCB => new DnsHttpsResource(),
                 _ => new DnsUnknownResource(),
             };
         }

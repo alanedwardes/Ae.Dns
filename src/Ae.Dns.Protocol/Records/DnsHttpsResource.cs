@@ -51,8 +51,10 @@ namespace Ae.Dns.Protocol.Records
             return parameterType switch
             {
                 SvcParameter.Alpn => new SvcStringParameter(),
-                SvcParameter.IPv6Hint => new SvcIpAddressesParameter(AddressFamily.InterNetworkV6),
+                SvcParameter.Port => new SvcUShortParameter(),
                 SvcParameter.IPv4Hint => new SvcIpAddressesParameter(AddressFamily.InterNetwork),
+                SvcParameter.IPv6Hint => new SvcIpAddressesParameter(AddressFamily.InterNetworkV6),
+                SvcParameter.Dohpath => new SvcUtf8StringParameter(),
                 _ => new DnsUnknownResource(),
             };
         }
@@ -107,20 +109,28 @@ namespace Ae.Dns.Protocol.Records
             {
                 parts.Add(".");
             }
-
-            if (SvcParameters.TryGetValue(SvcParameter.Alpn, out var alpnResource))
+            else
             {
-                parts.Add("alpn=\"" + alpnResource + "\"");
+                parts.Add(string.Join(".", TargetName) + '.');
             }
 
-            if (SvcParameters.TryGetValue(SvcParameter.IPv4Hint, out var ipv4Resource))
+            // Matches what is supported by dig
+            var labelMap = new Dictionary<SvcParameter, string>
             {
-                parts.Add("ipv4hint=" + ipv4Resource);
-            }
+                { SvcParameter.Mandatory, "mandatory" },
+                { SvcParameter.Alpn, "alpn" },
+                { SvcParameter.NoDefaultAlpn, "no-default-alpn" },
+                { SvcParameter.Port, "port" },
+                { SvcParameter.IPv4Hint, "ipv4hint" },
+                { SvcParameter.Ech, "ech" },
+                { SvcParameter.IPv6Hint, "ipv6hint" }
+            };
 
-            if (SvcParameters.TryGetValue(SvcParameter.IPv6Hint, out var ipv6Resource))
+            foreach (var parameter in SvcParameters.Where(x => !(x.Value is DnsUnknownResource)).OrderBy(x => x.Key))
             {
-                parts.Add("ipv6hint=" + ipv6Resource);
+                var keyName = labelMap.ContainsKey(parameter.Key) ? labelMap[parameter.Key] : $"key{(ushort)parameter.Key}";
+                var keyValue = parameter.Value is SvcStringParameter || parameter.Value is SvcUtf8StringParameter ? $"\"{parameter.Value}\"" : parameter.Value.ToString();
+                parts.Add($"{keyName}={keyValue}");
             }
 
             return string.Join(" ", parts);
