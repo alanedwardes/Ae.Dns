@@ -165,24 +165,29 @@ namespace Ae.Dns.Protocol
             return reader;
         }
 
+        public static void ToBytes(string value, Memory<byte> buffer, ref int offset)
+        {
+            // First write the value 1 byte from the offset to leave room for the length byte
+#if NETSTANDARD2_0
+            var stringBytes = Encoding.ASCII.GetBytes(value);
+            stringBytes.CopyTo(buffer.Slice(offset + 1, value.Length));
+            var length = stringBytes.Length;
+#else
+            var length = Encoding.ASCII.GetBytes(value, buffer.Slice(offset + 1, value.Length).Span);
+#endif
+
+            // Then write the length before the value
+            buffer.Span[offset] = (byte)length;
+
+            // Finally advance the offset past the length and value
+            offset += 1 + length;
+        }
+
         public static void ToBytes(ReadOnlySpan<string> strings, Memory<byte> buffer, ref int offset)
         {
             for (int i = 0; i < strings.Length; i++)
             {
-                // First write the value 1 byte from the offset to leave room for the length byte
-#if NETSTANDARD2_0
-                var stringBytes = Encoding.ASCII.GetBytes(strings[i]);
-                stringBytes.CopyTo(buffer.Slice(offset + 1, strings[i].Length));
-                var length = stringBytes.Length;
-#else
-                var length = Encoding.ASCII.GetBytes(strings[i], buffer.Slice(offset + 1, strings[i].Length).Span);
-#endif
-
-                // Then write the length before the value
-                buffer.Span[offset] = (byte)length;
-
-                // Finally advance the offset past the length and value
-                offset += 1 + length;
+                ToBytes(strings[i], buffer, ref offset);
             }
 
             buffer.Span[offset++] = 0;
