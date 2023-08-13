@@ -197,6 +197,11 @@ namespace Ae.Dns.Console
                         query = query.Where(x => x.Answer?.Resolver == context.Request.Query["resolver"]);
                     }
 
+                    if (context.Request.Query.ContainsKey("server"))
+                    {
+                        query = query.Where(x => x.Query.Server == context.Request.Query["server"]);
+                    }
+
                     if (context.Request.Query.ContainsKey("blockReason"))
                     {
                         query = query.Where(x => x.Query.BlockReason == context.Request.Query["blockReason"]);
@@ -244,6 +249,11 @@ namespace Ae.Dns.Console
                         return $"<a href=\"{CreateQueryString("resolver", dnsQuery.Answer.Resolver)}\">{dnsQuery.Answer.Resolver}</a>";
                     }
 
+                    string ServerFilter(DnsQuery dnsQuery)
+                    {
+                        return $"<a href=\"{CreateQueryString("server", dnsQuery.Query.Server)}\">{dnsQuery.Query.Server}</a>";
+                    }
+
                     string BlockReasonFilter(DnsQuery dnsQuery)
                     {
                         return $"<a href=\"{CreateQueryString("blockReason", dnsQuery.Query.BlockReason)}\">{dnsQuery.Query.BlockReason}</a>";
@@ -274,6 +284,10 @@ namespace Ae.Dns.Console
                     await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
                     await GroupToTable(filteredQueries.GroupBy(ResolverFilter), "Answer Source", "Hits");
 
+                    await context.Response.WriteAsync($"<h2>Top Servers</h2>");
+                    await context.Response.WriteAsync($"<p>Top servers used.</p>");
+                    await GroupToTable(filteredQueries.GroupBy(ServerFilter), "Server", "Hits");
+
                     var recentQueries = new DataTable { Columns = { "Timestamp", "Sender", "Duration", "Host", "Type", "Response" } };
                     foreach (var dnsQuery in filteredQueries.Take(50))
                     {
@@ -300,6 +314,7 @@ namespace Ae.Dns.Console
                 Host = header.Host;
                 Resolver = header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : "Unknown";
                 BlockReason = header.Tags.ContainsKey("BlockReason") ? header.Tags["BlockReason"].ToString() : "None";
+                Server = header.Tags.ContainsKey("Server") ? header.Tags["Server"].ToString() : "Unknown";
             }
 
             public DnsResponseCode ResponseCode { get; }
@@ -307,6 +322,7 @@ namespace Ae.Dns.Console
             public string Host { get; }
             public string Resolver { get; }
             public string BlockReason { get; }
+            public string Server { get; }
         }
 
         private sealed class DnsQuery

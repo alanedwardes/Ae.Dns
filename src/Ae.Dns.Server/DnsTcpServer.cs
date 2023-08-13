@@ -152,10 +152,12 @@ namespace Ae.Dns.Server
         {
             var stopwatch = Stopwatch.StartNew();
 
+            var request = new DnsRawClientRequest(queryLength, socket.RemoteEndPoint, nameof(DnsTcpServer));
+
             DnsRawClientResponse response;
             try
             {
-                response = await _dnsClient.Query(buffer.Slice(2), queryLength, socket.RemoteEndPoint, token);
+                response = await _dnsClient.Query(buffer.Slice(2), request, token);
             }
             catch (Exception e)
             {

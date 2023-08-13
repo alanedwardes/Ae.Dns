@@ -103,10 +103,12 @@ namespace Ae.Dns.Server
         {
             var stopwatch = Stopwatch.StartNew();
 
+            var request = new DnsRawClientRequest(queryLength, sender, nameof(DnsUdpServer));
+
             DnsRawClientResponse response;
             try
             {
-                response = await _dnsClient.Query(buffer, queryLength, sender, token);
+                response = await _dnsClient.Query(buffer, request, token);
             }
             catch (Exception e)
             {

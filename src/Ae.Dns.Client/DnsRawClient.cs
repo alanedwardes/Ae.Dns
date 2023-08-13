@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,9 +31,9 @@ namespace Ae.Dns.Client
         public void Dispose() => _dnsClient.Dispose();
 
         /// <inheritdoc/>
-        public async Task<DnsRawClientResponse> Query(Memory<byte> buffer, int queryLength, EndPoint querySource, CancellationToken token = default)
+        public async Task<DnsRawClientResponse> Query(Memory<byte> buffer, DnsRawClientRequest request, CancellationToken token = default)
         {
-            var queryBuffer = buffer.Slice(0, queryLength);
+            var queryBuffer = buffer.Slice(0, request.QueryLength);
 
             DnsMessage query;
             try
@@ -47,7 +46,8 @@ namespace Ae.Dns.Client
                 throw;
             }
 
-            query.Header.Tags.Add("Sender", querySource);
+            query.Header.Tags.Add("Sender", request.SourceEndpoint);
+            query.Header.Tags.Add("Server", request.ServerName);
 
             DnsMessage answer;
             try
