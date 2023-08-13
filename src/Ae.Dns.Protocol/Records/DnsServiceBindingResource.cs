@@ -9,7 +9,7 @@ namespace Ae.Dns.Protocol.Records
     /// <summary>
     /// See https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-svcb-https-10
     /// </summary>
-    public sealed class DnsHttpsResource : IDnsResource, IEquatable<DnsHttpsResource>
+    public sealed class DnsServiceBindingResource : IDnsResource, IEquatable<DnsServiceBindingResource>
     {
         /// <summary>
         /// When SvcPriority is 0 the SVCB record is in AliasMode. Otherwise, it is in ServiceMode.
@@ -33,7 +33,7 @@ namespace Ae.Dns.Protocol.Records
         public IDictionary<SvcParameter, IDnsResource> SvcParameters { get; set; } = new Dictionary<SvcParameter, IDnsResource>();
 
         /// <inheritdoc/>
-        public bool Equals(DnsHttpsResource other)
+        public bool Equals(DnsServiceBindingResource other)
         {
             return SvcPriority == other.SvcPriority &&
                 TargetName.SequenceEqual(other.TargetName) &&
@@ -41,7 +41,7 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsHttpsResource record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object obj) => obj is DnsServiceBindingResource record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(SvcPriority, TargetName, SvcParameters);

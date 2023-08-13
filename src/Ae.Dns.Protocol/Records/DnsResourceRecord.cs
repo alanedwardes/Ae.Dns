@@ -53,8 +53,8 @@ namespace Ae.Dns.Protocol.Records
                 DnsQueryType.SOA => new DnsSoaResource(),
                 DnsQueryType.MX => new DnsMxResource(),
                 DnsQueryType.OPT => new DnsOptResource(),
-                DnsQueryType.HTTPS => new DnsHttpsResource(),
-                DnsQueryType.SVCB => new DnsHttpsResource(),
+                DnsQueryType.HTTPS => new DnsServiceBindingResource(),
+                DnsQueryType.SVCB => new DnsServiceBindingResource(),
                 _ => new DnsUnknownResource(),
             };
         }
