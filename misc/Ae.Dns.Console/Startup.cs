@@ -160,6 +160,8 @@ namespace Ae.Dns.Console
 
                 if (context.Request.Path == "/")
                 {
+                    var dnsClient = context.RequestServices.GetRequiredService<IDnsClient>();
+
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     context.Response.ContentType = "text/html; charset=utf-8";
 
@@ -214,6 +216,12 @@ namespace Ae.Dns.Console
 
                     var filteredQueries = query.ToArray();
 
+                    var reverseLookups = (await Task.WhenAll(filteredQueries.Where(x => x.Sender != null).Select(x => x.Sender).Distinct().Select(async x =>
+                    {
+                        var answer = await dnsClient.Query(DnsQueryFactory.CreateReverseQuery(x));
+                        return (x, answer.Answers.FirstOrDefault()?.Resource.ToString());
+                    }))).ToDictionary(x => x.x, x => x.Item2);
+
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");
                     await context.Response.WriteAsync($"<p>Earliest tracked query was {filteredQueries.Select(x => x.Created).LastOrDefault()} (current time is {DateTime.UtcNow}).</p>");
                     await context.Response.WriteAsync($"<p>There are {resolverCache.Count()} <a href=\"/cache\">cache entries</a>. {filteredQueries.Count(x => x.Answer == null)} queries were not answered.</p>");
@@ -231,7 +239,7 @@ namespace Ae.Dns.Console
 
                     string SenderFilter(DnsQuery dnsQuery)
                     {
-                        return $"<a href=\"{CreateQueryString("sender", dnsQuery.Sender)}\">{dnsQuery.Sender}</a>";
+                        return $"<a href=\"{CreateQueryString("sender", dnsQuery.Sender)}\">{reverseLookups[dnsQuery.Sender] ?? dnsQuery.Sender.ToString()}</a>";
                     }
 
                     string ResponseFilter(DnsQuery dnsQuery)
@@ -356,20 +364,22 @@ namespace Ae.Dns.Console
                 var query = GetObjectFromTags<DnsMessage>(tags, "Query");
                 var answer = GetObjectFromTags<DnsMessage>(tags, "Answer");
                 var elapsed = GetObjectFromTags<TimeSpan?>(tags, "Elapsed");
-                var sender = query.Header.Tags.TryGetValue("Sender", out var rawEndpoint) && rawEndpoint is IPEndPoint endpoint ? endpoint : throw new Exception();
-
-                _queries.Enqueue(new DnsQuery
+                var sender = query.Header.Tags.TryGetValue("Sender", out var rawEndpoint) && rawEndpoint is not null && rawEndpoint is IPEndPoint endpoint ? endpoint.Address : null;
+                if (sender != null)
                 {
-                    Query = new DnsHeaderLight(query.Header),
-                    Answer = new DnsHeaderLight(answer?.Header),
-                    Sender = sender.Address,
-                    Elapsed = elapsed,
-                    Created = DateTime.UtcNow
-                });
+                    _queries.Enqueue(new DnsQuery
+                    {
+                        Query = new DnsHeaderLight(query.Header),
+                        Answer = new DnsHeaderLight(answer?.Header),
+                        Sender = sender,
+                        Elapsed = elapsed,
+                        Created = DateTime.UtcNow
+                    });
 
-                if (_queries.Count > 100_000)
-                {
-                    _queries.TryDequeue(out DnsQuery _);
+                    if (_queries.Count > 100_000)
+                    {
+                        _queries.TryDequeue(out DnsQuery _);
+                    }
                 }
             }
         }
