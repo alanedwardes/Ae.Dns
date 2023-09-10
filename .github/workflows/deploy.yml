@@ -43,4 +43,4 @@ jobs:
           --amend public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG-linux-arm64 \
           --amend public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG-linux-amd64
           
-        docker push --all-tags public.ecr.aws/j7m3k0v4/aedns
+        docker push public.ecr.aws/j7m3k0v4/aedns:manifest-latest
