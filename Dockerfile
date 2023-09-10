@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/runtime:6.0
 
 ARG TARGETPLATFORM
 
-ADD build/$TARGETPLATFORM /opt/aedns
+ADD build/${TARGETPLATFORM} /opt/aedns
 
 VOLUME ["/data"]
 
