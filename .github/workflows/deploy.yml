@@ -39,8 +39,8 @@ jobs:
         
         docker push --all-tags public.ecr.aws/j7m3k0v4/aedns
 
-        docker manifest create public.ecr.aws/j7m3k0v4/aedns:manifest-latest \
+        docker manifest create public.ecr.aws/j7m3k0v4/aedns:latest \
           --amend public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG-linux-arm64 \
           --amend public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG-linux-amd64
           
-        docker manifest push public.ecr.aws/j7m3k0v4/aedns:manifest-latest
+        docker manifest push public.ecr.aws/j7m3k0v4/aedns:latest
