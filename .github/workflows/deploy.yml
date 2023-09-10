@@ -28,6 +28,6 @@ jobs:
       env:
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG .
-        docker build -t public.ecr.aws/j7m3k0v4/aedns:latest .
+        docker build --platform=linux/arm64/v8 -t public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG .
+        docker build --platform=linux/arm64/v8 -t public.ecr.aws/j7m3k0v4/aedns:latest .
         docker push --all-tags public.ecr.aws/j7m3k0v4/aedns
