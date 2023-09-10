@@ -18,7 +18,7 @@ jobs:
       run: dotnet publish misc/Ae.Dns.Console/Ae.Dns.Console.csproj --configuration Release --runtime linux-arm64 --output build/linux/arm64
 
     - name: Build for AMD64
-      run: dotnet publish misc/Ae.Dns.Console/Ae.Dns.Console.csproj --configuration Release --runtime linux-amd64 --output build/linux/amd64
+      run: dotnet publish misc/Ae.Dns.Console/Ae.Dns.Console.csproj --configuration Release --runtime linux-x64 --output build/linux/amd64
       
     - name: Login to Public ECR
       uses: docker/login-action@v1
