@@ -33,6 +33,14 @@ jobs:
       run: |
         docker build --platform=linux/arm64 -t public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG-linux-arm64 .
         docker build --platform=linux/arm64 -t public.ecr.aws/j7m3k0v4/aedns:latest-linux-arm64 .
+        
         docker build --platform=linux/amd64 -t public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG-linux-amd64 .
         docker build --platform=linux/amd64 -t public.ecr.aws/j7m3k0v4/aedns:latest-linux-amd64 .
+        
+        docker push --all-tags public.ecr.aws/j7m3k0v4/aedns
+
+        docker manifest create public.ecr.aws/j7m3k0v4/aedns:manifest-latest \
+          --amend public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG-linux-arm64 \
+          --amend public.ecr.aws/j7m3k0v4/aedns:$IMAGE_TAG-linux-amd64
+          
         docker push --all-tags public.ecr.aws/j7m3k0v4/aedns
