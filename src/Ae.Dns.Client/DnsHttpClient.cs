@@ -37,7 +37,7 @@ namespace Ae.Dns.Client
 #endif
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, "/dns-query") { Content = content };
+            using var request = new HttpRequestMessage(HttpMethod.Post, _httpClient.BaseAddress.AbsolutePath.Any() ? _httpClient.BaseAddress.AbsolutePath : "/dns-query") { Content = content };
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(DnsMessageType));
 
             using var response = await _httpClient.SendAsync(request, token);
