@@ -41,7 +41,8 @@ namespace Ae.Dns.Tests.Client
                        .Callback<HttpRequestMessage, CancellationToken>((request, token) =>
                        {
                            Assert.Equal(HttpMethod.Post, request.Method);
-                           Assert.Equal($"https://www.example.com/wibble", request.RequestUri.ToString());
+                           Assert.Equal("https://www.example.com/wibble", request.RequestUri.ToString());
+                           Assert.Equal("application/dns-message", request.Headers.Accept.Single().ToString());
 
                            var expectedQueryBytes = SampleDnsPackets.Query2;
                            var actualQueryBytes = request.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();

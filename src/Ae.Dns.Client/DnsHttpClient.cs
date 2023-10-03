@@ -1,7 +1,5 @@
 ﻿using Ae.Dns.Protocol;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Http;
 using System.Net.Http.Headers;
