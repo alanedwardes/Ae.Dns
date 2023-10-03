@@ -1,4 +1,8 @@
 ﻿using Ae.Dns.Protocol;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -11,13 +15,26 @@ namespace Ae.Dns.Client
     /// </summary>
     public sealed class DnsHttpClient : IDnsClient
     {
+        private readonly DnsHttpClientOptions _options;
         private const string DnsMessageType = "application/dns-message";
         private readonly HttpClient _httpClient;
 
         /// <summary>
+        /// Create a new DNS HTTP client using the specified <see cref="DnsHttpClientOptions"/> and <see cref="HttpClient"/> instance.
+        /// </summary>
+        [ActivatorUtilitiesConstructor]
+        public DnsHttpClient(IOptions<DnsHttpClientOptions> options, HttpClient httpClient)
+        {
+            _options = options.Value;
+            _httpClient = httpClient;
+        }
+
+        /// <summary>
         /// Create a new DNS HTTP client using the specified <see cref="HttpClient"/> instance.
         /// </summary>
-        public DnsHttpClient(HttpClient httpClient) => _httpClient = httpClient;
+        public DnsHttpClient(HttpClient httpClient) : this(Options.Create(new DnsHttpClientOptions()), httpClient)
+        {
+        }
 
         /// <inheritdoc/>
         public void Dispose() => _httpClient?.Dispose();
@@ -37,7 +54,7 @@ namespace Ae.Dns.Client
 #endif
             content.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageType);
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, "/dns-query") { Content = content };
+            using var request = new HttpRequestMessage(HttpMethod.Post, _options.Path) { Content = content };
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(DnsMessageType));
 
             using var response = await _httpClient.SendAsync(request, token);
