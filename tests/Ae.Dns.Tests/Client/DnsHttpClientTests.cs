@@ -34,8 +34,8 @@ namespace Ae.Dns.Tests.Client
         public async Task TestLookupMock()
         {
             var mockHandler = new Mock<MockHttpMessageHandler> { CallBase = true };
-            var httpClient = new HttpClient(mockHandler.Object) { BaseAddress = new Uri("https://www.example.com") };
-            var dnsClient = new DnsHttpClient(Options.Create(new DnsHttpClientOptions { Path = "/wibble" }), httpClient);
+            using var httpClient = new HttpClient(mockHandler.Object) { BaseAddress = new Uri("https://www.example.com") };
+            using var dnsClient = new DnsHttpClient(Options.Create(new DnsHttpClientOptions { Path = "/wibble" }), httpClient);
 
             mockHandler.Setup(x => x.SendAsyncMock(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()))
                        .Callback<HttpRequestMessage, CancellationToken>((request, token) =>
