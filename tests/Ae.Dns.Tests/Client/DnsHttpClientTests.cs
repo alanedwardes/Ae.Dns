@@ -35,7 +35,7 @@ namespace Ae.Dns.Tests.Client
         {
             var mockHandler = new Mock<MockHttpMessageHandler> { CallBase = true };
             using var httpClient = new HttpClient(mockHandler.Object) { BaseAddress = new Uri("https://www.example.com") };
-            using var dnsClient = new DnsHttpClient(Options.Create(new DnsHttpClientOptions { Path = "/wibble" }), httpClient);
+            using var dnsClient = new DnsHttpClient(new DnsHttpClientOptions { Path = "/wibble" }, httpClient);
 
             mockHandler.Setup(x => x.SendAsyncMock(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()))
                        .Callback<HttpRequestMessage, CancellationToken>((request, token) =>

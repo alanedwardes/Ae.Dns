@@ -28,9 +28,16 @@ namespace Ae.Dns.Client
         }
 
         /// <summary>
+        /// Create a new DNS HTTP client using the specified <see cref="DnsHttpClientOptions"/> and <see cref="HttpClient"/> instance.
+        /// </summary>
+        public DnsHttpClient(DnsHttpClientOptions options, HttpClient httpClient) : this(Options.Create(options), httpClient)
+        {
+        }
+
+        /// <summary>
         /// Create a new DNS HTTP client using the specified <see cref="HttpClient"/> instance.
         /// </summary>
-        public DnsHttpClient(HttpClient httpClient) : this(Options.Create(new DnsHttpClientOptions()), httpClient)
+        public DnsHttpClient(HttpClient httpClient) : this(new DnsHttpClientOptions(), httpClient)
         {
         }
 
