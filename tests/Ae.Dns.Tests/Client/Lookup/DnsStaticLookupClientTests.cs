@@ -70,13 +70,13 @@ namespace Ae.Dns.Tests.Client.Lookup
             Assert.Equal(DnsResponseCode.NoError, answer1.Header.ResponseCode);
             var answer1record1 = Assert.Single(answer1.Answers);
             Assert.Equal(1, answer1.Header.AnswerRecordCount);
-            Assert.Equal("wibblev4", Assert.Single(((DnsTextResource)answer1record1.Resource).Entries));
+            Assert.Equal("wibblev4", Assert.Single(((DnsDomainResource)answer1record1.Resource).Entries));
 
             var answer2 = await client.Query(DnsQueryFactory.CreateReverseQuery(IPAddress.IPv6Loopback));
             Assert.Equal(DnsResponseCode.NoError, answer2.Header.ResponseCode);
             var answer2record1 = Assert.Single(answer2.Answers);
             Assert.Equal(1, answer2.Header.AnswerRecordCount);
-            Assert.Equal("wibblev6", Assert.Single(((DnsTextResource)answer2record1.Resource).Entries));
+            Assert.Equal("wibblev6", Assert.Single(((DnsDomainResource)answer2record1.Resource).Entries));
         }
 
         [Fact]
