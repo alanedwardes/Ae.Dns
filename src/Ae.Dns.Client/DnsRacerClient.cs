@@ -1,7 +1,9 @@
-﻿using Ae.Dns.Protocol;
+﻿using Ae.Dns.Client.Internal;
+using Ae.Dns.Protocol;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,18 +22,21 @@ namespace Ae.Dns.Client
     {
         private readonly IReadOnlyCollection<IDnsClient> _dnsClients;
         private readonly ILogger<DnsRacerClient> _logger;
+        private readonly DnsRacerClientOptions _options;
 
         /// <summary>
         /// Create a new racer DNS client using the specified <see cref="IDnsClient"/> instances to delegate to.
         /// </summary>
         /// <param name="logger">The logger instance to use.</param>
+        /// <param name="options">The options for this racer client.</param>
         /// <param name="dnsClients">The enumerable of DNS clients to use.</param>
         [ActivatorUtilitiesConstructor]
-        public DnsRacerClient(ILogger<DnsRacerClient> logger, IEnumerable<IDnsClient> dnsClients)
+        public DnsRacerClient(ILogger<DnsRacerClient> logger, IOptions<DnsRacerClientOptions> options, IEnumerable<IDnsClient> dnsClients)
         {
             _logger = logger;
+            _options = options.Value;
             _dnsClients = dnsClients.ToList();
-            
+
             if (_dnsClients.Count < 2)
             {
                 throw new InvalidOperationException("Must use at least two DNS clients");
@@ -43,7 +48,7 @@ namespace Ae.Dns.Client
         /// </summary>
         /// <param name="dnsClients">The enumerable of DNS clients to use.</param>
         public DnsRacerClient(params IDnsClient[] dnsClients)
-            : this(NullLogger<DnsRacerClient>.Instance, dnsClients)
+            : this(NullLogger<DnsRacerClient>.Instance, Options.Create(new DnsRacerClientOptions()), dnsClients)
         {
         }
 
@@ -53,38 +58,33 @@ namespace Ae.Dns.Client
             var sw = Stopwatch.StartNew();
 
             // Randomise the clients
-            var randomisedClients = _dnsClients.OrderBy(x => Guid.NewGuid()).ToArray();
+            var randomisedClients = _dnsClients.OrderBy(x => Guid.NewGuid()).Take(_options.RandomClientQueries).ToArray();
 
-            // Pick the first two
-            var clientA = randomisedClients[0];
-            var clientB = randomisedClients[1];
+            // Start the query tasks (and create a lookup from query to client)
+            var queries = randomisedClients.ToDictionary(client => client.Query(query, token), client => client);
 
-            // Start two queries in parallel
-            var queryTaskA = clientA.Query(query, token);
-            var queryTaskB = clientB.Query(query, token);
+            // Select a winning task
+            var winningTask = await TaskRacer.RaceTasks(queries.Select(x => x.Key));
 
-            // Identify the client from the task, used for logging
-            IDnsClient GetClientFromTask(Task task) => task == queryTaskA ? clientA : clientB;
-
-            // Select a winner
-            var winningTask = await Task.WhenAny(queryTaskA, queryTaskB);
-            var otherTask = winningTask == queryTaskA ? queryTaskB : queryTaskA;
-            if (winningTask.IsFaulted && !otherTask.IsFaulted)
+            // If tasks faulted, log the reason
+            var faultedTasks = queries.Keys.Where(x => x.IsFaulted).ToArray();
+            if (faultedTasks.Any())
             {
-                _logger.LogWarning("Task for client {FailedClient} faulted in {ElapsedMilliseconds} for query {Query}, swapping with result from client {SuccessfulClient}", GetClientFromTask(winningTask), query, sw.ElapsedMilliseconds, GetClientFromTask(otherTask));
-                winningTask = otherTask;
+                var faultedClients = string.Join(", ", faultedTasks.Select(x => queries[x]));
+                if (winningTask.IsFaulted)
+                {
+                    _logger.LogError("All tasks using {FaultedClients} failed for query {Query} in {ElapsedMilliseconds}ms", faultedClients, query, sw.ElapsedMilliseconds);
+                }
+                else
+                {
+                    _logger.LogWarning("Tasks for clients {FaultedClients} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClients, query, queries[winningTask], sw.ElapsedMilliseconds);
+                }
             }
 
-            // Handle the case where both failed
-            if (winningTask.IsFaulted)
-            {
-                _logger.LogError("Both tasks using {ClientA} and {ClientB} faulted for query {Query} in {ElapsedMilliseconds}ms", clientA, clientB, query, sw.ElapsedMilliseconds);
-            }
-
-            // Log the winner
-            var result = await winningTask;
-            _logger.LogInformation("Winning client was {WinningClient} for query {Query} in {ElapsedMilliseconds}ms", GetClientFromTask(winningTask), query, sw.ElapsedMilliseconds);
-            return result;
+            // Await the winning task (if it's faulted, it will throw at this point)
+            var winningAnswer = await winningTask;
+            _logger.LogInformation("Winning client was {WinningClient} for query {Query} in {ElapsedMilliseconds}ms", queries[winningTask], query, sw.ElapsedMilliseconds);
+            return winningAnswer;
         }
 
         /// <inheritdoc/>
