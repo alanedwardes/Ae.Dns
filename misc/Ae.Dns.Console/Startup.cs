@@ -346,7 +346,7 @@ namespace Ae.Dns.Console
 
         private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
         {
-            static TObject GetObjectFromTags<TObject>(ReadOnlySpan<KeyValuePair<string, object>> _tags, string name)
+            static TObject? GetObjectFromTags<TObject>(ReadOnlySpan<KeyValuePair<string, object>> _tags, string name)
             {
                 foreach (var tag in _tags)
                 {
@@ -370,7 +370,7 @@ namespace Ae.Dns.Console
                     _queries.Enqueue(new DnsQuery
                     {
                         Query = new DnsHeaderLight(query.Header),
-                        Answer = new DnsHeaderLight(answer?.Header),
+                        Answer = answer != null ? new DnsHeaderLight(answer.Header) : null,
                         Sender = sender,
                         Elapsed = elapsed,
                         Created = DateTime.UtcNow
