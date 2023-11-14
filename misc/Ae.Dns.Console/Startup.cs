@@ -244,7 +244,14 @@ namespace Ae.Dns.Console
 
                     string ResponseFilter(DnsQuery dnsQuery)
                     {
-                        return $"<a href=\"{CreateQueryString("response", dnsQuery.Answer?.ResponseCode)}\">{dnsQuery.Answer?.ResponseCode}</a>";
+                        if (dnsQuery.Answer == null)
+                        {
+                            return dnsQuery.Answer?.ResponseCode.ToString();
+                        }
+                        else
+                        {
+                            return $"<a href=\"{CreateQueryString("response", dnsQuery.Answer?.ResponseCode)}\">{dnsQuery.Answer?.ResponseCode}</a>";
+                        }
                     }
 
                     string QueryTypeFilter(DnsQuery dnsQuery)
@@ -254,7 +261,14 @@ namespace Ae.Dns.Console
 
                     string ResolverFilter(DnsQuery dnsQuery)
                     {
-                        return $"<a href=\"{CreateQueryString("resolver", dnsQuery.Answer.Resolver)}\">{dnsQuery.Answer.Resolver}</a>";
+                        if (dnsQuery.Answer == null)
+                        {
+                            return dnsQuery.Answer.Resolver;
+                        }
+                        else
+                        {
+                            return $"<a href=\"{CreateQueryString("resolver", dnsQuery.Answer.Resolver)}\">{dnsQuery.Answer.Resolver}</a>";
+                        }
                     }
 
                     string ServerFilter(DnsQuery dnsQuery)
