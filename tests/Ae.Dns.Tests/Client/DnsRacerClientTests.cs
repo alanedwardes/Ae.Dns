@@ -44,7 +44,7 @@ namespace Ae.Dns.Tests.Client
             var expectedAnswer = new DnsMessage();
 
             using var successClient = new DnsTestClient(() => Task.FromResult(expectedAnswer));
-            using var errorClient = new DnsTestClient(async () => throw new InvalidOperationException());
+            using var errorClient = new DnsTestClient(() => throw new InvalidOperationException());
 
             var racer = new DnsRacerClient(new[] { successClient, errorClient });
 
@@ -57,7 +57,7 @@ namespace Ae.Dns.Tests.Client
         [Fact]
         public async Task TestAllFaultedResults()
         {
-            using var errorClient = new DnsTestClient(async () => throw new InvalidOperationException());
+            using var errorClient = new DnsTestClient(() => throw new InvalidOperationException());
 
             var racer = new DnsRacerClient(new[] { errorClient, errorClient });
 

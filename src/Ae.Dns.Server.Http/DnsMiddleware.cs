@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Server.Http
 {
+    /// <summary>
+    /// DNS middleware for ASP.NET, serving responses for DNS queries.
+    /// </summary>
     public sealed class DnsMiddleware
     {
         private const string DnsMessageType = "application/dns-message";
@@ -15,6 +18,12 @@ namespace Ae.Dns.Server.Http
         private readonly IDnsClient _dnsClient;
         private readonly IDnsMiddlewareConfig _middlewareConfig;
 
+        /// <summary>
+        /// Construct a new instance of <see cref="DnsMiddleware"/>.
+        /// </summary>
+        /// <param name="next"></param>
+        /// <param name="dnsClient"></param>
+        /// <param name="middlewareConfig"></param>
         public DnsMiddleware(RequestDelegate next, IDnsClient dnsClient, IDnsMiddlewareConfig middlewareConfig)
         {
             _next = next;
@@ -22,6 +31,11 @@ namespace Ae.Dns.Server.Http
             _middlewareConfig = middlewareConfig;
         }
 
+        /// <summary>
+        /// Invoke the middleware.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public async Task InvokeAsync(HttpContext context)
         {
             if (context.Request.Path != _middlewareConfig.Path)

@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 
 namespace Ae.Dns.Server
 {
+    /// <summary>
+    /// Provides a DNS server over UDP.
+    /// </summary>
     public sealed class DnsUdpServer : IDnsServer
     {
         private static readonly EndPoint _anyEndpoint = new IPEndPoint(IPAddress.Any, 0);
@@ -41,6 +44,7 @@ namespace Ae.Dns.Server
         {
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             try

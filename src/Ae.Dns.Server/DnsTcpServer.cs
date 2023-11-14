@@ -17,6 +17,9 @@ using ByteBuffer = System.Memory<byte>;
 
 namespace Ae.Dns.Server
 {
+    /// <summary>
+    /// Provides a DNS server via TCP.
+    /// </summary>
     public sealed class DnsTcpServer : IDnsServer
     {
         private readonly Socket _socket;
@@ -45,6 +48,7 @@ namespace Ae.Dns.Server
         {
         }
 
+        /// <inheritdoc/>
         public void Dispose()
         {
             try

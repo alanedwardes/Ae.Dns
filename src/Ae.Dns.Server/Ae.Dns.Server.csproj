@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
 		<Version>2.0.0</Version>
-		<WarningsAsErrors>true</WarningsAsErrors>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Authors>alanedwardes</Authors>
 		<Description>DNS UDP server with filtering for .NET Core</Description>

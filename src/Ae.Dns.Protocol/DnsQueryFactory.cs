@@ -44,6 +44,11 @@ namespace Ae.Dns.Protocol
             };
         }
 
+        /// <summary>
+        /// Clone the <see cref="DnsHeader"/> to a new object.
+        /// </summary>
+        /// <param name="header"></param>
+        /// <returns></returns>
         public static DnsHeader Clone(DnsHeader header)
         {
             return new DnsHeader
@@ -66,6 +71,11 @@ namespace Ae.Dns.Protocol
             };
         }
 
+        /// <summary>
+        /// Truncate the answer (for example, if it has overflowed the size of a UDP packet).
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         public static DnsMessage TruncateAnswer(DnsMessage query)
         {
             var header = Clone(query.Header);

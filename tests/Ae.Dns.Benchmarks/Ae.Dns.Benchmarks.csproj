@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <OutputType>Exe</OutputType>
-    <IsPackable>false</IsPackable>
-    <WarningsAsErrors>true</WarningsAsErrors>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<IsPackable>false</IsPackable>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Ae.Dns.Tests\Ae.Dns.Tests.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Ae.Dns.Tests\Ae.Dns.Tests.csproj" />
+	</ItemGroup>
 
 </Project>

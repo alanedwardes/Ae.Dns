@@ -174,12 +174,12 @@ namespace Ae.Dns.Console
 
             if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdConfigFile))
             {
-                staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdConfigDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdConfigFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
+                staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdConfigDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdConfigFile), dnsConfiguration.DhcpdLeasesHostnameSuffix ?? throw new NullReferenceException("DhcpdLeasesHostnameSuffix is null")));
             }
 
             if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdLeasesFile))
             {
-                staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdLeasesDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdLeasesFile), dnsConfiguration.DhcpdLeasesHostnameSuffix));
+                staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdLeasesDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdLeasesFile), dnsConfiguration.DhcpdLeasesHostnameSuffix ?? throw new NullReferenceException("DhcpdLeasesHostnameSuffix is null")));
             }
 
             if (staticLookupSources.Count > 0)

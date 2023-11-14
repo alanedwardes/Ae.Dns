@@ -46,6 +46,11 @@ namespace Ae.Dns.Client
         private readonly Task _task;
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
+        /// <summary>
+        /// Construct a new <see cref="DnsUdpClient"/>.
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="options"></param>
         [ActivatorUtilitiesConstructor]
         public DnsUdpClient(ILogger<DnsUdpClient> logger, IOptions<DnsUdpClientOptions> options)
         {
@@ -55,6 +60,10 @@ namespace Ae.Dns.Client
             _task = Task.Run(ReceiveTask);
         }
 
+        /// <summary>
+        /// Construct a new <see cref="DnsUdpClient"/>.
+        /// </summary>
+        /// <param name="options"></param>
         public DnsUdpClient(DnsUdpClientOptions options)
             : this(NullLogger<DnsUdpClient>.Instance, Options.Create(options))
         {

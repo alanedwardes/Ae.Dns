@@ -39,14 +39,6 @@ namespace Ae.Dns.Console
 
             app.Run(async context =>
             {
-                async Task WriteHeader(string header)
-                {
-                    await context.Response.WriteAsync(header);
-                    await context.Response.WriteAsync(Environment.NewLine);
-                    await context.Response.WriteAsync(new string('=', header.Length));
-                    await context.Response.WriteAsync(Environment.NewLine);
-                }
-
                 async Task WriteTable(DataTable table)
                 {
                     await context.Response.WriteAsync("<table>");
@@ -73,7 +65,7 @@ namespace Ae.Dns.Console
                     await context.Response.WriteAsync("</table>");
                 }
 
-                async Task GroupToTable(IEnumerable<IGrouping<string, DnsQuery>> groups, params string[] headings)
+                async Task GroupToTable(IEnumerable<IGrouping<string?, DnsQuery>> groups, params string[] headings)
                 {
                     var table = new DataTable();
 
@@ -84,7 +76,7 @@ namespace Ae.Dns.Console
 
                     table.Columns.Add("Percentage");
 
-                    var itemCounts = groups.Select(x => KeyValuePair.Create(x.Key, x.Count())).OrderByDescending(x => x.Value).ToList();
+                    var itemCounts = groups.Select(x => KeyValuePair.Create<string?, int>(x.Key, x.Count())).OrderByDescending(x => x.Value).ToList();
                     var totalCount = itemCounts.Sum(x => x.Value);
 
                     int CalculatePercentage(int count) => (int)(count / (double)totalCount * (double)100d);
@@ -165,10 +157,14 @@ namespace Ae.Dns.Console
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     context.Response.ContentType = "text/html; charset=utf-8";
 
-                    string CreateQueryString(string name, object value)
+                    string CreateQueryString(string name, object? value)
                     {
-                        var filters = context.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToString());
-                        filters[name] = value.ToString();
+                        IDictionary<string, string?> filters = context.Request.Query.ToDictionary(x => x.Key, x => (string?)x.Value.ToString());
+                        var valueString = value?.ToString();
+                        if (valueString != null)
+                        {
+                            filters[name] = valueString;
+                        }
                         return QueryHelpers.AddQueryString(context.Request.Path, filters);
                     }
 
@@ -179,7 +175,7 @@ namespace Ae.Dns.Console
 
                     IEnumerable<DnsQuery> query = _queries.OrderByDescending(x => x.Created);
 
-                    if (context.Request.Query.ContainsKey("sender") && IPAddress.TryParse(context.Request.Query["sender"], out IPAddress sender))
+                    if (context.Request.Query.ContainsKey("sender") && IPAddress.TryParse(context.Request.Query["sender"], out IPAddress? sender))
                     {
                         query = query.Where(x => x.Sender.Equals(sender));
                     }
@@ -242,11 +238,11 @@ namespace Ae.Dns.Console
                         return $"<a href=\"{CreateQueryString("sender", dnsQuery.Sender)}\">{reverseLookups[dnsQuery.Sender] ?? dnsQuery.Sender.ToString()}</a>";
                     }
 
-                    string ResponseFilter(DnsQuery dnsQuery)
+                    string? ResponseFilter(DnsQuery dnsQuery)
                     {
                         if (dnsQuery.Answer == null)
                         {
-                            return dnsQuery.Answer?.ResponseCode.ToString();
+                            return null;
                         }
                         else
                         {
@@ -259,11 +255,11 @@ namespace Ae.Dns.Console
                         return $"<a href=\"{CreateQueryString("type", dnsQuery.Query.QueryType)}\">{dnsQuery.Query.QueryType}</a>";
                     }
 
-                    string ResolverFilter(DnsQuery dnsQuery)
+                    string? ResolverFilter(DnsQuery dnsQuery)
                     {
                         if (dnsQuery.Answer == null)
                         {
-                            return dnsQuery.Answer.Resolver;
+                            return null;
                         }
                         else
                         {
@@ -334,9 +330,9 @@ namespace Ae.Dns.Console
                 ResponseCode = header.ResponseCode;
                 QueryType = header.QueryType;
                 Host = header.Host;
-                Resolver = header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : "Unknown";
-                BlockReason = header.Tags.ContainsKey("BlockReason") ? header.Tags["BlockReason"].ToString() : "None";
-                Server = header.Tags.ContainsKey("Server") ? header.Tags["Server"].ToString() : "Unknown";
+                Resolver = (header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : null) ?? "Unknown";
+                BlockReason = (header.Tags.ContainsKey("BlockReason") ? header.Tags["BlockReason"].ToString() : null) ?? "None";
+                Server = (header.Tags.ContainsKey("Server") ? header.Tags["Server"].ToString() : null) ?? "Unknown";
             }
 
             public DnsResponseCode ResponseCode { get; }
@@ -349,24 +345,30 @@ namespace Ae.Dns.Console
 
         private sealed class DnsQuery
         {
-            public DnsHeaderLight Query { get; set; }
+            public DnsQuery(DnsHeaderLight query, IPAddress sender)
+            {
+                Query = query;
+                Sender = sender;
+            }
+
+            public DnsHeaderLight Query { get; }
             public DnsHeaderLight? Answer { get; set; }
-            public IPAddress Sender { get; set; }
+            public IPAddress Sender { get; }
             public TimeSpan? Elapsed { get; set; }
-            public DateTime Created { get; set; }
+            public DateTime Created { get; } = DateTime.UtcNow;
         }
 
         private readonly ConcurrentQueue<DnsQuery> _queries = new();
 
-        private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object>> tags, object state)
+        private void OnMeasurementRecorded(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
         {
-            static TObject? GetObjectFromTags<TObject>(ReadOnlySpan<KeyValuePair<string, object>> _tags, string name)
+            static TObject? GetObjectFromTags<TObject>(ReadOnlySpan<KeyValuePair<string, object?>> _tags, string name)
             {
                 foreach (var tag in _tags)
                 {
                     if (tag.Key == name)
                     {
-                        return (TObject)tag.Value;
+                        return (TObject?)tag.Value;
                     }
                 }
 
@@ -375,19 +377,16 @@ namespace Ae.Dns.Console
 
             if (instrument.Meter.Name == DnsMetricsClient.MeterName)
             {
-                var query = GetObjectFromTags<DnsMessage>(tags, "Query");
+                var query = GetObjectFromTags<DnsMessage>(tags, "Query") ?? throw new NullReferenceException("No query specified");
                 var answer = GetObjectFromTags<DnsMessage>(tags, "Answer");
                 var elapsed = GetObjectFromTags<TimeSpan?>(tags, "Elapsed");
                 var sender = query.Header.Tags.TryGetValue("Sender", out var rawEndpoint) && rawEndpoint is not null && rawEndpoint is IPEndPoint endpoint ? endpoint.Address : null;
                 if (sender != null)
                 {
-                    _queries.Enqueue(new DnsQuery
+                    _queries.Enqueue(new DnsQuery(new DnsHeaderLight(query.Header), sender)
                     {
-                        Query = new DnsHeaderLight(query.Header),
                         Answer = answer != null ? new DnsHeaderLight(answer.Header) : null,
-                        Sender = sender,
-                        Elapsed = elapsed,
-                        Created = DateTime.UtcNow
+                        Elapsed = elapsed
                     });
 
                     if (_queries.Count > 100_000)

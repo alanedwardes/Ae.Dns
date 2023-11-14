@@ -19,6 +19,11 @@ namespace Ae.Dns.Client
         private readonly DnsTcpClientOptions _options;
         private bool _isDisposed;
 
+        /// <summary>
+        /// Construct a new <see cref="DnsTcpClient"/>.
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="options"></param>
         [ActivatorUtilitiesConstructor]
         public DnsTcpClient(ILogger<DnsTcpClient> logger, IOptions<DnsTcpClientOptions> options)
         {
@@ -26,6 +31,10 @@ namespace Ae.Dns.Client
             _options = options.Value;
         }
 
+        /// <summary>
+        /// Construct a new <see cref="DnsTcpClient"/>.
+        /// </summary>
+        /// <param name="options"></param>
         public DnsTcpClient(DnsTcpClientOptions options) : this(NullLogger<DnsTcpClient>.Instance, Options.Create(options))
         {
         }

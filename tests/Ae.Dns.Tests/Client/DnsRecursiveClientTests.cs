@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Xunit;
@@ -16,6 +17,7 @@ namespace Ae.Dns.Tests.Client
         [InlineData("ae-infrastructure-eu-west-1.s3.eu-west-1.amazonaws.com")]
         [InlineData("news.ycombinator.com")]
         [InlineData("asimov.vortex.data.trafficmanager.net")]
+        [Obsolete]
         public async Task RecursiveLookup(string domain)
         {
             using var client = new DnsRecursiveClient();
