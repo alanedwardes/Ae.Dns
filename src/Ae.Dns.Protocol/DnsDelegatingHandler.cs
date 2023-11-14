@@ -32,7 +32,7 @@ namespace Ae.Dns.Protocol
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             // Never attempt this with a host that looks like an IP address
-            if (IPAddress.TryParse(request.RequestUri.Host, out _))
+            if (request.RequestUri == null || IPAddress.TryParse(request.RequestUri.Host, out _))
             {
                 return await base.SendAsync(request, cancellationToken);
             }
