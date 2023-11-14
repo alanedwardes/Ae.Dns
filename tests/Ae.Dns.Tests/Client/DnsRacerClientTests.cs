@@ -44,7 +44,7 @@ namespace Ae.Dns.Tests.Client
             var expectedAnswer = new DnsMessage();
 
             using var successClient = new DnsTestClient(() => Task.FromResult(expectedAnswer));
-            using var errorClient = new DnsTestClient(() => throw new InvalidOperationException());
+            using var errorClient = new DnsTestClient(() => Task.FromException<DnsMessage>(new InvalidOperationException()));
 
             var racer = new DnsRacerClient(new[] { successClient, errorClient });
 
