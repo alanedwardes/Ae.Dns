@@ -44,7 +44,7 @@ namespace Ae.Dns.Protocol
             return null;
         }
 
-        public static bool TryParseIpAddressFromReverseLookup(this DnsMessage message, out IPAddress address)
+        public static bool TryParseIpAddressFromReverseLookup(this DnsMessage message, out IPAddress? address)
         {
             if (message.Header.QueryType == DnsQueryType.PTR)
             {

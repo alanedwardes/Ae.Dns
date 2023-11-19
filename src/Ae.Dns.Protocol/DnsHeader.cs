@@ -53,7 +53,7 @@ namespace Ae.Dns.Protocol
         /// </value>
         public short AdditionalRecordCount { get; set; }
 
-        internal string[] Labels { get; set; }
+        internal string[] Labels { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// The <see cref="DnsQueryType"/> of this header.
@@ -157,8 +157,13 @@ namespace Ae.Dns.Protocol
         public override string ToString() => $"{(IsQueryResponse ? "RES" : "QRY")}: {Id} Domain: {Host} Type: {QueryType} Class: {QueryClass}";
 
         /// <inheritdoc/>
-        public bool Equals(DnsHeader other)
+        public bool Equals(DnsHeader? other)
         {
+            if (other == null)
+            {
+                return false;
+            }
+
             return Id == other.Id &&
                    Flags == other.Flags &&
                    QuestionCount == other.QuestionCount &&

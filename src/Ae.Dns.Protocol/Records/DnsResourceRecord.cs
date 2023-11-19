@@ -30,14 +30,14 @@ namespace Ae.Dns.Protocol.Records
             set => Name = value.Split('.');
         }
 
-        private string[] Name { get; set; }
+        private string[] Name { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// The value of this DNS record, which should be
         /// cast to the appropriate resource record type
         /// class depending on the <see cref="Type"/>.
         /// </summary>
-        public IDnsResource Resource { get; set; }
+        public IDnsResource Resource { get; set; } = new DnsUnknownResource();
 
         private IDnsResource CreateResourceRecord(DnsQueryType recordType)
         {
@@ -63,14 +63,22 @@ namespace Ae.Dns.Protocol.Records
         public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {TimeToLive} Resource: {Resource}";
 
         /// <inheritdoc/>
-        public bool Equals(DnsResourceRecord other) => Host == other.Host &&
-                                                       Type == other.Type &&
-                                                       Class == other.Class &&
-                                                       TimeToLive == other.TimeToLive &&
-                                                       Resource.Equals(other.Resource);
+        public bool Equals(DnsResourceRecord? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return Host == other.Host &&
+                Type == other.Type &&
+                Class == other.Class &&
+                TimeToLive == other.TimeToLive &&
+                Resource.Equals(other.Resource);
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsResourceRecord record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is DnsResourceRecord record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Name, Type, Class, TimeToLive, Host, Resource);

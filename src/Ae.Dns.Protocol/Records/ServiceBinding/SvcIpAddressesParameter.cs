@@ -27,10 +27,18 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         public AddressFamily AddressFamily { get; }
 
         /// <inheritdoc/>
-        public bool Equals(SvcIpAddressesParameter other) => Entries.SequenceEqual(other.Entries);
+        public bool Equals(SvcIpAddressesParameter? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return Entries.SequenceEqual(other.Entries);
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is SvcIpAddressesParameter record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is SvcIpAddressesParameter record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Entries);

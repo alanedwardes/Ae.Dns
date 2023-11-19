@@ -11,16 +11,24 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         /// <summary>
         /// The string entry associated with this parameter.
         /// </summary>
-        public string Value { get; set; }
+        public string? Value { get; set; }
 
         /// <inheritdoc/>
-        public bool Equals(SvcUtf8StringParameter other) => Value == other.Value;
+        public bool Equals(SvcUtf8StringParameter? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return Value == other.Value;
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is SvcUtf8StringParameter record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is SvcUtf8StringParameter record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => Value.GetHashCode();
+        public override int GetHashCode() => Value?.GetHashCode() ?? 0;
 
         /// <inheritdoc/>
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
@@ -32,12 +40,12 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            var stringBytes = Encoding.UTF8.GetBytes(Value);
+            var stringBytes = Encoding.UTF8.GetBytes(Value ?? throw new NullReferenceException("No string was set to write"));
             stringBytes.CopyTo(bytes.Slice(offset));
             offset += stringBytes.Length;
         }
 
         /// <inheritdoc/>
-        public override string ToString() => Value;
+        public override string? ToString() => Value;
     }
 }

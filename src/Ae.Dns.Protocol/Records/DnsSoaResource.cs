@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
 {
@@ -13,7 +14,7 @@ namespace Ae.Dns.Protocol.Records
         /// <summary>
         /// Primary master name server for this zone 
         /// </summary>
-        public string MName { get; set; }
+        public string[] MName { get; set; } = Array.Empty<string>();
         /// <summary>
         /// Email address of the administrator responsible for this zone.
         /// (As usual, the email address is encoded as a name. The part of the
@@ -23,7 +24,7 @@ namespace Ae.Dns.Protocol.Records
         /// address john.doe@example.com would be represented in a zone file
         /// as john\.doe.example.com.)
         /// </summary>
-        public string RName { get; set; }
+        public string[] RName { get; set; } = Array.Empty<string>();
         /// <summary>
         /// Serial number for this zone. If a secondary name server slaved to
         /// this one observes an increase in this number, the slave will assume
@@ -59,10 +60,18 @@ namespace Ae.Dns.Protocol.Records
         public TimeSpan Minimum { get; set; }
 
         /// <inheritdoc/>
-        public bool Equals(DnsSoaResource other) => MName == other.MName && RName == other.RName && Serial == other.Serial && Refresh == other.Refresh && Retry == other.Retry && Expire == other.Expire && Minimum == other.Minimum;
+        public bool Equals(DnsSoaResource? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return MName.SequenceEqual(other.MName) && RName.SequenceEqual(other.RName) && Serial == other.Serial && Refresh == other.Refresh && Retry == other.Retry && Expire == other.Expire && Minimum == other.Minimum;
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsSoaResource record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is DnsSoaResource record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(MName, RName, Serial, Refresh, Retry, Expire, Minimum);
@@ -70,8 +79,8 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
-            MName = string.Join(".", DnsByteExtensions.ReadString(bytes, ref offset));
-            RName = string.Join(".", DnsByteExtensions.ReadString(bytes, ref offset));
+            MName = DnsByteExtensions.ReadString(bytes, ref offset);
+            RName = DnsByteExtensions.ReadString(bytes, ref offset);
             Serial = DnsByteExtensions.ReadUInt32(bytes, ref offset);
             Refresh = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
             Retry = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
@@ -80,13 +89,13 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public override string ToString() => MName;
+        public override string ToString() => string.Join(".", MName);
 
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(MName.Split('.'), bytes, ref offset);
-            DnsByteExtensions.ToBytes(RName.Split('.'), bytes, ref offset);
+            DnsByteExtensions.ToBytes(MName, bytes, ref offset);
+            DnsByteExtensions.ToBytes(RName, bytes, ref offset);
             DnsByteExtensions.ToBytes(Serial, bytes, ref offset);
             DnsByteExtensions.ToBytes((int)Refresh.TotalSeconds, bytes, ref offset);
             DnsByteExtensions.ToBytes((int)Retry.TotalSeconds, bytes, ref offset);

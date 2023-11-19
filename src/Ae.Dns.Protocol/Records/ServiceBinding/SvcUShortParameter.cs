@@ -13,10 +13,18 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         public ushort Value { get; set; }
 
         /// <inheritdoc/>
-        public bool Equals(SvcUShortParameter other) => Value == other.Value;
+        public bool Equals(SvcUShortParameter? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return Value == other.Value;
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is SvcStringParameter record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is SvcStringParameter record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => Value.GetHashCode();

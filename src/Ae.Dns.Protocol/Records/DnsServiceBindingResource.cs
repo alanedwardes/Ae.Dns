@@ -25,7 +25,7 @@ namespace Ae.Dns.Protocol.Records
         /// For ServiceMode SVCB RRs, if TargetName has the value ".", then the owner name of this record MUST be used as the effective TargetName.
         /// https://www.ietf.org/archive/id/draft-ietf-dnsop-svcb-https-12.html#name-aliasmode
         /// </summary>
-        public string[] TargetName { get; set; }
+        public string[] TargetName { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// The set of SVCB parameters contained within this record.
@@ -33,15 +33,20 @@ namespace Ae.Dns.Protocol.Records
         public IDictionary<SvcParameter, IDnsResource> SvcParameters { get; set; } = new Dictionary<SvcParameter, IDnsResource>();
 
         /// <inheritdoc/>
-        public bool Equals(DnsServiceBindingResource other)
+        public bool Equals(DnsServiceBindingResource? other)
         {
+            if (other == null)
+            {
+                return false;
+            }
+
             return SvcPriority == other.SvcPriority &&
                 TargetName.SequenceEqual(other.TargetName) &&
                 SvcParameters.SequenceEqual(other.SvcParameters);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsServiceBindingResource record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is DnsServiceBindingResource record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(SvcPriority, TargetName, SvcParameters);

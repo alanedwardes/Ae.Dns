@@ -36,8 +36,8 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal("in-addr.arpa", record.Host);
 
             var soaData = (DnsSoaResource)record.Resource;
-            Assert.Equal("b.in-addr-servers.arpa", soaData.MName);
-            Assert.Equal("nstld.iana.org", soaData.RName);
+            Assert.Equal("b.in-addr-servers.arpa", string.Join(".", soaData.MName));
+            Assert.Equal("nstld.iana.org", string.Join(".", soaData.RName));
             Assert.Equal((uint)TimeSpan.Parse("00:36:32").TotalSeconds, record.TimeToLive);
         }
 

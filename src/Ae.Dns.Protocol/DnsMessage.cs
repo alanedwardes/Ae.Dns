@@ -36,13 +36,21 @@ namespace Ae.Dns.Protocol
         public IList<DnsResourceRecord> Additional { get; set; } = Array.Empty<DnsResourceRecord>();
 
         /// <inheritdoc/>
-        public bool Equals(DnsMessage other) => Header.Equals(other.Header) &&
-                                                Answers.SequenceEqual(other.Answers) &&
-                                                Nameservers.SequenceEqual(other.Nameservers) &&
-                                                Additional.SequenceEqual(other.Additional);
+        public bool Equals(DnsMessage? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return Header.Equals(other.Header) &&
+                Answers.SequenceEqual(other.Answers) &&
+                Nameservers.SequenceEqual(other.Nameservers) &&
+                Additional.SequenceEqual(other.Additional);
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsMessage record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is DnsMessage record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Header, Answers, Nameservers, Additional);

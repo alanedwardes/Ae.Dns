@@ -17,13 +17,21 @@ namespace Ae.Dns.Protocol.Records
         /// <value>
         /// May be an IPv4 or IPv6 address, depending on the record type.
         /// </value>
-        public IPAddress IPAddress { get; set; }
+        public IPAddress IPAddress { get; set; } = IPAddress.None;
 
         /// <inheritdoc/>
-        public bool Equals(DnsIpAddressResource other) => IPAddress.Equals(other.IPAddress);
+        public bool Equals(DnsIpAddressResource? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return IPAddress.Equals(other.IPAddress);
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsIpAddressResource record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is DnsIpAddressResource record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(IPAddress);

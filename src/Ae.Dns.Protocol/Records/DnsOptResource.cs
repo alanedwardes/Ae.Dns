@@ -16,10 +16,18 @@ namespace Ae.Dns.Protocol.Records
         public ReadOnlyMemory<byte> Raw { get; set; }
 
         /// <inheritdoc/>
-        public bool Equals(DnsOptResource other) => Raw.Span.SequenceEqual(other.Raw.Span);
+        public bool Equals(DnsOptResource? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return Raw.Span.SequenceEqual(other.Raw.Span);
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsOptResource record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is DnsOptResource record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Raw);

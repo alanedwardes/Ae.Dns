@@ -29,10 +29,18 @@ namespace Ae.Dns.Protocol.Records
         protected override bool CanUseCompression => true;
 
         /// <inheritdoc/>
-        public bool Equals(DnsMxResource other) => Preference == other.Preference && Exchange == other.Exchange;
+        public bool Equals(DnsMxResource? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return Preference == other.Preference && Exchange == other.Exchange;
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsMxResource record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is DnsMxResource record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Preference, Exchange);

@@ -17,10 +17,18 @@ namespace Ae.Dns.Protocol.Records
         public string[] Entries { get; set; } = Array.Empty<string>();
 
         /// <inheritdoc/>
-        public bool Equals(DnsStringResource other) => Entries.SequenceEqual(other.Entries);
+        public bool Equals(DnsStringResource? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            return Entries.SequenceEqual(other.Entries);
+        }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DnsStringResource record ? Equals(record) : base.Equals(obj);
+        public override bool Equals(object? obj) => obj is DnsStringResource record ? Equals(record) : base.Equals(obj);
 
         /// <inheritdoc/>
         public override int GetHashCode() => HashCode.Combine(Entries);

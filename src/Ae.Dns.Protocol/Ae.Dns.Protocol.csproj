@@ -11,6 +11,7 @@
 		<PackageProjectUrl>https://github.com/alanedwardes/Ae.Dns</PackageProjectUrl>
 		<PackageTags>DNS</PackageTags>
 		<LangVersion>8.0</LangVersion>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
