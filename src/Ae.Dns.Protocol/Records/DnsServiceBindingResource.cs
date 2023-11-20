@@ -25,7 +25,7 @@ namespace Ae.Dns.Protocol.Records
         /// For ServiceMode SVCB RRs, if TargetName has the value ".", then the owner name of this record MUST be used as the effective TargetName.
         /// https://www.ietf.org/archive/id/draft-ietf-dnsop-svcb-https-12.html#name-aliasmode
         /// </summary>
-        public string[] TargetName { get; set; } = Array.Empty<string>();
+        public DnsLabels TargetName { get; set; }
 
         /// <summary>
         /// The set of SVCB parameters contained within this record.
@@ -87,7 +87,7 @@ namespace Ae.Dns.Protocol.Records
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
             DnsByteExtensions.ToBytes(SvcPriority, bytes, ref offset);
-            DnsByteExtensions.ToBytes(TargetName, bytes, ref offset);
+            DnsByteExtensions.ToBytes(TargetName.ToArray(), bytes, ref offset);
 
             foreach (var parameter in SvcParameters.OrderBy(x => x.Key))
             {
@@ -110,7 +110,7 @@ namespace Ae.Dns.Protocol.Records
                 SvcPriority.ToString()
             };
             
-            if (TargetName.Length == 0)
+            if (TargetName.Count == 0)
             {
                 parts.Add(".");
             }

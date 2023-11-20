@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Ae.Dns.Protocol
 {
@@ -53,7 +54,7 @@ namespace Ae.Dns.Protocol
         /// </value>
         public short AdditionalRecordCount { get; set; }
 
-        internal string[] Labels { get; set; } = Array.Empty<string>();
+        internal DnsLabels Labels { get; set; }
 
         /// <summary>
         /// The <see cref="DnsQueryType"/> of this header.
@@ -219,7 +220,7 @@ namespace Ae.Dns.Protocol
             DnsByteExtensions.ToBytes(AnswerRecordCount, bytes, ref offset);
             DnsByteExtensions.ToBytes(NameServerRecordCount, bytes, ref offset);
             DnsByteExtensions.ToBytes(AdditionalRecordCount, bytes, ref offset);
-            DnsByteExtensions.ToBytes(Labels, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Labels.ToArray(), bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)QueryType, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)QueryClass, bytes, ref offset);
         }

@@ -1,5 +1,6 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using System;
+using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
 {
@@ -30,7 +31,7 @@ namespace Ae.Dns.Protocol.Records
             set => Name = value.Split('.');
         }
 
-        private string[] Name { get; set; } = Array.Empty<string>();
+        private DnsLabels Name { get; set; }
 
         /// <summary>
         /// The value of this DNS record, which should be
@@ -108,7 +109,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(Name, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Name.ToArray(), bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)Type, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)Class, bytes, ref offset);
             DnsByteExtensions.ToBytes(TimeToLive, bytes, ref offset);

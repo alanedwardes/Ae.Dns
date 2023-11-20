@@ -11,7 +11,7 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         /// <summary>
         /// The string entries associated with this parameter.
         /// </summary>
-        public string[] Entries { get; set; } = Array.Empty<string>();
+        public DnsLabels Entries { get; set; }
 
         /// <inheritdoc/>
         public bool Equals(SvcStringParameter? other)
@@ -49,6 +49,6 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         }
 
         /// <inheritdoc/>
-        public override string ToString() => string.Join(",", Entries);
+        public override string ToString() => Entries.ToString();
     }
 }
