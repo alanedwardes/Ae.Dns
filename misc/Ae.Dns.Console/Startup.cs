@@ -99,7 +99,7 @@ namespace Ae.Dns.Console
 
                 if (context.Request.Path.StartsWithSegments("/cache/remove"))
                 {
-                    var cacheKeyToRemove = context.Request.Path.Value.Split("/").Last();
+                    var cacheKeyToRemove = context.Request.Path.Value?.Split("/").Last();
                     resolverCache.Remove(cacheKeyToRemove);
                     context.Response.StatusCode = StatusCodes.Status307TemporaryRedirect;
                     context.Response.Headers.Location = "/cache";
@@ -391,7 +391,7 @@ namespace Ae.Dns.Console
 
                     if (_queries.Count > 100_000)
                     {
-                        _queries.TryDequeue(out DnsQuery _);
+                        _queries.TryDequeue(out DnsQuery? _);
                     }
                 }
             }

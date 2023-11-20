@@ -6,6 +6,7 @@
 		<IsPackable>false</IsPackable>
 		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<NoWarn>NU1902</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
