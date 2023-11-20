@@ -116,7 +116,7 @@ namespace Ae.Dns.Protocol.Records
             }
             else
             {
-                parts.Add(string.Join(".", TargetName) + '.');
+                parts.Add(TargetName + ".");
             }
 
             // Matches what is supported by dig
