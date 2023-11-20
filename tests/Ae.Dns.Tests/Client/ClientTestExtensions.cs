@@ -19,7 +19,7 @@ namespace Ae.Dns.Tests.Client
 
             var query = DnsQueryFactory.CreateQuery(host, queryType);
             var answer = await retry.Query(query, tokenSource.Token);
-            Assert.Equal(host, answer.Header.Host);
+            Assert.Equal(host, answer.Header.Host.ToString());
             Assert.Equal(query.Header.Id, answer.Header.Id);
             Assert.Equal(expectedResponseCode, answer.Header.ResponseCode);
 

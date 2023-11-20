@@ -17,7 +17,7 @@ namespace Ae.Dns.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
-            Assert.Equal("cognito-identity.us-east-1.amazonaws.com", header.Host);
+            Assert.Equal("cognito-identity.us-east-1.amazonaws.com", header.Host.ToString());
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
@@ -34,7 +34,7 @@ namespace Ae.Dns.Tests.Protocol
                 QueryClass = DnsQueryClass.IN,
                 QueryType = DnsQueryType.A,
                 RecursionDesired = true,
-                Labels = header.Labels,
+                Host = header.Host,
                 QuestionCount = 1,
             };
 
@@ -50,7 +50,7 @@ namespace Ae.Dns.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
-            Assert.Equal("polling.bbc.co.uk", header.Host);
+            Assert.Equal("polling.bbc.co.uk", header.Host.ToString());
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
@@ -64,7 +64,7 @@ namespace Ae.Dns.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
-            Assert.Equal("outlook.office365.com", header.Host);
+            Assert.Equal("outlook.office365.com", header.Host.ToString());
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
@@ -78,7 +78,7 @@ namespace Ae.Dns.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.AAAA, header.QueryType);
-            Assert.Equal("h3.shared.global.fastly.net", header.Host);
+            Assert.Equal("h3.shared.global.fastly.net", header.Host.ToString());
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);
@@ -92,7 +92,7 @@ namespace Ae.Dns.Tests.Protocol
 
             Assert.Equal(DnsQueryClass.IN, header.QueryClass);
             Assert.Equal(DnsQueryType.A, header.QueryType);
-            Assert.Equal("roaming.officeapps.live.com", header.Host);
+            Assert.Equal("roaming.officeapps.live.com", header.Host.ToString());
             Assert.Equal(0, header.AnswerRecordCount);
             Assert.Equal(0, header.AdditionalRecordCount);
             Assert.Equal(1, header.QuestionCount);

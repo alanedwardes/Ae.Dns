@@ -48,15 +48,14 @@ namespace Ae.Dns.Protocol
         {
             if (message.Header.QueryType == DnsQueryType.PTR)
             {
-                var hostParts = message.Header.Host.Split('.');
-                if (message.Header.Host.EndsWith(".in-addr.arpa"))
+                if (message.Header.Host.ToString().EndsWith(".in-addr.arpa"))
                 {
-                    return IPAddress.TryParse(string.Join(".", hostParts.Take(4).Reverse()), out address);
+                    return IPAddress.TryParse(string.Join(".", message.Header.Host.Take(4).Reverse()), out address);
                 }
 
-                if (message.Header.Host.EndsWith(".ip6.arpa"))
+                if (message.Header.Host.ToString().EndsWith(".ip6.arpa"))
                 {
-                    return IPAddress.TryParse(string.Join(":", Chunk(hostParts.Take(32).Reverse(), 4).Select(x => string.Concat(x))), out address);
+                    return IPAddress.TryParse(string.Join(":", Chunk(message.Header.Host.Take(32).Reverse(), 4).Select(x => string.Concat(x))), out address);
                 }
             }
 

@@ -40,37 +40,35 @@ namespace Ae.Dns.Client.Filters
         public bool IsPermitted(DnsMessage query)
         {
             // Very unlikely localhost got this far, though just in case it did
-            if (query.Header.Host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
+            if (query.Header.Host.ToString().Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Host is localhost)";
                 return false;
             }
 
             // Do not permit DNS-SD (service discovery) queries
-            if (_reservedDnsServiceDiscoveryPrefixes.Any(x => query.Header.Host.StartsWith(x, StringComparison.InvariantCultureIgnoreCase)))
+            if (_reservedDnsServiceDiscoveryPrefixes.Any(x => query.Header.Host.ToString().StartsWith(x, StringComparison.InvariantCultureIgnoreCase)))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(DNS service discovery)";
                 return false;
             }
 
             // Do not permit reserved top level domain names
-            if (_reservedTopLevelDomainNames.Any(x => query.Header.Host.EndsWith(x, StringComparison.InvariantCultureIgnoreCase)))
+            if (_reservedTopLevelDomainNames.Any(x => query.Header.Host.ToString().EndsWith(x, StringComparison.InvariantCultureIgnoreCase)))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Reserved local network TLD)";
                 return false;
             }
 
             // Sometimes misconfigured applications can send queries beginning with a protocol
-            if (query.Header.Host.StartsWith("https://") || query.Header.Host.StartsWith("http://"))
+            if (query.Header.Host.ToString().StartsWith("https://") || query.Header.Host.ToString().StartsWith("http://"))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Host contains http:// prefix)";
                 return false;
             }
 
-            var hostParts = query.Header.Host.Split('.');
-
             // Disallow a TLD containing an underscore
-            if (hostParts.Last().Contains("_"))
+            if (query.Header.Host.Last().Contains("_"))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(TLD contains underscore)";
                 return false;
@@ -78,7 +76,7 @@ namespace Ae.Dns.Client.Filters
 
             // Disallow something without a TLD
             // Note: sometimes this is valid, but it's so rare it's not worth allowing
-            if (hostParts.Length < 2)
+            if (query.Header.Host.Count < 2)
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(No TLD)";
                 return false;
@@ -94,7 +92,7 @@ namespace Ae.Dns.Client.Filters
             // See https://www.ietf.org/archive/id/draft-pauly-add-resolver-discovery-01.html
             // If you're running your own server on a local network, you probably don't want clients
             // bypassing the server and going directly to the upstream (if one happens to respond to this)
-            if (query.Header.QueryType == DnsQueryType.SVCB && query.Header.Host == "_dns.resolver.arpa")
+            if (query.Header.QueryType == DnsQueryType.SVCB && query.Header.Host.ToString() == "_dns.resolver.arpa")
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(DNS resolver discovery)";
                 return false;

@@ -8,7 +8,7 @@ using System.Net;
 using IDnsClient dnsClient = new DnsUdpClient(IPAddress.Parse("1.1.1.1"));
 
 // Allow anything that isn't www.google.com
-IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Header.Host != "www.google.com");
+IDnsFilter dnsFilter = new DnsDelegateFilter(x => x.Header.Host.ToString() != "www.google.com");
 
 using IDnsClient filterClient = new DnsFilterClient(dnsFilter, dnsClient);
 

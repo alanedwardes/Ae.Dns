@@ -26,7 +26,7 @@ namespace Ae.Dns.Client.Filters
         {
             foreach (var suffix in _domainSuffixes)
             {
-                if (query.Header.Host.EndsWith(suffix))
+                if (query.Header.Host.ToString().EndsWith(suffix))
                 {
                     query.Header.Tags["BlockReason"] = $"{nameof(DnsDomainSuffixFilter)}({suffix})";
                     return false;

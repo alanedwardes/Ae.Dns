@@ -23,7 +23,7 @@ namespace Ae.Dns.Tests.Protocol
             var dnsHandler = new DnsDelegatingHandler(dnsClient.Object, isIpv4) { InnerHandler = mockHandler.Object };
             var httpClient = new HttpClient(dnsHandler);
 
-            dnsClient.Setup(x => x.Query(It.Is<DnsMessage>(x => x.Header.Host == "www.google.com" && x.Header.QueryType == dnsQueryType), It.IsAny<CancellationToken>()))
+            dnsClient.Setup(x => x.Query(It.Is<DnsMessage>(x => x.Header.Host.ToString() == "www.google.com" && x.Header.QueryType == dnsQueryType), It.IsAny<CancellationToken>()))
                      .ReturnsAsync(new DnsMessage
                      {
                          Answers = new List<DnsResourceRecord>

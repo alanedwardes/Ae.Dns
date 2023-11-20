@@ -63,7 +63,7 @@ namespace Ae.Dns.Client.Lookup
 
             foreach (var source in _sources)
             {
-                if (source.TryForwardLookup(query.Header.Host, out var addresses))
+                if (source.TryForwardLookup(query.Header.Host.ToString(), out var addresses))
                 {
                     // This might return zero addresses, but that's OK. We must not return an error.
                     // For reasoning behind this, see https://www.rfc-editor.org/rfc/rfc4074#section-3

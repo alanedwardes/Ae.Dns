@@ -329,7 +329,7 @@ namespace Ae.Dns.Console
             {
                 ResponseCode = header.ResponseCode;
                 QueryType = header.QueryType;
-                Host = header.Host;
+                Host = header.Host.ToString();
                 Resolver = (header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : null) ?? "Unknown";
                 BlockReason = (header.Tags.ContainsKey("BlockReason") ? header.Tags["BlockReason"].ToString() : null) ?? "None";
                 Server = (header.Tags.ContainsKey("Server") ? header.Tags["Server"].ToString() : null) ?? "Unknown";
