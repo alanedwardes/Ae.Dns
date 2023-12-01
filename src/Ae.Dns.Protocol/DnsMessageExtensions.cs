@@ -46,7 +46,7 @@ namespace Ae.Dns.Protocol
 
         public static bool TryParseIpAddressFromReverseLookup(this DnsMessage message, out IPAddress? address)
         {
-            if (message.Header.QueryType == DnsQueryType.PTR && message.Header.Host.Last().Equals("arpa", StringComparison.InvariantCultureIgnoreCase))
+            if (message.Header.QueryType == DnsQueryType.PTR && message.Header.Host.Count > 2 && message.Header.Host.Last().Equals("arpa", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (message.Header.Host[message.Header.Host.Count - 2].Equals("in-addr", StringComparison.InvariantCultureIgnoreCase))
                 {
