@@ -35,7 +35,7 @@ namespace Ae.Dns.Tests.Client
                         // This is an unrealistic example
                         new DnsResourceRecord
                         {
-                            Host = new DnsLabels("example.com"),
+                            Host = "example.com",
                             Type = DnsQueryType.A,
                             Resource = new DnsIpAddressResource{IPAddress = IPAddress.Loopback},
                             TimeToLive = 5

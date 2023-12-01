@@ -77,10 +77,10 @@ namespace Ae.Dns.Client
                     continue;
                 }
 
-                lookup = await LookupNameserverIpAddress(query.Header.Host.ToString(), depth, token);
+                lookup = await LookupNameserverIpAddress(query.Header.Host, depth, token);
             }
 
-            throw new DnsClientException($"Too much recursion ({depth}) or too many lookups ({lookups})", query.Header.Host.ToString());
+            throw new DnsClientException($"Too much recursion ({depth}) or too many lookups ({lookups})", query.Header.Host);
         }
 
         private async Task<DnsIpAddressResource> LookupNameserverIpAddress(string nameserver, int depth, CancellationToken token)

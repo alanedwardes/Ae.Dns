@@ -33,7 +33,7 @@ namespace Ae.Dns.Client
             return new MessageId
             {
                 Id = message.Header.Id,
-                Name = message.Header.Host.ToString(),
+                Name = message.Header.Host,
                 Type = message.Header.QueryType,
                 Class = message.Header.QueryClass
             };

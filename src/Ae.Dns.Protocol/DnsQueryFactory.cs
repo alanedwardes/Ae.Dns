@@ -34,7 +34,7 @@ namespace Ae.Dns.Protocol
                 Header = new DnsHeader
                 {
                     Id = GenerateId(),
-                    Host = new DnsLabels(host),
+                    Host = host,
                     QueryType = type,
                     QueryClass = DnsQueryClass.IN,
                     OperationCode = DnsOperationCode.QUERY,

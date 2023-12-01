@@ -49,5 +49,17 @@ namespace Ae.Dns.Protocol
         /// </summary>
         /// <param name="labels"></param>
         public static implicit operator DnsLabels(string[] labels) => new DnsLabels(labels);
+
+        /// <summary>
+        /// Convert a string to <see cref="DnsLabels"/>.
+        /// </summary>
+        /// <param name="labels"></param>
+        public static implicit operator DnsLabels(string labels) => new DnsLabels(labels);
+
+        /// <summary>
+        /// Convert an instance of <see cref="DnsLabels"/> to a string.
+        /// </summary>
+        /// <param name="labels"></param>
+        public static implicit operator string(DnsLabels labels) => labels.ToString();
     }
 }

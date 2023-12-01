@@ -29,7 +29,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void TestFromString()
         {
-            var labels = new DnsLabels("one.two.three");
+            DnsLabels labels = "one.two.three";
 
             Assert.Equal(new[] { "one", "two", "three" }, labels);
         }

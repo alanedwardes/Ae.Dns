@@ -22,7 +22,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             var header = DnsQueryFactory.CreateQuery("example.com", DnsQueryType.CNAME);
 
-            Assert.Equal("example.com", header.Header.Host.ToString());
+            Assert.Equal("example.com", header.Header.Host);
             Assert.True(header.Header.Id > 0);
             Assert.Equal(DnsQueryClass.IN, header.Header.QueryClass);
             Assert.Equal(DnsQueryType.CNAME, header.Header.QueryType);
@@ -36,7 +36,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             var header = DnsQueryFactory.CreateReverseQuery(IPAddress.Parse("1.2.3.4"));
 
-            Assert.Equal("4.3.2.1.in-addr.arpa", header.Header.Host.ToString());
+            Assert.Equal("4.3.2.1.in-addr.arpa", header.Header.Host);
             Assert.True(header.Header.Id > 0);
             Assert.Equal(DnsQueryClass.IN, header.Header.QueryClass);
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
@@ -50,7 +50,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             var header = DnsQueryFactory.CreateReverseQuery(IPAddress.Parse("2600:9000:2015:3600:1a:36dc:e5c0:93a1"));
 
-            Assert.Equal("1.a.3.9.0.c.5.e.c.d.6.3.a.1.0.0.0.0.6.3.5.1.0.2.0.0.0.9.0.0.6.2.ip6.arpa", header.Header.Host.ToString());
+            Assert.Equal("1.a.3.9.0.c.5.e.c.d.6.3.a.1.0.0.0.0.6.3.5.1.0.2.0.0.0.9.0.0.6.2.ip6.arpa", header.Header.Host);
             Assert.True(header.Header.Id > 0);
             Assert.Equal(DnsQueryClass.IN, header.Header.QueryClass);
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
@@ -64,7 +64,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             var header = DnsQueryFactory.CreateReverseQuery(IPAddress.Parse("2a02:2e0:3fe:1001:302::"));
 
-            Assert.Equal("0.0.0.0.0.0.0.0.0.0.0.0.2.0.3.0.1.0.0.1.e.f.3.0.0.e.2.0.2.0.a.2.ip6.arpa", header.Header.Host.ToString());
+            Assert.Equal("0.0.0.0.0.0.0.0.0.0.0.0.2.0.3.0.1.0.0.1.e.f.3.0.0.e.2.0.2.0.a.2.ip6.arpa", header.Header.Host);
             Assert.True(header.Header.Id > 0);
             Assert.Equal(DnsQueryClass.IN, header.Header.QueryClass);
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
@@ -78,7 +78,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             var header = DnsQueryFactory.CreateReverseQuery(IPAddress.Parse("2a00:1450:4009:815::200e"));
 
-            Assert.Equal("e.0.0.2.0.0.0.0.0.0.0.0.0.0.0.0.5.1.8.0.9.0.0.4.0.5.4.1.0.0.a.2.ip6.arpa", header.Header.Host.ToString());
+            Assert.Equal("e.0.0.2.0.0.0.0.0.0.0.0.0.0.0.0.5.1.8.0.9.0.0.4.0.5.4.1.0.0.a.2.ip6.arpa", header.Header.Host);
             Assert.True(header.Header.Id > 0);
             Assert.Equal(DnsQueryClass.IN, header.Header.QueryClass);
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
@@ -92,7 +92,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             var header = DnsQueryFactory.CreateReverseQuery(IPAddress.Parse("2620:149:af0::10"));
 
-            Assert.Equal("0.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.f.a.0.9.4.1.0.0.2.6.2.ip6.arpa", header.Header.Host.ToString());
+            Assert.Equal("0.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.f.a.0.9.4.1.0.0.2.6.2.ip6.arpa", header.Header.Host);
             Assert.True(header.Header.Id > 0);
             Assert.Equal(DnsQueryClass.IN, header.Header.QueryClass);
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);
@@ -106,7 +106,7 @@ namespace Ae.Dns.Tests.Protocol
         {
             var header = DnsQueryFactory.CreateReverseQuery(IPAddress.Parse("2a02:26f0:fd00:11a8::1ea2"));
 
-            Assert.Equal("2.a.e.1.0.0.0.0.0.0.0.0.0.0.0.0.8.a.1.1.0.0.d.f.0.f.6.2.2.0.a.2.ip6.arpa", header.Header.Host.ToString());
+            Assert.Equal("2.a.e.1.0.0.0.0.0.0.0.0.0.0.0.0.8.a.1.1.0.0.d.f.0.f.6.2.2.0.a.2.ip6.arpa", header.Header.Host);
             Assert.True(header.Header.Id > 0);
             Assert.Equal(DnsQueryClass.IN, header.Header.QueryClass);
             Assert.Equal(DnsQueryType.PTR, header.Header.QueryType);

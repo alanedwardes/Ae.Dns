@@ -1,4 +1,6 @@
-﻿namespace Ae.Dns.Protocol.Records
+﻿using System.Linq;
+
+namespace Ae.Dns.Protocol.Records
 {
     /// <summary>
     /// Represents a DNS text resource containing a string.
@@ -9,6 +11,6 @@
         protected override bool CanUseCompression => false;
 
         /// <inheritdoc/>
-        public override string ToString() => '"' + string.Join("\", \"", Entries) + '"';
+        public override string ToString() => '"' + string.Join("\", \"", Entries.ToArray()) + '"';
     }
 }

@@ -89,7 +89,7 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public override string ToString() => MName.ToString();
+        public override string ToString() => MName;
 
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)

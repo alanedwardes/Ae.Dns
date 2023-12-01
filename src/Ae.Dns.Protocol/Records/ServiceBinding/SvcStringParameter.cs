@@ -49,6 +49,6 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         }
 
         /// <inheritdoc/>
-        public override string ToString() => Entries.ToString();
+        public override string ToString() => Entries;
     }
 }

@@ -93,7 +93,7 @@ namespace Ae.Dns.Client.Filters
         {
             foreach (var filterSet in _filterSets)
             {
-                if (filterSet.Value.Contains(query.Header.Host.ToString()))
+                if (filterSet.Value.Contains(query.Header.Host))
                 {
                     query.Header.Tags["BlockReason"] = $"{nameof(DnsRemoteSetFilter)}({filterSet.Key})";
                     return false;

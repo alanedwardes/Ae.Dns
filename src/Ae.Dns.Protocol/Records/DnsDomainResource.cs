@@ -11,7 +11,7 @@
         /// <summary>
         /// Get the value of this entry as a domain name.
         /// </summary>
-        public string Domain => Entries.ToString();
+        public string Domain => Entries;
 
         /// <inheritdoc/>
         public override string ToString() => Domain;
