@@ -54,8 +54,6 @@ namespace Ae.Dns.Protocol
         /// </value>
         public short AdditionalRecordCount { get; set; }
 
-        //internal DnsLabels Labels { get; set; }
-
         /// <summary>
         /// The <see cref="DnsQueryType"/> of this header.
         /// </summary>
