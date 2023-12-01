@@ -14,7 +14,7 @@ namespace Ae.Dns.Tests.Protocol
         [InlineData(2, 344, new[] { "187170-ipv4", "farm", "dprodmgd104", "aa-rt", "sharepoint", "com", "spo-0004", "spo-msedge", "net" })]
         public void ReadStringTests(int example, int offset, string[] expected)
         {
-            var value = DnsByteExtensions.ReadString(SampleDnsPackets.Answers[example - 1], ref offset);
+            var value = DnsByteExtensions.ReadLabels(SampleDnsPackets.Answers[example - 1], ref offset);
             Assert.Equal(expected, value);
         }
 
@@ -27,7 +27,7 @@ namespace Ae.Dns.Tests.Protocol
         [InlineData(4, 104, new[] { "alanedwardes", "com" })]
         public void ReadCnameRecordTests(int example, int offset, string[] expected)
         {
-            var value = DnsByteExtensions.ReadString(SampleDnsPackets.Answers[example - 1], ref offset);
+            var value = DnsByteExtensions.ReadLabels(SampleDnsPackets.Answers[example - 1], ref offset);
             Assert.Equal(expected, value);
         }
 

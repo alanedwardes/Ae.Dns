@@ -67,7 +67,7 @@ namespace Ae.Dns.Protocol
             return data;
         }
 
-        public static string ReadStringSimple(ReadOnlyMemory<byte> bytes, ref int offset)
+        private static string ReadStringSimple(ReadOnlyMemory<byte> bytes, ref int offset)
         {
             byte labelLength = bytes.Span[offset];
             offset += 1;
@@ -80,7 +80,7 @@ namespace Ae.Dns.Protocol
             return str;
         }
 
-        public static string[] ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
+        private static List<string> ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
         {
             // Assume most labels consist of 3 parts
             var parts = new List<string>(3);
@@ -114,12 +114,12 @@ namespace Ae.Dns.Protocol
                 offset = preCompressionOffset.Value;
             }
 
-            return parts.ToArray();
+            return parts;
         }
 
-        public static DnsLabels ReadLabels(ReadOnlyMemory<byte> bytes, ref int offset)
+        public static DnsLabels ReadLabels(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
         {
-            return new DnsLabels(ReadString(bytes, ref offset));
+            return new DnsLabels(ReadString(bytes, ref offset, compressionPermitted));
         }
 
         public static ReadOnlyMemory<byte> AllocateAndWrite(IDnsByteArrayWriter writer)
