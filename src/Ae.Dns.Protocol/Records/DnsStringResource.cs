@@ -43,7 +43,7 @@ namespace Ae.Dns.Protocol.Records
         {
             // Provide the ReadString method with a sliced buffer, which ends when this resource ends
             // It must start where the packet starts, since there are often pointers back to the beginning
-            Entries = DnsByteExtensions.ReadString(bytes.Slice(0, offset + length), ref offset, CanUseCompression);
+            Entries = new DnsLabels(DnsByteExtensions.ReadString(bytes.Slice(0, offset + length), ref offset, CanUseCompression));
         }
 
         /// <inheritdoc/>

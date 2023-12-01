@@ -21,7 +21,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void TestFromArray()
         {
-            DnsLabels labels = new [] { "one", "two", "three" };
+            DnsLabels labels = new DnsLabels(new [] { "one", "two", "three" });
 
             Assert.Equal(new[] { "one", "two", "three" }, labels);
         }
@@ -37,7 +37,7 @@ namespace Ae.Dns.Tests.Protocol
         [Fact]
         public void TestToString()
         {
-            DnsLabels labels = new[] { "one", "two", "three" };
+            DnsLabels labels = new DnsLabels(new[] { "one", "two", "three" });
 
             Assert.Equal("one.two.three", labels.ToString());
         }

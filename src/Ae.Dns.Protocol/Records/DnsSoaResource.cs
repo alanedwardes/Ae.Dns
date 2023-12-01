@@ -79,8 +79,8 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
-            MName = DnsByteExtensions.ReadString(bytes, ref offset);
-            RName = DnsByteExtensions.ReadString(bytes, ref offset);
+            MName = DnsByteExtensions.ReadLabels(bytes, ref offset);
+            RName = DnsByteExtensions.ReadLabels(bytes, ref offset);
             Serial = DnsByteExtensions.ReadUInt32(bytes, ref offset);
             Refresh = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
             Retry = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));

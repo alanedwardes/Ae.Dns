@@ -34,7 +34,7 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             var stringLength = 0;
-            Entries = DnsByteExtensions.ReadString(bytes.Slice(offset, length), ref stringLength, false);
+            Entries = new DnsLabels(DnsByteExtensions.ReadString(bytes.Slice(offset, length), ref stringLength, false));
             // stringLength must be the same as length at this point
             offset += stringLength;
         }

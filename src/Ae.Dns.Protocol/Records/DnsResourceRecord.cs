@@ -81,7 +81,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset)
         {
-            Host = DnsByteExtensions.ReadString(bytes, ref offset);
+            Host = DnsByteExtensions.ReadLabels(bytes, ref offset);
             Type = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             Class = (DnsQueryClass)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             TimeToLive = DnsByteExtensions.ReadUInt32(bytes, ref offset);

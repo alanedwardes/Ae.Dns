@@ -70,7 +70,7 @@ namespace Ae.Dns.Protocol.Records
             var totalLength = offset + length;
 
             SvcPriority = DnsByteExtensions.ReadUInt16(bytes, ref offset);
-            TargetName = DnsByteExtensions.ReadString(bytes, ref offset, false);
+            TargetName = new DnsLabels(DnsByteExtensions.ReadString(bytes, ref offset, false));
 
             while (offset < totalLength)
             {

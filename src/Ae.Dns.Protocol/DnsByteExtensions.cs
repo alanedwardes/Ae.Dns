@@ -117,6 +117,11 @@ namespace Ae.Dns.Protocol
             return parts.ToArray();
         }
 
+        public static DnsLabels ReadLabels(ReadOnlyMemory<byte> bytes, ref int offset)
+        {
+            return new DnsLabels(ReadString(bytes, ref offset));
+        }
+
         public static ReadOnlyMemory<byte> AllocateAndWrite(IDnsByteArrayWriter writer)
         {
             var buffer = AllocatePinnedNetworkBuffer();

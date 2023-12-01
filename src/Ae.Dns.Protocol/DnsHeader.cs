@@ -195,7 +195,7 @@ namespace Ae.Dns.Protocol
             AnswerRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
             NameServerRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
             AdditionalRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
-            Host = DnsByteExtensions.ReadString(bytes, ref offset);
+            Host = DnsByteExtensions.ReadLabels(bytes, ref offset);
             QueryType = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             QueryClass = (DnsQueryClass)DnsByteExtensions.ReadUInt16(bytes, ref offset);
 
