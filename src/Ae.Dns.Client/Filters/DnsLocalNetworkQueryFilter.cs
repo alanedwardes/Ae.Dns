@@ -28,6 +28,14 @@ namespace Ae.Dns.Client.Filters
         /// <inheritdoc/>
         public bool IsPermitted(DnsMessage query)
         {
+            // Disallow something without a TLD
+            // Note: sometimes this is valid, but it's so rare it's not worth allowing
+            if (query.Header.Host.Count < 2)
+            {
+                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(No TLD)";
+                return false;
+            }
+
             // Do not permit DNS-SD (service discovery) queries, see https://www.ietf.org/rfc/rfc6763.txt
             if (query.Header.Host.Count > 1 && query.Header.Host[1].Equals("_dns-sd", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -53,14 +61,6 @@ namespace Ae.Dns.Client.Filters
             if (query.Header.Host.Last().Contains("_"))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(TLD contains underscore)";
-                return false;
-            }
-
-            // Disallow something without a TLD
-            // Note: sometimes this is valid, but it's so rare it's not worth allowing
-            if (query.Header.Host.Count < 2)
-            {
-                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(No TLD)";
                 return false;
             }
 
