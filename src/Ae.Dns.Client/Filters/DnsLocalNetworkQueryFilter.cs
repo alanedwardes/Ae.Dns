@@ -15,53 +15,35 @@ namespace Ae.Dns.Client.Filters
     {
         private readonly IEnumerable<string> _reservedTopLevelDomainNames = new[]
         {
-            // See https://www.rfc-editor.org/rfc/rfc2606.html
-            ".test", ".example", ".invalid", ".localhost",
-            // See https://www.ietf.org/archive/id/draft-chapin-rfc2606bis-00.html
-            ".local", ".localdomain", ".domain", ".lan", ".host",
-            // See https://www.icann.org/resources/board-material/resolutions-2018-02-04-en#2.c
-            ".home", ".corp", ".mail",
-            // See https://www.rfc-editor.org/rfc/rfc6762#appendix-G
-            ".intranet", ".internal", ".private"
+            // See https://wwwrfc-editororg/rfc/rfc2606html
+            "test", "example", "invalid", "localhost",
+            // See https://wwwietforg/archive/id/draft-chapin-rfc2606bis-00html
+            "local", "localdomain", "domain", "lan", "host",
+            // See https://wwwicannorg/resources/board-material/resolutions-2018-02-04-en#2c
+            "home", "corp", "mail",
+            // See https://wwwrfc-editororg/rfc/rfc6762#appendix-G
+            "intranet", "internal", "private"
         };
-
-        // See https://www.ietf.org/rfc/rfc6763.txt
-        private readonly IEnumerable<string> _reservedDnsServiceDiscoveryPrefixes = new[]
-        {
-            "b._dns-sd._udp.",
-            "db._dns-sd._udp.",
-            "r._dns-sd._udp.",
-            "dr._dns-sd._udp.",
-            "lb._dns-sd._udp."
-        };
-
 
         /// <inheritdoc/>
         public bool IsPermitted(DnsMessage query)
         {
-            // Very unlikely localhost got this far, though just in case it did
-            if (query.Header.Host.ToString().Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
-            {
-                query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Host is localhost)";
-                return false;
-            }
-
-            // Do not permit DNS-SD (service discovery) queries
-            if (_reservedDnsServiceDiscoveryPrefixes.Any(x => query.Header.Host.ToString().StartsWith(x, StringComparison.InvariantCultureIgnoreCase)))
+            // Do not permit DNS-SD (service discovery) queries, see https://www.ietf.org/rfc/rfc6763.txt
+            if (query.Header.Host.Count > 1 && query.Header.Host[1].Equals("_dns-sd", StringComparison.InvariantCultureIgnoreCase))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(DNS service discovery)";
                 return false;
             }
 
             // Do not permit reserved top level domain names
-            if (_reservedTopLevelDomainNames.Any(x => query.Header.Host.ToString().EndsWith(x, StringComparison.InvariantCultureIgnoreCase)))
+            if (_reservedTopLevelDomainNames.Any(x => query.Header.Host.Last().Equals(x, StringComparison.InvariantCultureIgnoreCase)))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Reserved local network TLD)";
                 return false;
             }
 
             // Sometimes misconfigured applications can send queries beginning with a protocol
-            if (query.Header.Host.ToString().StartsWith("https://") || query.Header.Host.ToString().StartsWith("http://"))
+            if (query.Header.Host.First().Equals("https://", StringComparison.InvariantCultureIgnoreCase) || query.Header.Host.First().Equals("http://", StringComparison.InvariantCultureIgnoreCase))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(Host contains http:// prefix)";
                 return false;

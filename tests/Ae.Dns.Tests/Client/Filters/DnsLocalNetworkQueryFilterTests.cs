@@ -8,6 +8,7 @@ namespace Ae.Dns.Tests.Client.Filters
     public class DnsLocalNetworkQueryFilterTests
     {
         [Theory]
+        [InlineData("localhost", DnsQueryType.A, false)]
         [InlineData("google.com", DnsQueryType.A, true)]
         [InlineData("lb._dns-sd._udp.0.178.168.192.in-addr.arpa", DnsQueryType.PTR, false)]
         [InlineData("test.home", DnsQueryType.A, false)]

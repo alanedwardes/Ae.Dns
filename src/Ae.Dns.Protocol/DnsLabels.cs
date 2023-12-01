@@ -25,7 +25,7 @@ namespace Ae.Dns.Protocol
         /// Construct a new <see cref="DnsLabels"/> instance using joined labels.
         /// </summary>
         /// <param name="labels"></param>
-        public DnsLabels(string labels) => _labels = labels.Split('.');
+        public DnsLabels(string labels) => _labels = labels?.Split('.');
 
         private readonly IReadOnlyList<string>? _labels;
         private IReadOnlyList<string> LabelsNeverNull => _labels ?? Array.Empty<string>();
