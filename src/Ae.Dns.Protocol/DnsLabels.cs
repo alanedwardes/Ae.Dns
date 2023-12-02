@@ -19,7 +19,7 @@ namespace Ae.Dns.Protocol
         /// Construct a new <see cref="DnsLabels"/> instance using the specified labels.
         /// </summary>
         /// <param name="strings"></param>
-        public DnsLabels(IEnumerable<string> strings) => _labels = strings?.ToArray() ?? throw new ArgumentNullException(nameof(strings));
+        public DnsLabels(IReadOnlyList<string> strings) => _labels = strings ?? throw new ArgumentNullException(nameof(strings));
 
         /// <summary>
         /// Construct a new <see cref="DnsLabels"/> instance using joined labels.

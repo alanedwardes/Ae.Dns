@@ -119,7 +119,8 @@ namespace Ae.Dns.Protocol
 
         public static DnsLabels ReadLabels(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
         {
-            return new DnsLabels(ReadString(bytes, ref offset, compressionPermitted));
+            var labels = ReadString(bytes, ref offset, compressionPermitted);
+            return new DnsLabels(labels);
         }
 
         public static ReadOnlyMemory<byte> AllocateAndWrite(IDnsByteArrayWriter writer)
