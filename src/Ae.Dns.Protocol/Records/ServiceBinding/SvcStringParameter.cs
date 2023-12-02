@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records.ServiceBinding
@@ -11,7 +12,7 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         /// <summary>
         /// The string entries associated with this parameter.
         /// </summary>
-        public string[] Entries { get; set; } = Array.Empty<string>();
+        public DnsLabels Entries { get; set; }
 
         /// <inheritdoc/>
         public bool Equals(SvcStringParameter? other)
@@ -34,7 +35,7 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             var stringLength = 0;
-            Entries = DnsByteExtensions.ReadString(bytes.Slice(offset, length), ref stringLength, false);
+            Entries = DnsByteExtensions.ReadLabels(bytes.Slice(offset, length), ref stringLength, false);
             // stringLength must be the same as length at this point
             offset += stringLength;
         }
@@ -49,6 +50,6 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         }
 
         /// <inheritdoc/>
-        public override string ToString() => string.Join(",", Entries);
+        public override string ToString() => string.Join(",", (IEnumerable<string>)Entries);
     }
 }

@@ -34,7 +34,7 @@ namespace Ae.Dns.Tests.Protocol
                 QueryClass = DnsQueryClass.IN,
                 QueryType = DnsQueryType.A,
                 RecursionDesired = true,
-                Labels = header.Labels,
+                Host = header.Host,
                 QuestionCount = 1,
             };
 

@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Ae.Dns.Protocol
 {
@@ -52,8 +53,6 @@ namespace Ae.Dns.Protocol
         /// A count of the number of additional records in this header.
         /// </value>
         public short AdditionalRecordCount { get; set; }
-
-        internal string[] Labels { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// The <see cref="DnsQueryType"/> of this header.
@@ -147,11 +146,7 @@ namespace Ae.Dns.Protocol
         /// <summary>
         /// The DNS host to use, for example "example.com".
         /// </summary>
-        public string Host
-        {
-            get => string.Join(".", Labels);
-            set => Labels = value.Split('.');
-        }
+        public DnsLabels Host { get; set; }
 
         /// <inheritdoc/>
         public override string ToString() => $"{(IsQueryResponse ? "RES" : "QRY")}: {Id} Domain: {Host} Type: {QueryType} Class: {QueryClass}";
@@ -170,7 +165,7 @@ namespace Ae.Dns.Protocol
                    AnswerRecordCount == other.AnswerRecordCount &&
                    NameServerRecordCount == other.NameServerRecordCount &&
                    AdditionalRecordCount == other.AdditionalRecordCount &&
-                   Host == other.Host &&
+                   Host.SequenceEqual(other.Host) &&
                    QueryType == other.QueryType &&
                    QueryClass == other.QueryClass;
         }
@@ -200,7 +195,7 @@ namespace Ae.Dns.Protocol
             AnswerRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
             NameServerRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
             AdditionalRecordCount = DnsByteExtensions.ReadInt16(bytes, ref offset);
-            Labels = DnsByteExtensions.ReadString(bytes, ref offset);
+            Host = DnsByteExtensions.ReadLabels(bytes, ref offset);
             QueryType = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             QueryClass = (DnsQueryClass)DnsByteExtensions.ReadUInt16(bytes, ref offset);
 
@@ -219,7 +214,7 @@ namespace Ae.Dns.Protocol
             DnsByteExtensions.ToBytes(AnswerRecordCount, bytes, ref offset);
             DnsByteExtensions.ToBytes(NameServerRecordCount, bytes, ref offset);
             DnsByteExtensions.ToBytes(AdditionalRecordCount, bytes, ref offset);
-            DnsByteExtensions.ToBytes(Labels, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Host.ToArray(), bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)QueryType, bytes, ref offset);
             DnsByteExtensions.ToBytes((ushort)QueryClass, bytes, ref offset);
         }

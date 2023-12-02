@@ -36,8 +36,8 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal("in-addr.arpa", record.Host);
 
             var soaData = (DnsSoaResource)record.Resource;
-            Assert.Equal("b.in-addr-servers.arpa", string.Join(".", soaData.MName));
-            Assert.Equal("nstld.iana.org", string.Join(".", soaData.RName));
+            Assert.Equal("b.in-addr-servers.arpa", soaData.MName);
+            Assert.Equal("nstld.iana.org", soaData.RName);
             Assert.Equal((uint)TimeSpan.Parse("00:36:32").TotalSeconds, record.TimeToLive);
         }
 
@@ -200,7 +200,7 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal("_spf.mailgun.org", record1.Host);
 
             var entries = ((DnsTextResource)record1.Resource).Entries;
-            Assert.Equal(2, entries.Length);
+            Assert.Equal(2, entries.Count);
             Assert.Equal("v=spf1 ip4:209.61.151.0/24 ip4:166.78.68.0/22 ip4:198.61.254.0/23 ip4:192.237.158.0/23 ip4:23.253.182.0/23 ip4:104.130.96.0/28 ip4:146.20.113.0/24 ip4:146.20.191.0/24 ip4:159.135.224.0/20 ip4:69.72.32.0/20", entries[0]);
             Assert.Equal(" ip4:104.130.122.0/23 ip4:146.20.112.0/26 ip4:161.38.192.0/20 ip4:143.55.224.0/21 ip4:143.55.232.0/22 ip4:159.112.240.0/20 ~all", entries[1]);
             Assert.Equal((uint)TimeSpan.Parse("00:00:21").TotalSeconds, record1.TimeToLive);

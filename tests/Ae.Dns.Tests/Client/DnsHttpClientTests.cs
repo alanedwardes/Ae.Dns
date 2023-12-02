@@ -1,7 +1,6 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
-using Microsoft.Extensions.Options;
 using Moq;
 using System;
 using System.Linq;

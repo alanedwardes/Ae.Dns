@@ -46,17 +46,18 @@ namespace Ae.Dns.Protocol
 
         public static bool TryParseIpAddressFromReverseLookup(this DnsMessage message, out IPAddress? address)
         {
-            if (message.Header.QueryType == DnsQueryType.PTR)
+            if (message.Header.QueryType == DnsQueryType.PTR && message.Header.Host.Count > 3
+                && message.Header.Host.Last().Equals("arpa", StringComparison.InvariantCultureIgnoreCase))
             {
-                var hostParts = message.Header.Host.Split('.');
-                if (message.Header.Host.EndsWith(".in-addr.arpa"))
+                var lookupType = message.Header.Host[message.Header.Host.Count - 2];
+                if (lookupType.Equals("in-addr", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return IPAddress.TryParse(string.Join(".", hostParts.Take(4).Reverse()), out address);
+                    return IPAddress.TryParse(string.Join(".", message.Header.Host.Take(4).Reverse()), out address);
                 }
 
-                if (message.Header.Host.EndsWith(".ip6.arpa"))
+                if (lookupType.Equals("ip6", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return IPAddress.TryParse(string.Join(":", Chunk(hostParts.Take(32).Reverse(), 4).Select(x => string.Concat(x))), out address);
+                    return IPAddress.TryParse(string.Join(":", Chunk(message.Header.Host.Take(32).Reverse(), 4).Select(x => string.Concat(x))), out address);
                 }
             }
 

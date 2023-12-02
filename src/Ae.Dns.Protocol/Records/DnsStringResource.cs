@@ -14,7 +14,7 @@ namespace Ae.Dns.Protocol.Records
         /// <value>
         /// The text values of this resource as an array of strings.
         /// </value>
-        public string[] Entries { get; set; } = Array.Empty<string>();
+        public DnsLabels Entries { get; set; }
 
         /// <inheritdoc/>
         public bool Equals(DnsStringResource? other)
@@ -43,13 +43,13 @@ namespace Ae.Dns.Protocol.Records
         {
             // Provide the ReadString method with a sliced buffer, which ends when this resource ends
             // It must start where the packet starts, since there are often pointers back to the beginning
-            Entries = DnsByteExtensions.ReadString(bytes.Slice(0, offset + length), ref offset, CanUseCompression);
+            Entries = DnsByteExtensions.ReadLabels(bytes.Slice(0, offset + length), ref offset, CanUseCompression);
         }
 
         /// <inheritdoc/>
         public virtual void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(Entries, bytes, ref offset);
+            DnsByteExtensions.ToBytes(Entries.ToArray(), bytes, ref offset);
         }
     }
 }

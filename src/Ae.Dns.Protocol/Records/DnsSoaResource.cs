@@ -14,7 +14,7 @@ namespace Ae.Dns.Protocol.Records
         /// <summary>
         /// Primary master name server for this zone 
         /// </summary>
-        public string[] MName { get; set; } = Array.Empty<string>();
+        public DnsLabels MName { get; set; }
         /// <summary>
         /// Email address of the administrator responsible for this zone.
         /// (As usual, the email address is encoded as a name. The part of the
@@ -24,7 +24,7 @@ namespace Ae.Dns.Protocol.Records
         /// address john.doe@example.com would be represented in a zone file
         /// as john\.doe.example.com.)
         /// </summary>
-        public string[] RName { get; set; } = Array.Empty<string>();
+        public DnsLabels RName { get; set; }
         /// <summary>
         /// Serial number for this zone. If a secondary name server slaved to
         /// this one observes an increase in this number, the slave will assume
@@ -79,8 +79,8 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
-            MName = DnsByteExtensions.ReadString(bytes, ref offset);
-            RName = DnsByteExtensions.ReadString(bytes, ref offset);
+            MName = DnsByteExtensions.ReadLabels(bytes, ref offset);
+            RName = DnsByteExtensions.ReadLabels(bytes, ref offset);
             Serial = DnsByteExtensions.ReadUInt32(bytes, ref offset);
             Refresh = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
             Retry = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
@@ -89,13 +89,13 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public override string ToString() => string.Join(".", MName);
+        public override string ToString() => MName;
 
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(MName, bytes, ref offset);
-            DnsByteExtensions.ToBytes(RName, bytes, ref offset);
+            DnsByteExtensions.ToBytes(MName.ToArray(), bytes, ref offset);
+            DnsByteExtensions.ToBytes(RName.ToArray(), bytes, ref offset);
             DnsByteExtensions.ToBytes(Serial, bytes, ref offset);
             DnsByteExtensions.ToBytes((int)Refresh.TotalSeconds, bytes, ref offset);
             DnsByteExtensions.ToBytes((int)Retry.TotalSeconds, bytes, ref offset);
