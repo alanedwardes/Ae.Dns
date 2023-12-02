@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records.ServiceBinding
@@ -49,6 +50,6 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
         }
 
         /// <inheritdoc/>
-        public override string ToString() => Entries;
+        public override string ToString() => string.Join(",", (IEnumerable<string>)Entries);
     }
 }
