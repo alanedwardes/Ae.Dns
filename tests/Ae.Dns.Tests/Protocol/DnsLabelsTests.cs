@@ -10,7 +10,6 @@ namespace Ae.Dns.Tests.Protocol
         {
             var labels = new DnsLabels();
             Assert.Empty(labels);
-            Assert.Empty(labels.ToString());
 #pragma warning disable xUnit2013 // Do not use equality check to check for collection size.
             Assert.Equal(0, labels.Count);
 #pragma warning restore xUnit2013 // Do not use equality check to check for collection size.
@@ -40,6 +39,26 @@ namespace Ae.Dns.Tests.Protocol
             DnsLabels labels = new DnsLabels(new[] { "one", "two", "three" });
 
             Assert.Equal("one.two.three", labels.ToString());
+        }
+
+        [Fact]
+        public void TestToStringEmpty()
+        {
+            Assert.Equal("<none>", DnsLabels.Empty.ToString());
+        }
+
+        [Fact]
+        public void TestCastString()
+        {
+            DnsLabels labels = new DnsLabels(new[] { "one", "two", "three" });
+
+            Assert.Equal("one.two.three", (string)labels);
+        }
+
+        [Fact]
+        public void TestCastStringEmpty()
+        {
+            Assert.Empty((string)DnsLabels.Empty);
         }
     }
 }

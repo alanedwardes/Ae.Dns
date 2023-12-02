@@ -41,7 +41,7 @@ namespace Ae.Dns.Protocol
         IEnumerator IEnumerable.GetEnumerator() => LabelsNeverNull.GetEnumerator();
 
         /// <inheritdoc/>
-        public override string ToString() => string.Join(".", LabelsNeverNull);
+        public override string ToString() => _labels == null ? "<none>" : string.Join(".", _labels);
 
         /// <summary>
         /// Convert a string to <see cref="DnsLabels"/>.
@@ -53,6 +53,6 @@ namespace Ae.Dns.Protocol
         /// Convert an instance of <see cref="DnsLabels"/> to a string.
         /// </summary>
         /// <param name="labels"></param>
-        public static implicit operator string(DnsLabels labels) => labels.ToString();
+        public static implicit operator string(DnsLabels labels) => string.Join(".", labels.LabelsNeverNull);
     }
 }
