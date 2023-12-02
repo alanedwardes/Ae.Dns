@@ -37,7 +37,9 @@ namespace Ae.Dns.Client.Filters
             }
 
             // Do not permit DNS-SD (service discovery) queries, see https://www.ietf.org/rfc/rfc6763.txt
-            if (query.Header.Host.Count > 1 && query.Header.Host[1].Equals("_dns-sd", StringComparison.InvariantCultureIgnoreCase))
+            if (query.Header.Host.Count > 3 &&
+                query.Header.Host[1].Equals("_dns-sd", StringComparison.InvariantCultureIgnoreCase) &&
+                query.Header.Host[2].Equals("_udp", StringComparison.InvariantCultureIgnoreCase))
             {
                 query.Header.Tags["BlockReason"] = $"{nameof(DnsLocalNetworkQueryFilter)}(DNS service discovery)";
                 return false;

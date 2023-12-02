@@ -11,6 +11,8 @@ namespace Ae.Dns.Tests.Client.Filters
         [InlineData("localhost", DnsQueryType.A, false)]
         [InlineData("google.com", DnsQueryType.A, true)]
         [InlineData("lb._dns-sd._udp.0.178.168.192.in-addr.arpa", DnsQueryType.PTR, false)]
+        [InlineData("lb._dns-sd._udp.home", DnsQueryType.PTR, false)]
+        [InlineData("lb._dns-sd._udp.97.88.152.10.in-addr.arpa", DnsQueryType.PTR, false)]
         [InlineData("test.home", DnsQueryType.A, false)]
         [InlineData("_rocketchat._https", DnsQueryType.SRV, false)]
         [InlineData("rocketchat-tcp-protocol", DnsQueryType.TEXT, false)]
