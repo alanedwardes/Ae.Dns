@@ -1,6 +1,5 @@
 ﻿using Ae.Dns.Client.Internal;
 using Ae.Dns.Protocol;
-using Ae.Dns.Protocol.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -49,7 +48,7 @@ namespace Ae.Dns.Client
             var queries = randomisedClients.ToDictionary(client => client.Query(query, token), client => client);
 
             // Select a winning task
-            var winningTask = await TaskRacer.RaceTasks(queries.Select(x => x.Key), async result => result.IsFaulted || (await result).Header.ResponseCode == DnsResponseCode.ServFail);
+            var winningTask = await TaskRacer.RaceTasks(queries.Select(x => x.Key), async result => result.IsFaulted || (await result).EncounteredResolverError());
 
             // If tasks faulted, log the reason
             var faultedTasks = queries.Keys.Where(x => x.IsFaulted).ToArray();

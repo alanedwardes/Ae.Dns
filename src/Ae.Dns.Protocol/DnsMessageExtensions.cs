@@ -44,6 +44,23 @@ namespace Ae.Dns.Protocol
             return null;
         }
 
+        /// <summary>
+        /// Returns true if the resolver encountered an error.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static bool EncounteredResolverError(this DnsMessage message)
+        {
+            if (!message.Header.IsQueryResponse)
+            {
+                return false;
+            }
+
+            return message.Header.ResponseCode == DnsResponseCode.ServFail ||
+                   message.Header.ResponseCode == DnsResponseCode.NotImp ||
+                   message.Header.ResponseCode == DnsResponseCode.NotAuth;
+        }
+
         public static bool TryParseIpAddressFromReverseLookup(this DnsMessage message, out IPAddress? address)
         {
             if (message.Header.QueryType == DnsQueryType.PTR && message.Header.Host.Count > 3
