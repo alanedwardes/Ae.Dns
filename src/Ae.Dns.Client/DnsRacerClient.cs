@@ -84,7 +84,7 @@ namespace Ae.Dns.Client
 
             // Await the winning task (if it's faulted, it will throw at this point)
             var winningAnswer = await winningTask;
-            _logger.LogInformation("Winning client was {WinningClient} for query {Query} in {ElapsedMilliseconds}ms", queries[winningTask], query, sw.ElapsedMilliseconds);
+            _logger.LogTrace("Winning client was {WinningClient} for query {Query} in {ElapsedMilliseconds}ms", queries[winningTask], query, sw.ElapsedMilliseconds);
             return winningAnswer;
         }
 

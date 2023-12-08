@@ -192,7 +192,7 @@ namespace Ae.Dns.Server
                 throw;
             }
 
-            _logger.LogInformation("Responded to query from {RemoteEndPoint} in {ResponseTime}", socket.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogTrace("Responded to query from {RemoteEndPoint} in {ResponseTime}", socket.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }
