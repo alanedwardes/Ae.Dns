@@ -77,7 +77,8 @@ namespace Ae.Dns.Client
                 }
                 else
                 {
-                    _logger.LogWarning("Tasks for clients {FaultedClients} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClients, query, queries[winningTask], sw.ElapsedMilliseconds);
+                    var exceptions = new AggregateException(faultedTasks.Select(x => x.Exception.Flatten()));
+                    _logger.LogWarning(exceptions, "Tasks for clients {FaultedClients} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClients, query, queries[winningTask], sw.ElapsedMilliseconds);
                 }
             }
 
