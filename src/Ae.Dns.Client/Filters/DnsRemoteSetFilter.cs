@@ -70,7 +70,7 @@ namespace Ae.Dns.Client.Filters
                 }
             }
 
-            _logger.LogTrace("Found {Count} domains in {FilterUri}", set.Count, fileUri);
+            _logger.LogInformation("Loaded {Count} domains in {FilterUri}", set.Count, fileUri);
 
             lock (_filterSets)
             {

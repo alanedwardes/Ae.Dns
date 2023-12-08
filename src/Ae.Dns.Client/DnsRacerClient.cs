@@ -77,13 +77,14 @@ namespace Ae.Dns.Client
                 }
                 else
                 {
-                    _logger.LogWarning("Tasks for clients {FaultedClients} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClients, query, queries[winningTask], sw.ElapsedMilliseconds);
+                    var exceptions = new AggregateException(faultedTasks.Select(x => x.Exception.Flatten()));
+                    _logger.LogWarning(exceptions, "Tasks for clients {FaultedClients} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClients, query, queries[winningTask], sw.ElapsedMilliseconds);
                 }
             }
 
             // Await the winning task (if it's faulted, it will throw at this point)
             var winningAnswer = await winningTask;
-            _logger.LogInformation("Winning client was {WinningClient} for query {Query} in {ElapsedMilliseconds}ms", queries[winningTask], query, sw.ElapsedMilliseconds);
+            _logger.LogTrace("Winning client was {WinningClient} for query {Query} in {ElapsedMilliseconds}ms", queries[winningTask], query, sw.ElapsedMilliseconds);
             return winningAnswer;
         }
 

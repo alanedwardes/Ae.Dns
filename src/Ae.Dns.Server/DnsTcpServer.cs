@@ -114,6 +114,12 @@ namespace Ae.Dns.Server
                         // Do nothing, recieve timed out
                         return;
                     }
+                    catch (SocketException se) when (se.SocketErrorCode == SocketError.ConnectionReset)
+                    {
+                        // Do nothing as "Connection reset by peer" is an error when
+                        // clients don't cleanly close their connections (happens a lot)
+                        return;
+                    }
                     catch (Exception e)
                     {
                         _logger.LogWarning(e, "Error with incoming connection, closing socket");
@@ -186,7 +192,7 @@ namespace Ae.Dns.Server
                 throw;
             }
 
-            _logger.LogInformation("Responded to query from {RemoteEndPoint} in {ResponseTime}", socket.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogTrace("Responded to query from {RemoteEndPoint} in {ResponseTime}", socket.RemoteEndPoint, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }

@@ -143,7 +143,7 @@ namespace Ae.Dns.Server
                 return;
             }
 
-            _logger.LogInformation("Responded to query from {RemoteEndPoint} in {ResponseTime}", sender, stopwatch.Elapsed.TotalSeconds);
+            _logger.LogTrace("Responded to query from {RemoteEndPoint} in {ResponseTime}", sender, stopwatch.Elapsed.TotalSeconds);
         }
     }
 }

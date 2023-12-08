@@ -64,7 +64,7 @@ namespace Ae.Dns.Client
                 return await _dnsClient.Query(query, token);
             }
 
-            _logger.LogInformation("DNS query blocked for {Domain}", query.Header.Host);
+            _logger.LogTrace("DNS query blocked for {Domain}", query.Header.Host);
             return new DnsMessage { Header = CreateNullHeader(query) };
         }
 
