@@ -42,10 +42,10 @@ namespace Ae.Dns.Client
             var randomisedGroups = _options.DnsClientGroups.Where(x => x.Value.Count > 0).OrderBy(x => Guid.NewGuid()).Take(_options.RandomGroupQueries);
 
             // Randomise a client from each group
-            var randomisedClients = randomisedGroups.Select(x => x.Value.OrderBy(y => Guid.NewGuid()).First());
+            var randomisedClients = randomisedGroups.ToDictionary(x => x.Value.OrderBy(y => Guid.NewGuid()).First(), x => x.Key);
 
             // Start the query tasks (and create a lookup from query to client)
-            var queries = randomisedClients.ToDictionary(client => client.Query(query, token), client => client);
+            var queries = randomisedClients.Keys.ToDictionary(client => client.Query(query, token), client => client);
 
             // Select a winning task
             var winningTask = await TaskRacer.RaceTasks(queries.Select(x => x.Key), async result => result.IsFaulted || (await result).EncounteredResolverError());
@@ -54,20 +54,33 @@ namespace Ae.Dns.Client
             var faultedTasks = queries.Keys.Where(x => x.IsFaulted).ToArray();
             if (faultedTasks.Any())
             {
-                var faultedClients = string.Join(", ", faultedTasks.Select(x => queries[x]));
+                var faultedClients = faultedTasks.Select(x => queries[x]);
+                var faultedGroups = faultedClients.Select(x => randomisedClients[x]);
+
+                var faultedClientsString = string.Join(", ", faultedClients);
+                var faultedGroupsString = string.Join(", ", faultedGroups);
+
                 if (winningTask.IsFaulted)
                 {
-                    _logger.LogError("All tasks using {FaultedClients} failed for query {Query} in {ElapsedMilliseconds}ms", faultedClients, query, sw.ElapsedMilliseconds);
+                    _logger.LogError("All tasks using {FaultedClients} from groups {FaultedGroups} failed for query {Query} in {ElapsedMilliseconds}ms", faultedClientsString, faultedGroupsString, query, sw.ElapsedMilliseconds);
                 }
                 else
                 {
-                    _logger.LogWarning("Tasks for clients {FaultedClients} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClients, query, queries[winningTask], sw.ElapsedMilliseconds);
+                    _logger.LogWarning("Tasks for clients {FaultedClients} from groups {FaultedGroups} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClientsString, faultedGroupsString, query, queries[winningTask], sw.ElapsedMilliseconds);
                 }
             }
 
             // Await the winning task (if it's faulted, it will throw at this point)
             var winningAnswer = await winningTask;
-            _logger.LogInformation("Winning client was {WinningClient} for query {Query} in {ElapsedMilliseconds}ms", queries[winningTask], query, sw.ElapsedMilliseconds);
+
+            // Only bother working out the logging if needed
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                var winningClient = queries[winningTask];
+                var winningGroup = randomisedClients[winningClient];
+                _logger.LogInformation("Winning client was {WinningClient} from group {WinningGroup} for query {Query} in {ElapsedMilliseconds}ms", winningClient, winningGroup, query, sw.ElapsedMilliseconds);
+            }
+
             return winningAnswer;
         }
 

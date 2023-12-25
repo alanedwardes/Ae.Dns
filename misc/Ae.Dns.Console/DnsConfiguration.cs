@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Ae.Dns.Console
 {
@@ -15,5 +16,6 @@ namespace Ae.Dns.Console
         public string? DhcpdConfigFile { get; set; }
         public string? DhcpdLeasesHostnameSuffix { get; set; }
         public DnsInfluxDbConfiguration? InfluxDbMetrics { get; set; }
+        public Dictionary<string, string[]> ClientGroups { get; set; } = new Dictionary<string, string[]>();
     }
 }
