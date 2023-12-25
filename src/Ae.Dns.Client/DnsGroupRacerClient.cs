@@ -74,11 +74,11 @@ namespace Ae.Dns.Client
             var winningAnswer = await winningTask;
 
             // Only bother working out the logging if needed
-            if (_logger.IsEnabled(LogLevel.Information))
+            if (_logger.IsEnabled(LogLevel.Trace))
             {
                 var winningClient = queries[winningTask];
                 var winningGroup = randomisedClients[winningClient];
-                _logger.LogInformation("Winning client was {WinningClient} from group {WinningGroup} for query {Query} in {ElapsedMilliseconds}ms", winningClient, winningGroup, query, sw.ElapsedMilliseconds);
+                _logger.LogTrace("Winning client was {WinningClient} from group {WinningGroup} for query {Query} in {ElapsedMilliseconds}ms", winningClient, winningGroup, query, sw.ElapsedMilliseconds);
             }
 
             return winningAnswer;
