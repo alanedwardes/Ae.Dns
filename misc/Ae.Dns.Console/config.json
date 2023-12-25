@@ -1,31 +1,53 @@
 {
-    "serilog": {
-        "using": [ "Serilog.Sinks.Console" ],
-        "writeTo": [
-            { "name": "Console" }
-        ]
-        // Change level: "minimumLevel": "Warning"
-    },
-    "httpsUpstreams": [
-        "https://dns.google/",
-        "https://cloudflare-dns.com/",
-        "https://doh.opendns.com/"
-    ],
-    "remoteBlocklists": [
-        // Examples:
-        // * https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-        // * https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
-        // A remote hosts file or simply a list of domain names
-    ],
-    "disallowedDomainSuffixes": [
-        // Adding example.org here means *.example.org is blocked
-    ],
-    "allowlistedDomains": [
-        // Adding google.com means google.com is explicitly allowed regardless of the blocklists
-        // It doesn't mean *.google.com is allowed, this is an exact match only
-    ],
-    "hostFiles": [
-        // Host files to monitor for changes and incorporate into DNS lookups
-        // For example: "C:\\Windows\\System32\\drivers\\etc\\hosts"
+  "serilog": {
+    "using": [ "Serilog.Sinks.Console" ],
+    "writeTo": [
+      { "name": "Console" }
     ]
+    // Change level: "minimumLevel": "Warning"
+  },
+  "httpsUpstreams": [
+    "https://8.8.8.8/",
+    "https://8.8.4.4/",
+    "https://1.1.1.1/",
+    "https://1.0.0.1/",
+    "https://146.112.41.2/",
+    "https://208.67.222.222/",
+    "https://208.67.220.220/"
+  ],
+  "remoteBlocklists": [
+    // Examples:
+    // * https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+    // * https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
+    // A remote hosts file or simply a list of domain names
+  ],
+  "disallowedDomainSuffixes": [
+    // Adding example.org here means *.example.org is blocked
+  ],
+  "allowlistedDomains": [
+    // Adding google.com means google.com is explicitly allowed regardless of the blocklists
+    // It doesn't mean *.google.com is allowed, this is an exact match only
+  ],
+  "hostFiles": [
+    // Host files to monitor for changes and incorporate into DNS lookups
+    // For example: "C:\\Windows\\System32\\drivers\\etc\\hosts"
+  ],
+  "clientGroups": {
+    // When racing each upstream, pick one client from each group
+    // for redundancy. Optional section - if omitted, clients are
+    // not grouped and queries may be raced against the same provider.
+    "Google": [
+      "https://8.8.8.8/",
+      "https://8.8.4.4/"
+    ],
+    "CloudFlare": [
+      "https://1.1.1.1/",
+      "https://1.0.0.1/"
+    ],
+    "OpenDNS": [
+      "https://146.112.41.2/",
+      "https://208.67.222.222/",
+      "https://208.67.220.220/"
+    ]
+  }
 }

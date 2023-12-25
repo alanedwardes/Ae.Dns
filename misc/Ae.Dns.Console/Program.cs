@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -98,7 +99,7 @@ namespace Ae.Dns.Console
                 _ = remoteFilter.AddRemoteBlockList(remoteBlockList);
             }
 
-            var upstreams = provider.GetServices<IDnsClient>().ToArray();
+            IDnsClient[] upstreams = provider.GetServices<IDnsClient>().ToArray();
             if (!upstreams.Any())
             {
                 throw new Exception("No upstream DNS servers specified - you must specify at least one");
@@ -106,7 +107,30 @@ namespace Ae.Dns.Console
 
             selfLogger.LogInformation("Using {UpstreamCount} DNS upstreams", upstreams.Length);
 
-            IDnsClient dnsClient = ActivatorUtilities.CreateInstance<DnsRacerClient>(provider, upstreams.AsEnumerable());
+            IDnsClient dnsClient;
+            if (dnsConfiguration.ClientGroups.Any())
+            {
+                IDnsClient FindUpstreamByTag(string tag)
+                {
+                    var upstream = upstreams.SingleOrDefault(x => string.Equals(x.ToString(), tag));
+                    if (upstream == null)
+                    {
+                        throw new Exception($"DNS upstream client with tag {tag} not found. Available tags: {string.Join(", ", upstreams.Select(x => x.ToString()))}");
+                    }
+                    return upstream;
+                }
+
+                var groupRacerOptions = new DnsGroupRacerClientOptions
+                {
+                    DnsClientGroups = dnsConfiguration.ClientGroups.ToDictionary(x => x.Key, x => (IReadOnlyList<IDnsClient>)x.Value.Select(y => FindUpstreamByTag(y)).ToArray())
+                };
+
+                dnsClient = ActivatorUtilities.CreateInstance<DnsGroupRacerClient>(provider, Options.Create(groupRacerOptions));
+            }
+            else
+            {
+                dnsClient = ActivatorUtilities.CreateInstance<DnsRacerClient>(provider, upstreams.AsEnumerable());
+            }
 
             dnsClient = ActivatorUtilities.CreateInstance<DnsRebindMitigationClient>(provider, dnsClient);
 
