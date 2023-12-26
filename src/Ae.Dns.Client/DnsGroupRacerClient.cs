@@ -45,10 +45,10 @@ namespace Ae.Dns.Client
             var randomisedClients = randomisedGroups.ToDictionary(x => x.Value.OrderBy(y => Guid.NewGuid()).First(), x => x.Key);
 
             // Start the query tasks (and create a lookup from query to client)
-            var queries = randomisedClients.Keys.ToDictionary(client => client.Query(query, token), client => client);
+            var queries = randomisedClients.Keys.ToDictionary(client => QueryWrapped(client, query, token), client => client);
 
             // Select a winning task
-            var winningTask = await TaskRacer.RaceTasks(queries.Select(x => x.Key), async result => result.IsFaulted || (await result).EncounteredResolverError());
+            var winningTask = await TaskRacer.RaceTasks(queries.Select(x => x.Key));
 
             // If tasks faulted, log the reason
             var faultedTasks = queries.Keys.Where(x => x.IsFaulted).ToArray();
@@ -63,6 +63,7 @@ namespace Ae.Dns.Client
                 if (winningTask.IsFaulted)
                 {
                     _logger.LogError("All tasks using {FaultedClients} from groups {FaultedGroups} failed for query {Query} in {ElapsedMilliseconds}ms", faultedClientsString, faultedGroupsString, query, sw.ElapsedMilliseconds);
+                    return DnsQueryFactory.CreateErrorResponse(query);
                 }
                 else
                 {
@@ -82,6 +83,13 @@ namespace Ae.Dns.Client
             }
 
             return winningAnswer;
+        }
+
+        private async Task<DnsMessage> QueryWrapped(IDnsClient client, DnsMessage query, CancellationToken token)
+        {
+            var answer = await client.Query(query, token);
+            answer.EnsureSuccessResponseCode();
+            return answer;
         }
 
         /// <inheritdoc/>

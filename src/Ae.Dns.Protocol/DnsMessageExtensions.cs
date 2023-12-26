@@ -44,21 +44,14 @@ namespace Ae.Dns.Protocol
             return null;
         }
 
-        /// <summary>
-        /// Returns true if the resolver encountered an error.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public static bool EncounteredResolverError(this DnsMessage message)
+        public static void EnsureSuccessResponseCode(this DnsMessage message)
         {
-            if (!message.Header.IsQueryResponse)
+            if (message.Header.ResponseCode == DnsResponseCode.ServFail ||
+                message.Header.ResponseCode == DnsResponseCode.NotImp ||
+                message.Header.ResponseCode == DnsResponseCode.NotAuth)
             {
-                return false;
+                throw new Exception($"The response code {message.Header.ResponseCode} does not indicate success for message {message}");
             }
-
-            return message.Header.ResponseCode == DnsResponseCode.ServFail ||
-                   message.Header.ResponseCode == DnsResponseCode.NotImp ||
-                   message.Header.ResponseCode == DnsResponseCode.NotAuth;
         }
 
         public static bool TryParseIpAddressFromReverseLookup(this DnsMessage message, out IPAddress? address)
