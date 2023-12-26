@@ -71,7 +71,7 @@ namespace Ae.Dns.Client
                 }
             }
 
-            // Await the winning task (if it's faulted, it will throw at this point)
+            // Await the winning task (it will not be faulted at this point)
             var winningAnswer = await winningTask;
 
             // Only bother working out the logging if needed
