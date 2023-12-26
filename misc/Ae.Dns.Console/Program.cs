@@ -15,7 +15,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,20 +39,15 @@ namespace Ae.Dns.Console
                 .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "config.json"), true)
                 .Build();
 
-            var logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
-
             var dnsConfiguration = new DnsConfiguration();
             configuration.Bind(dnsConfiguration);
 
             var services = new ServiceCollection();
-            services.AddLogging(x => x.AddSerilog(logger));
+            services.AddLogging(x => x.AddConsole());
             services.Configure<DnsUdpServerOptions>(configuration.GetSection("udpServer"));
             services.Configure<DnsTcpServerOptions>(configuration.GetSection("tcpServer"));
 
             const string staticDnsResolverHttpClient = "StaticResolver";
-
             services.AddHttpClient(staticDnsResolverHttpClient, x => x.BaseAddress = new Uri("https://1.1.1.1/"))
                     .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
@@ -223,7 +217,12 @@ namespace Ae.Dns.Console
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
-                .ConfigureLogging(x => x.ClearProviders().AddSerilog(logger))
+                .ConfigureLogging(x =>
+                {
+                    x.AddConsole();
+                    x.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
+                    x.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
+                })
                 .ConfigureWebHostDefaults(webHostBuilder =>
                 {
                     webHostBuilder.UseStartup<Startup>();
