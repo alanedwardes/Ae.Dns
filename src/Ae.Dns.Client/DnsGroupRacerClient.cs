@@ -55,6 +55,8 @@ namespace Ae.Dns.Client
             if (faultedTasks.Any())
             {
                 var faultedClients = faultedTasks.Select(x => queries[x]);
+                var aggregatedExceptions = new AggregateException(faultedTasks.Select(x => x.Exception));
+
                 var faultedGroups = faultedClients.Select(x => randomisedClients[x]);
 
                 var faultedClientsString = string.Join(", ", faultedClients);
@@ -62,12 +64,12 @@ namespace Ae.Dns.Client
 
                 if (winningTask.IsFaulted)
                 {
-                    _logger.LogError("All tasks using {FaultedClients} from groups {FaultedGroups} failed for query {Query} in {ElapsedMilliseconds}ms", faultedClientsString, faultedGroupsString, query, sw.ElapsedMilliseconds);
+                    _logger.LogError(aggregatedExceptions, "All tasks using {FaultedClients} from groups {FaultedGroups} failed for query {Query} in {ElapsedMilliseconds}ms", faultedClientsString, faultedGroupsString, query, sw.ElapsedMilliseconds);
                     return DnsQueryFactory.CreateErrorResponse(query);
                 }
                 else
                 {
-                    _logger.LogWarning("Tasks for clients {FaultedClients} from groups {FaultedGroups} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClientsString, faultedGroupsString, query, queries[winningTask], sw.ElapsedMilliseconds);
+                    _logger.LogWarning(aggregatedExceptions, "Tasks for clients {FaultedClients} from groups {FaultedGroups} failed for query {Query}, swapped with result for {SuccessfulClient} in {ElapsedMilliseconds}ms", faultedClientsString, faultedGroupsString, query, queries[winningTask], sw.ElapsedMilliseconds);
                 }
             }
 
