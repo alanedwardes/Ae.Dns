@@ -150,6 +150,55 @@ namespace Ae.Dns.Console
                     await context.Response.WriteAsync("</table>");
                 }
 
+                if (context.Request.Path.StartsWithSegments("/captures"))
+                {
+                    var captureClient = context.RequestServices.GetRequiredService<DnsCaptureRawClient>();
+
+                    if (context.Request.Path.StartsWithSegments("/captures/on"))
+                    {
+                        captureClient.IsEnabled = true;
+                        context.Response.Redirect("/captures");
+                        return;
+                    }
+
+                    if (context.Request.Path.StartsWithSegments("/captures/off"))
+                    {
+                        captureClient.IsEnabled = false;
+                        context.Response.Redirect("/captures");
+                        return;
+                    }
+
+                    if (context.Request.Path.StartsWithSegments("/captures/clear"))
+                    {
+                        captureClient.Captures.Clear();
+                        context.Response.Redirect("/captures");
+                        return;
+                    }
+
+                    context.Response.StatusCode = StatusCodes.Status200OK;
+                    context.Response.ContentType = "text/html; charset=utf-8";
+
+                    await context.Response.WriteAsync($"<h1>Captures</h1>");
+                    await context.Response.WriteAsync($"<p>Captures are {(captureClient.IsEnabled ? "on" : "off")}, captured = {captureClient.Captures.Count()}</p>");
+                    await context.Response.WriteAsync($"<p>Controls: <a href=\"/captures/{(captureClient.IsEnabled ? "off" : "on")}\">{(captureClient.IsEnabled ? "Stop" : "Start")} Capturing</a> <a href=\"/captures/clear\">Clear Captures</a></p>");
+
+                    await context.Response.WriteAsync($"<ul>");
+
+                    foreach (var capture in captureClient.Captures)
+                    {
+                        await context.Response.WriteAsync($"<li>");
+                        await context.Response.WriteAsync($"<b>Served by {capture.Request.ServerName} from {capture.Request.SourceEndpoint}</b>");
+                        await context.Response.WriteAsync($"<pre>{capture.Response.Query}</pre>");
+                        await context.Response.WriteAsync($"<pre>Query bytes: {DnsByteExtensions.ToDebugString(capture.Query)}</pre>");
+                        await context.Response.WriteAsync($"<pre>{capture.Response.Answer}</pre>");
+                        await context.Response.WriteAsync($"<pre>Answer bytes: {DnsByteExtensions.ToDebugString(capture.Answer)}</pre>");
+                        await context.Response.WriteAsync($"</li>");
+
+                    }
+
+                    await context.Response.WriteAsync($"</ul>");
+                }
+
                 if (context.Request.Path == "/")
                 {
                     var dnsClient = context.RequestServices.GetRequiredService<IDnsClient>();

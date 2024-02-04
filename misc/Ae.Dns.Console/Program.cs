@@ -210,10 +210,14 @@ namespace Ae.Dns.Console
             dnsClient = new DnsAppMetricsClient(metrics, dnsClient);
 
             // Create a "raw" client which deals with buffers directly
-            var rawClient = ActivatorUtilities.CreateInstance<DnsRawClient>(provider, dnsClient);
+            IDnsRawClient rawClient = ActivatorUtilities.CreateInstance<DnsRawClient>(provider, dnsClient);
 
-            IDnsServer tcpServer = ActivatorUtilities.CreateInstance<DnsTcpServer>(provider, rawClient);
-            IDnsServer udpServer = ActivatorUtilities.CreateInstance<DnsUdpServer>(provider, rawClient);
+            // Create a dormant capture client for debugging purposes
+            DnsCaptureRawClient captureRawClient = ActivatorUtilities.CreateInstance<DnsCaptureRawClient>(provider, rawClient);
+
+            // Create two servers, TCP and UDP to serve answers
+            IDnsServer tcpServer = ActivatorUtilities.CreateInstance<DnsTcpServer>(provider, captureRawClient);
+            IDnsServer udpServer = ActivatorUtilities.CreateInstance<DnsUdpServer>(provider, captureRawClient);
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
@@ -230,6 +234,7 @@ namespace Ae.Dns.Console
                 })
                 .ConfigureServices(x =>
                 {
+                    x.AddSingleton(captureRawClient);
                     x.AddSingleton(mainCache);
                     x.AddSingleton<IDnsMiddlewareConfig>(new DnsMiddlewareConfig());
                     x.AddSingleton(dnsClient);

@@ -6,3 +6,4 @@
 [assembly: InternalsVisibleTo("Ae.Dns.Tests")]
 [assembly: InternalsVisibleTo("Ae.Dns.Benchmarks")]
 [assembly: InternalsVisibleTo("Ae.Dns.Crawler")]
+[assembly: InternalsVisibleTo("Ae.Dns.Console")]
