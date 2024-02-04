@@ -25,14 +25,12 @@ namespace Ae.Dns.Protocol
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
-            _routes.TryGetValue(query.Header.OperationCode, out IDnsClient? client);
-
-            if (client == null)
+            if (!_routes.TryGetValue(query.Header.OperationCode, out IDnsClient? operationClient))
             {
-                return query.CreateErrorMessage(DnsResponseCode.NotImp, ToString());
+                operationClient = DnsNotImplementedClient.Instance;
             }
 
-            return await client.Query(query, token);
+            return await operationClient.Query(query, token);
         }
 
         /// <inheritdoc/>
