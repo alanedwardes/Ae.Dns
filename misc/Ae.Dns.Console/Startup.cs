@@ -188,10 +188,20 @@ namespace Ae.Dns.Console
                     {
                         await context.Response.WriteAsync($"<li>");
                         await context.Response.WriteAsync($"<b>Served by {capture.Request.ServerName} from {capture.Request.SourceEndpoint}</b>");
-                        await context.Response.WriteAsync($"<pre>{capture.Response.Query}</pre>");
-                        await context.Response.WriteAsync($"<pre>Query bytes: {DnsByteExtensions.ToDebugString(capture.Query)}</pre>");
-                        await context.Response.WriteAsync($"<pre>{capture.Response.Answer}</pre>");
-                        await context.Response.WriteAsync($"<pre>Answer bytes: {DnsByteExtensions.ToDebugString(capture.Answer)}</pre>");
+                        await context.Response.WriteAsync($"<pre>{capture.Response?.Query.ToString() ?? "Error processing query"}</pre>");
+                        await context.Response.WriteAsync($"<pre>{DnsByteExtensions.ToDebugString(capture.Query)}</pre>");
+
+                        if (capture.Answer.HasValue)
+                        {
+                            await context.Response.WriteAsync($"<pre>{capture.Response?.Answer}</pre>");
+                            await context.Response.WriteAsync($"<pre>{DnsByteExtensions.ToDebugString(capture.Answer.Value)}</pre>");
+                        }
+
+                        if (capture.Exception != null)
+                        {
+                            await context.Response.WriteAsync($"<pre>{capture.Exception}</pre>");
+                        }
+
                         await context.Response.WriteAsync($"</li>");
 
                     }

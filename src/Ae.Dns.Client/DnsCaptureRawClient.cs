@@ -29,11 +29,15 @@ namespace Ae.Dns.Client
             /// <summary>
             /// The raw answer.
             /// </summary>
-            public ReadOnlyMemory<byte> Answer { get; set; }
+            public ReadOnlyMemory<byte>? Answer { get; set; }
             /// <summary>
             /// The outgoing response.
             /// </summary>
-            public DnsRawClientResponse Response { get; set; }
+            public DnsRawClientResponse? Response { get; set; }
+            /// <summary>
+            /// An exception, if there was one.
+            /// </summary>
+            public Exception Exception { get; set; }
         }
 
         /// <summary>
@@ -77,7 +81,21 @@ namespace Ae.Dns.Client
             var queryBuffer = new byte[request.QueryLength];
             buffer.Slice(0, request.QueryLength).CopyTo(queryBuffer);
 
-            var response = await _innerClient.Query(buffer, request, token);
+            DnsRawClientResponse response;
+            try
+            {
+                response = await _innerClient.Query(buffer, request, token);
+            }
+            catch (Exception ex)
+            {
+                Captures.Add(new Capture
+                {
+                    Request = request,
+                    Query = queryBuffer,
+                    Exception = ex
+                });
+                throw;
+            }
 
             if (CaptureFilter(request, response))
             {
