@@ -105,5 +105,22 @@ namespace Ae.Dns.Protocol
             }
 #endif
         }
+
+        public static DnsMessage CreateErrorMessage(this DnsMessage query, DnsResponseCode responseCode, string resolver) => new DnsMessage
+        {
+            Header = new DnsHeader
+            {
+                Id = query.Header.Id,
+                ResponseCode = responseCode,
+                IsQueryResponse = true,
+                RecursionAvailable = true,
+                RecursionDesired = query.Header.RecursionDesired,
+                Host = query.Header.Host,
+                QueryClass = query.Header.QueryClass,
+                QuestionCount = query.Header.QuestionCount,
+                QueryType = query.Header.QueryType,
+                Tags = { { "Resolver", resolver } }
+            }
+        };
     }
 }

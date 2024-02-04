@@ -44,28 +44,11 @@ namespace Ae.Dns.Client
             if (ipAddressResponses.Any(IpAddressExtensions.IsPrivate))
             {
                 _logger.LogTrace("DNS rebind attack mitigated for {query}", query);
-                return CreateNullHeader(query);
+                return query.CreateErrorMessage(DnsResponseCode.Refused, ToString());
             }
 
             return answer;
         }
-
-        private DnsMessage CreateNullHeader(DnsMessage query) => new DnsMessage
-        {
-            Header = new DnsHeader
-            {
-                Id = query.Header.Id,
-                ResponseCode = DnsResponseCode.Refused,
-                IsQueryResponse = true,
-                RecursionAvailable = true,
-                RecursionDesired = query.Header.RecursionDesired,
-                Host = query.Header.Host,
-                QueryClass = query.Header.QueryClass,
-                QuestionCount = query.Header.QuestionCount,
-                QueryType = query.Header.QueryType,
-                Tags = { { "Resolver", ToString() } }
-            }
-        };
 
         /// <inheritdoc/>
         public override string ToString() => nameof(DnsRebindMitigationClient);

@@ -57,7 +57,7 @@ namespace Ae.Dns.Protocol
                 return "<empty>";
             }
 
-            return $"new byte [] {{{string.Join(",", bytes.ToArray())}}}";
+            return string.Join(",", bytes.ToArray());
         }
 
         public static ReadOnlyMemory<byte> ReadBytes(ReadOnlyMemory<byte> bytes, int length, ref int offset)

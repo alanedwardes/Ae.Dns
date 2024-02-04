@@ -42,20 +42,6 @@ namespace Ae.Dns.Client
         {
         }
 
-        private DnsHeader CreateNullHeader(DnsMessage query) => new DnsHeader
-        {
-            Id = query.Header.Id,
-            ResponseCode = DnsResponseCode.Refused,
-            IsQueryResponse = true,
-            RecursionAvailable = true,
-            RecursionDesired = query.Header.RecursionDesired,
-            Host = query.Header.Host,
-            QueryClass = query.Header.QueryClass,
-            QuestionCount = query.Header.QuestionCount,
-            QueryType = query.Header.QueryType,
-            Tags = { { "Resolver", ToString() } }
-        };
-
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
@@ -65,7 +51,7 @@ namespace Ae.Dns.Client
             }
 
             _logger.LogTrace("DNS query blocked for {Domain}", query.Header.Host);
-            return new DnsMessage { Header = CreateNullHeader(query) };
+            return query.CreateErrorMessage(DnsResponseCode.Refused, ToString());
         }
 
         /// <inheritdoc/>

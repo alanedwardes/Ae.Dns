@@ -199,7 +199,7 @@ namespace Ae.Dns.Protocol
             QueryType = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             QueryClass = (DnsQueryClass)DnsByteExtensions.ReadUInt16(bytes, ref offset);
 
-            if (!IsQueryResponse && (AnswerRecordCount > 0 || NameServerRecordCount > 0))
+            if (!IsQueryResponse && OperationCode == DnsOperationCode.QUERY && (AnswerRecordCount > 0 || NameServerRecordCount > 0))
             {
                 throw new InvalidOperationException($"Header states that this message is a query, yet there are answer and nameserver records.");
             }

@@ -101,7 +101,7 @@ namespace Ae.Dns.Console
 
             selfLogger.LogInformation("Using {UpstreamCount} DNS upstreams", upstreams.Length);
 
-            IDnsClient dnsClient;
+            IDnsClient queryClient;
             if (dnsConfiguration.ClientGroups.Any())
             {
                 IDnsClient FindUpstreamByTag(string tag)
@@ -119,18 +119,18 @@ namespace Ae.Dns.Console
                     DnsClientGroups = dnsConfiguration.ClientGroups.ToDictionary(x => x.Key, x => (IReadOnlyList<IDnsClient>)x.Value.Select(y => FindUpstreamByTag(y)).ToArray())
                 };
 
-                dnsClient = ActivatorUtilities.CreateInstance<DnsGroupRacerClient>(provider, Options.Create(groupRacerOptions));
+                queryClient = ActivatorUtilities.CreateInstance<DnsGroupRacerClient>(provider, Options.Create(groupRacerOptions));
             }
             else
             {
-                dnsClient = ActivatorUtilities.CreateInstance<DnsRacerClient>(provider, upstreams.AsEnumerable());
+                queryClient = ActivatorUtilities.CreateInstance<DnsRacerClient>(provider, upstreams.AsEnumerable());
             }
 
-            dnsClient = ActivatorUtilities.CreateInstance<DnsRebindMitigationClient>(provider, dnsClient);
+            queryClient = ActivatorUtilities.CreateInstance<DnsRebindMitigationClient>(provider, queryClient);
 
             ObjectCache mainCache = new MemoryCache("MainCache");
 
-            dnsClient = ActivatorUtilities.CreateInstance<DnsCachingClient>(provider, dnsClient, mainCache);
+            queryClient = ActivatorUtilities.CreateInstance<DnsCachingClient>(provider, queryClient, mainCache);
 
             selfLogger.LogInformation("Adding {AllowListedDomains} domains to explicit allow list", dnsConfiguration.AllowlistedDomains.Length);
 
@@ -150,7 +150,7 @@ namespace Ae.Dns.Console
             // The domain must pass one of these filters to be allowed
             var compositeFilter = new DnsCompositeOrFilter(denyFilter, allowListFilter);
 
-            dnsClient = ActivatorUtilities.CreateInstance<DnsFilterClient>(provider, compositeFilter, dnsClient);
+            queryClient = ActivatorUtilities.CreateInstance<DnsFilterClient>(provider, compositeFilter, queryClient);
 
             var metricsBuilder = new MetricsBuilder();
 
@@ -202,15 +202,21 @@ namespace Ae.Dns.Console
 
             if (staticLookupSources.Count > 0)
             {
-                dnsClient = new DnsStaticLookupClient(dnsClient, staticLookupSources.ToArray());
+                queryClient = new DnsStaticLookupClient(queryClient, staticLookupSources.ToArray());
             }
 
+            // Route query and update operations as appropriate
+            IDnsClient operationClient = new DnsOperationRouter(new Dictionary<DnsOperationCode, IDnsClient>
+            {
+                { DnsOperationCode.QUERY, queryClient }
+            });
+
             // Track metrics last
-            dnsClient = new DnsMetricsClient(dnsClient);
-            dnsClient = new DnsAppMetricsClient(metrics, dnsClient);
+            operationClient = new DnsMetricsClient(operationClient);
+            operationClient = new DnsAppMetricsClient(metrics, operationClient);
 
             // Create a "raw" client which deals with buffers directly
-            IDnsRawClient rawClient = ActivatorUtilities.CreateInstance<DnsRawClient>(provider, dnsClient);
+            IDnsRawClient rawClient = ActivatorUtilities.CreateInstance<DnsRawClient>(provider, operationClient);
 
             // Create a dormant capture client for debugging purposes
             DnsCaptureRawClient captureRawClient = ActivatorUtilities.CreateInstance<DnsCaptureRawClient>(provider, rawClient);
@@ -237,7 +243,7 @@ namespace Ae.Dns.Console
                     x.AddSingleton(captureRawClient);
                     x.AddSingleton(mainCache);
                     x.AddSingleton<IDnsMiddlewareConfig>(new DnsMiddlewareConfig());
-                    x.AddSingleton(dnsClient);
+                    x.AddSingleton(operationClient);
                 });
 
             await Task.WhenAll(
