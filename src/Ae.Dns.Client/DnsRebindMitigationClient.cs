@@ -44,7 +44,7 @@ namespace Ae.Dns.Client
             if (ipAddressResponses.Any(IpAddressExtensions.IsPrivate))
             {
                 _logger.LogTrace("DNS rebind attack mitigated for {query}", query);
-                return query.CreateErrorMessage(DnsResponseCode.Refused, ToString());
+                return query.CreateAnswerMessage(DnsResponseCode.Refused, ToString());
             }
 
             return answer;

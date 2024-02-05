@@ -1,6 +1,7 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Client.Filters;
 using Ae.Dns.Client.Lookup;
+using Ae.Dns.Client.Zone;
 using Ae.Dns.Metrics.InfluxDb;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
@@ -205,10 +206,20 @@ namespace Ae.Dns.Console
                 queryClient = new DnsStaticLookupClient(queryClient, staticLookupSources.ToArray());
             }
 
+            IDnsClient updateClient = DnsNotImplementedClient.Instance;
+
+            if (dnsConfiguration.UpdateZoneName != null && dnsConfiguration.UpdateZoneFile != null)
+            {
+#pragma warning disable CS0618 // Type or member is obsolete
+                updateClient = new DnsUpdateClient(new FileDnsZone(dnsConfiguration.UpdateZoneName, new FileInfo(dnsConfiguration.UpdateZoneFile)));
+#pragma warning restore CS0618 // Type or member is obsolete
+            }
+
             // Route query and update operations as appropriate
             IDnsClient operationClient = new DnsOperationRouter(new Dictionary<DnsOperationCode, IDnsClient>
             {
-                { DnsOperationCode.QUERY, queryClient }
+                { DnsOperationCode.QUERY, queryClient },
+                { DnsOperationCode.UPDATE, updateClient }
             });
 
             // Track metrics last

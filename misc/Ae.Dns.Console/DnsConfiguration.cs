@@ -15,6 +15,8 @@ namespace Ae.Dns.Console
         public string? DhcpdLeasesFile { get; set; }
         public string? DhcpdConfigFile { get; set; }
         public string? DhcpdLeasesHostnameSuffix { get; set; }
+        public string? UpdateZoneName { get; set; }
+        public string? UpdateZoneFile { get; set; }
         public DnsInfluxDbConfiguration? InfluxDbMetrics { get; set; }
         public Dictionary<string, string[]> ClientGroups { get; set; } = new Dictionary<string, string[]>();
     }

@@ -51,7 +51,7 @@ namespace Ae.Dns.Client
             }
 
             _logger.LogTrace("DNS query blocked for {Domain}", query.Header.Host);
-            return query.CreateErrorMessage(DnsResponseCode.Refused, ToString());
+            return query.CreateAnswerMessage(DnsResponseCode.Refused, ToString());
         }
 
         /// <inheritdoc/>

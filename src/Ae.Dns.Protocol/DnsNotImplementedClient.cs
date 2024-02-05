@@ -22,7 +22,7 @@ namespace Ae.Dns.Protocol
         /// <inheritdoc/>
         public Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
-            return Task.FromResult(query.CreateErrorMessage(DnsResponseCode.NotImp, ToString()));
+            return Task.FromResult(query.CreateAnswerMessage(DnsResponseCode.NotImp, ToString()));
         }
 
         /// <inheritdoc/>

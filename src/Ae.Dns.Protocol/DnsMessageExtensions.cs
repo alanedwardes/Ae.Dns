@@ -44,6 +44,14 @@ namespace Ae.Dns.Protocol
             return null;
         }
 
+        public static void EnsureOperationCode(this DnsMessage message, DnsOperationCode expected)
+        {
+            if (message.Header.OperationCode != expected)
+            {
+                throw new Exception($"The operation code {message.Header.ResponseCode} was not expected (needed {expected})");
+            }
+        }
+
         public static void EnsureSuccessResponseCode(this DnsMessage message)
         {
             if (message.Header.ResponseCode == DnsResponseCode.ServFail ||
@@ -106,7 +114,7 @@ namespace Ae.Dns.Protocol
 #endif
         }
 
-        public static DnsMessage CreateErrorMessage(this DnsMessage query, DnsResponseCode responseCode, string resolver) => new DnsMessage
+        public static DnsMessage CreateAnswerMessage(this DnsMessage query, DnsResponseCode responseCode, string resolver) => new DnsMessage
         {
             Header = new DnsHeader
             {
