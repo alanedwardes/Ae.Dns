@@ -59,14 +59,14 @@ namespace Ae.Dns.Client.Zone
             await _zoneLock.WaitAsync(token);
             try
             {
-                var recordsToRemove = _records.Where(x => recordsToAdd.Select(x => x.Host).Contains(x.Host));
+                var recordsToRemove = _records.Where(x => recordsToAdd.Select(x => x.Host).Contains(x.Host)).ToArray();
 
                 foreach (var recordToAdd in recordsToAdd)
                 {
                     _records.Add(recordToAdd);
                 }
 
-                foreach(var recordToRemove in recordsToRemove)
+                foreach (var recordToRemove in recordsToRemove)
                 {
                     _records.Remove(recordToRemove);
                 }
