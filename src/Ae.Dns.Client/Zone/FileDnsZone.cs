@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,6 +33,9 @@ namespace Ae.Dns.Client.Zone
         /// <inheritdoc/>
         public IEnumerable<DnsResourceRecord> Records => _records;
 
+        /// <inheritdoc/>
+        public string Name => _name;
+
         private async Task ReloadZone(CancellationToken token)
         {
             await _zoneLock.WaitAsync(token);
@@ -49,26 +51,17 @@ namespace Ae.Dns.Client.Zone
         }
 
         /// <inheritdoc/>
-        public async Task<bool> AddRecords(IEnumerable<DnsResourceRecord> recordsToAdd, CancellationToken token = default)
+        public async Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, IEnumerable<DnsResourceRecord> recordsToAdd, CancellationToken token = default)
         {
-            if (recordsToAdd.Any(x => x.Host.Last() != _name))
-            {
-                return false;
-            }
-
             await _zoneLock.WaitAsync(token);
+
             try
             {
-                var recordsToRemove = _records.Where(x => recordsToAdd.Select(x => x.Host).Contains(x.Host)).ToArray();
+                changeDelegate(_records);
 
                 foreach (var recordToAdd in recordsToAdd)
                 {
                     _records.Add(recordToAdd);
-                }
-
-                foreach (var recordToRemove in recordsToRemove)
-                {
-                    _records.Remove(recordToRemove);
                 }
 
                 SerializeZone();

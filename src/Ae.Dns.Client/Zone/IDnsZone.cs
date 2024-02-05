@@ -15,13 +15,19 @@ namespace Ae.Dns.Client.Zone
         /// <summary>
         /// Add the specified enumerable of <see cref="DnsResourceRecord"/> to this zone.
         /// </summary>
-        /// <param name="records"></param>
+        /// <param name="changeDelegate"></param>
+        /// <param name="recordsToAdd"></param>
         /// <param name="token"></param>
-        Task<bool> AddRecords(IEnumerable<DnsResourceRecord> records, CancellationToken token = default);
+        Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, IEnumerable<DnsResourceRecord> recordsToAdd, CancellationToken token = default);
 
         /// <summary>
         /// Get all records in the zone.
         /// </summary>
         IEnumerable<DnsResourceRecord> Records { get; }
+
+        /// <summary>
+        /// The name of the zone.
+        /// </summary>
+        string Name { get;  }
     }
 }

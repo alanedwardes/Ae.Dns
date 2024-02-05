@@ -20,7 +20,9 @@ namespace Ae.Dns.Tests.Client.Lookup
         {
             public IEnumerable<DnsResourceRecord> Records => Enumerable.Empty<DnsResourceRecord>();
 
-            public Task<bool> AddRecords(IEnumerable<DnsResourceRecord> records, CancellationToken token = default)
+            public string Name => throw new NotImplementedException();
+
+            public Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, IEnumerable<DnsResourceRecord> recordsToAdd, CancellationToken token = default)
             {
                 throw new NotImplementedException();
             }
@@ -47,7 +49,9 @@ namespace Ae.Dns.Tests.Client.Lookup
                 new DnsResourceRecord { Host = "wibble", Class = DnsQueryClass.IN, Type = DnsQueryType.TEXT, Resource = new DnsTextResource { Entries = "hello2" } },
             };
 
-            public Task<bool> AddRecords(IEnumerable<DnsResourceRecord> records, CancellationToken token = default)
+            public string Name => throw new NotImplementedException();
+
+            public Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, IEnumerable<DnsResourceRecord> recordsToAdd, CancellationToken token = default)
             {
                 throw new NotImplementedException();
             }

@@ -1,7 +1,9 @@
 ﻿using Ae.Dns.Client.Zone;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
+using Ae.Dns.Protocol.Records;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,11 +32,17 @@ namespace Ae.Dns.Client
         {
             query.EnsureOperationCode(DnsOperationCode.UPDATE);
 
-            var recordsToAdd = query.Nameservers.Where(x => x.Type == DnsQueryType.A ||
-                                                            x.Type == DnsQueryType.AAAA)
-                                                .ToArray();
+            var hostnames = query.Nameservers.Select(x => x.Host).ToArray();
 
-            if (recordsToAdd.Length > 0 && await _dnsZone.AddRecords(recordsToAdd, token))
+            void RemoveStaleRecords(ICollection<DnsResourceRecord> records)
+            {
+                foreach (var recordToRemove in records.Where(x => hostnames.Contains(x.Host)).ToArray())
+                {
+                    records.Remove(recordToRemove);
+                }
+            };
+
+            if (query.Nameservers.Count > 0 && hostnames.Any(x => x.Last() != _dnsZone.Name) && await _dnsZone.ChangeRecords(RemoveStaleRecords, query.Nameservers, token))
             {
                 return query.CreateAnswerMessage(DnsResponseCode.NoError, ToString());
             }
