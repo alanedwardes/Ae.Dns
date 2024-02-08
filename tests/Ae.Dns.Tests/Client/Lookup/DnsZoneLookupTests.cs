@@ -1,16 +1,17 @@
-﻿using Ae.Dns.Client.Lookup;
-using Ae.Dns.Client.Zone;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+
+using Ae.Dns.Client.Lookup;
+using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
+using Ae.Dns.Protocol.Zone;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-
-#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Ae.Dns.Tests.Client.Lookup
 {
@@ -18,11 +19,31 @@ namespace Ae.Dns.Tests.Client.Lookup
     {
         private sealed class DummyZoneNoRecords : IDnsZone
         {
-            public IEnumerable<DnsResourceRecord> Records => Enumerable.Empty<DnsResourceRecord>();
+            public IList<DnsResourceRecord> Records { get; set; } = new List<DnsResourceRecord>();
+            public DnsLabels Origin { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public TimeSpan DefaultTtl { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-            public string Name => throw new NotImplementedException();
+            public Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, CancellationToken token = default)
+            {
+                throw new NotImplementedException();
+            }
 
-            public Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, IEnumerable<DnsResourceRecord> recordsToAdd, CancellationToken token = default)
+            public void DeserializeZone(StreamReader reader)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string FromFormattedHost(string host)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SerializeZone(StreamWriter writer)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string ToFormattedHost(string host)
             {
                 throw new NotImplementedException();
             }
@@ -41,7 +62,7 @@ namespace Ae.Dns.Tests.Client.Lookup
 
         private sealed class DummyZoneWithRecords : IDnsZone
         {
-            public IEnumerable<DnsResourceRecord> Records => new[]
+            public IList<DnsResourceRecord> Records { get; set; } = new[]
             {
                 new DnsResourceRecord { Host = "wibble", Class = DnsQueryClass.IN, Type = DnsQueryType.A, Resource = new DnsIpAddressResource { IPAddress = IPAddress.Loopback } },
                 new DnsResourceRecord { Host = "wibble", Class = DnsQueryClass.IN, Type = DnsQueryType.A, Resource = new DnsIpAddressResource { IPAddress = IPAddress.Broadcast } },
@@ -49,9 +70,30 @@ namespace Ae.Dns.Tests.Client.Lookup
                 new DnsResourceRecord { Host = "wibble", Class = DnsQueryClass.IN, Type = DnsQueryType.TEXT, Resource = new DnsTextResource { Entries = "hello2" } },
             };
 
-            public string Name => throw new NotImplementedException();
+            public DnsLabels Origin { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public TimeSpan DefaultTtl { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-            public Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, IEnumerable<DnsResourceRecord> recordsToAdd, CancellationToken token = default)
+            public Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, CancellationToken token = default)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void DeserializeZone(StreamReader reader)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string FromFormattedHost(string host)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SerializeZone(StreamWriter writer)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string ToFormattedHost(string host)
             {
                 throw new NotImplementedException();
             }

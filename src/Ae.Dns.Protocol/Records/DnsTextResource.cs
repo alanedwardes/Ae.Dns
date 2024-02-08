@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using Ae.Dns.Protocol.Zone;
 
 namespace Ae.Dns.Protocol.Records
 {
@@ -11,6 +11,18 @@ namespace Ae.Dns.Protocol.Records
         protected override bool CanUseCompression => false;
 
         /// <inheritdoc/>
-        public override string ToString() => '"' + string.Join("\", \"", Entries.ToArray()) + '"';
+        public override string ToZone(IDnsZone zone)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public override void FromZone(IDnsZone zone, string input)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public override string ToString() => Entries;
     }
 }

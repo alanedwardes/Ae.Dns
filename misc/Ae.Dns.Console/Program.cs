@@ -1,10 +1,10 @@
 ﻿using Ae.Dns.Client;
 using Ae.Dns.Client.Filters;
 using Ae.Dns.Client.Lookup;
-using Ae.Dns.Client.Zone;
 using Ae.Dns.Metrics.InfluxDb;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
+using Ae.Dns.Protocol.Zone;
 using Ae.Dns.Server;
 using Ae.Dns.Server.Http;
 using App.Metrics;
@@ -211,7 +211,11 @@ namespace Ae.Dns.Console
             if (dnsConfiguration.UpdateZoneName != null && dnsConfiguration.UpdateZoneFile != null)
             {
 #pragma warning disable CS0618 // Type or member is obsolete
-                updateClient = new DnsUpdateClient(new FileDnsZone(dnsConfiguration.UpdateZoneName, new FileInfo(dnsConfiguration.UpdateZoneFile)));
+                updateClient = new DnsUpdateClient(new DnsZone
+                {
+                    Origin = dnsConfiguration.UpdateZoneName,
+                    DefaultTtl = TimeSpan.FromHours(1)
+                });
 #pragma warning restore CS0618 // Type or member is obsolete
             }
 

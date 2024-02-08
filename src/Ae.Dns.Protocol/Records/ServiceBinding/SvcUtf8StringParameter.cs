@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ae.Dns.Protocol.Zone;
+using System;
 using System.Text;
 
 namespace Ae.Dns.Protocol.Records.ServiceBinding
@@ -43,6 +44,18 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
             var stringBytes = Encoding.UTF8.GetBytes(Value ?? throw new NullReferenceException("No string was set to write"));
             stringBytes.CopyTo(bytes.Slice(offset));
             offset += stringBytes.Length;
+        }
+
+        /// <inheritdoc/>
+        public string ToZone(IDnsZone zone)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public void FromZone(IDnsZone zone, string input)
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

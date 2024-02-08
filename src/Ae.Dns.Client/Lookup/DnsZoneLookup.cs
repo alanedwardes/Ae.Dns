@@ -1,5 +1,5 @@
-﻿using Ae.Dns.Client.Zone;
-using Ae.Dns.Protocol.Records;
+﻿using Ae.Dns.Protocol.Records;
+using Ae.Dns.Protocol.Zone;
 using System;
 using System.Collections.Generic;
 using System.Linq;

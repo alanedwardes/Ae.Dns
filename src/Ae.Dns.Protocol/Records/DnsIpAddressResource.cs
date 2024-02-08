@@ -1,4 +1,5 @@
 ﻿using Ae.Dns.Protocol.Enums;
+using Ae.Dns.Protocol.Zone;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -59,6 +60,19 @@ namespace Ae.Dns.Protocol.Records
 
             address.CopyTo(bytes.Slice(offset).Span);
             offset += address.Length;
+        }
+
+
+        /// <inheritdoc/>
+        public string ToZone(IDnsZone zone)
+        {
+            return IPAddress.ToString();
+        }
+
+        /// <inheritdoc/>
+        public void FromZone(IDnsZone zone, string input)
+        {
+            IPAddress = IPAddress.Parse(input);
         }
     }
 }

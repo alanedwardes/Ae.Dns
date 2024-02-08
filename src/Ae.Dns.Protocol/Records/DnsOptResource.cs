@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ae.Dns.Protocol.Zone;
+using System;
 namespace Ae.Dns.Protocol.Records
 {
     /// <summary>
@@ -44,6 +45,18 @@ namespace Ae.Dns.Protocol.Records
             // Payloadsize / flags is serialised at a higher level
             Raw.CopyTo(bytes.Slice(offset));
             offset += Raw.Length;
+        }
+
+        /// <inheritdoc/>
+        public string ToZone(IDnsZone zone)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public void FromZone(IDnsZone zone, string input)
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

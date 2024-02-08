@@ -1,7 +1,7 @@
-﻿using Ae.Dns.Client.Zone;
-using Ae.Dns.Protocol;
+﻿using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
+using Ae.Dns.Protocol.Zone;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,26 +28,36 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
+        public Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
             query.EnsureOperationCode(DnsOperationCode.UPDATE);
 
             var hostnames = query.Nameservers.Select(x => x.Host).ToArray();
 
-            void RemoveStaleRecords(ICollection<DnsResourceRecord> records)
+            void ChangeRecords(ICollection<DnsResourceRecord> records)
             {
                 foreach (var recordToRemove in records.Where(x => hostnames.Contains(x.Host)).ToArray())
                 {
                     records.Remove(recordToRemove);
                 }
+
+                foreach (var nameserver in query.Nameservers)
+                {
+                    records.Add(nameserver);
+                }
             };
 
-            if (query.Nameservers.Count > 0 && hostnames.Any(x => x.Last() != _dnsZone.Name) && await _dnsZone.ChangeRecords(RemoveStaleRecords, query.Nameservers, token))
+            if (query.Nameservers.Count > 0 && hostnames.Any(x => x.Last() != _dnsZone.Origin))
             {
-                return query.CreateAnswerMessage(DnsResponseCode.NoError, ToString());
+                lock (_dnsZone)
+                {
+                    ChangeRecords(_dnsZone.Records);
+                }
+
+                return Task.FromResult(query.CreateAnswerMessage(DnsResponseCode.NoError, ToString()));
             }
 
-            return query.CreateAnswerMessage(DnsResponseCode.Refused, ToString());
+            return Task.FromResult(query.CreateAnswerMessage(DnsResponseCode.Refused, ToString()));
         }
 
         /// <inheritdoc/>

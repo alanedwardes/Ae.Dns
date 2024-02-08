@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ae.Dns.Protocol.Zone;
+using System;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
@@ -38,6 +39,18 @@ namespace Ae.Dns.Protocol.Records
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             Raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset);
+        }
+
+        /// <inheritdoc/>
+        public string ToZone(IDnsZone zone)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public void FromZone(IDnsZone zone, string input)
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

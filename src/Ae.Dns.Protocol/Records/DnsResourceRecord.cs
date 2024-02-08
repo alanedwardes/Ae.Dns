@@ -1,4 +1,5 @@
 ﻿using Ae.Dns.Protocol.Enums;
+using Ae.Dns.Protocol.Zone;
 using System;
 using System.Linq;
 
@@ -7,7 +8,7 @@ namespace Ae.Dns.Protocol.Records
     /// <summary>
     /// Represents metadata around a DNS resource record returned by a DNS server.
     /// </summary>
-    public sealed class DnsResourceRecord : IEquatable<DnsResourceRecord>, IDnsByteArrayReader, IDnsByteArrayWriter
+    public sealed class DnsResourceRecord : IEquatable<DnsResourceRecord>, IDnsByteArrayReader, IDnsByteArrayWriter, IDnsZoneConverter
     {
         /// <summary>
         /// The type of DNS query.
@@ -117,6 +118,25 @@ namespace Ae.Dns.Protocol.Records
 
             // Advance the offset with the size of the resource
             offset += resourceSize;
+        }
+
+        /// <inheritdoc/>
+        public string ToZone(IDnsZone zone)
+        {
+            return $"{zone.ToFormattedHost(Host)} {Class} {Type} {Resource.ToZone(zone)}";
+        }
+
+        /// <inheritdoc/>
+        public void FromZone(IDnsZone zone, string input)
+        {
+            var parts = input.Split(null, 4);
+
+            Host = zone.FromFormattedHost(parts[0]);
+            Class = (DnsQueryClass)Enum.Parse(typeof(DnsQueryClass), parts[1]);
+            Type = (DnsQueryType)Enum.Parse(typeof(DnsQueryType), parts[2]);
+            TimeToLive = (uint)zone.DefaultTtl.TotalSeconds;
+            Resource = CreateResourceRecord(Type);
+            Resource.FromZone(zone, parts[3]);
         }
     }
 }
