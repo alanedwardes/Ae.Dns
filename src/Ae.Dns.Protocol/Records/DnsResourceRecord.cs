@@ -123,20 +123,20 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public string ToZone(IDnsZone zone)
         {
-            return $"{zone.ToFormattedHost(Host)} {Class} {Type} {Resource.ToZone(zone)}";
+            return $"{zone.ToFormattedHost(Host)} {TimeToLive} {Class} {Type} {Resource.ToZone(zone)}";
         }
 
         /// <inheritdoc/>
         public void FromZone(IDnsZone zone, string input)
         {
-            var parts = input.Split(null, 4);
+            var parts = input.Split(null, 5);
 
             Host = zone.FromFormattedHost(parts[0]);
-            Class = (DnsQueryClass)Enum.Parse(typeof(DnsQueryClass), parts[1]);
-            Type = (DnsQueryType)Enum.Parse(typeof(DnsQueryType), parts[2]);
-            TimeToLive = (uint)zone.DefaultTtl.TotalSeconds;
+            TimeToLive = uint.Parse(parts[1]);
+            Class = (DnsQueryClass)Enum.Parse(typeof(DnsQueryClass), parts[2]);
+            Type = (DnsQueryType)Enum.Parse(typeof(DnsQueryType), parts[3]);
             Resource = CreateResourceRecord(Type);
-            Resource.FromZone(zone, parts[3]);
+            Resource.FromZone(zone, parts[4]);
         }
     }
 }

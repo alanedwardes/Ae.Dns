@@ -1,4 +1,6 @@
 ﻿using Ae.Dns.Protocol.Zone;
+using System;
+using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
 {
@@ -13,13 +15,19 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public override string ToZone(IDnsZone zone)
         {
-            throw new System.NotImplementedException();
+            if (Entries.Count == 1)
+            {
+                return Entries.Single();
+            }
+
+            return string.Join(" ", Entries.Select(x => $"\"{x}\""));
         }
 
         /// <inheritdoc/>
         public override void FromZone(IDnsZone zone, string input)
         {
-            throw new System.NotImplementedException();
+            var parts = input.Split('"').Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+            Entries = new DnsLabels(parts);
         }
 
         /// <inheritdoc/>
