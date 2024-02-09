@@ -28,7 +28,7 @@ namespace Ae.Dns.Client
         }
 
         /// <inheritdoc/>
-        public Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
+        public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
             query.EnsureOperationCode(DnsOperationCode.UPDATE);
 
@@ -49,15 +49,11 @@ namespace Ae.Dns.Client
 
             if (query.Nameservers.Count > 0 && hostnames.Any(x => x.Last() != _dnsZone.Origin))
             {
-                lock (_dnsZone)
-                {
-                    ChangeRecords(_dnsZone.Records);
-                }
-
-                return Task.FromResult(query.CreateAnswerMessage(DnsResponseCode.NoError, ToString()));
+                await _dnsZone.Update(ChangeRecords);
+                return query.CreateAnswerMessage(DnsResponseCode.NoError, ToString());
             }
 
-            return Task.FromResult(query.CreateAnswerMessage(DnsResponseCode.Refused, ToString()));
+            return query.CreateAnswerMessage(DnsResponseCode.Refused, ToString());
         }
 
         /// <inheritdoc/>

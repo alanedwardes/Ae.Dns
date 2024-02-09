@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Ae.Dns.Protocol.Zone
 {
@@ -13,8 +16,11 @@ namespace Ae.Dns.Protocol.Zone
     [Obsolete("Experimental: May change significantly in the future")]
     public sealed class DnsZone : IDnsZone
     {
+        private readonly List<DnsResourceRecord> _records = new List<DnsResourceRecord>();
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+
         /// <inheritdoc/>
-        public IList<DnsResourceRecord> Records { get; set; } = new List<DnsResourceRecord>();
+        public IReadOnlyList<DnsResourceRecord> Records => _records;
 
         /// <inheritdoc/>
         public DnsLabels Origin { get; set; }
@@ -23,10 +29,29 @@ namespace Ae.Dns.Protocol.Zone
         public TimeSpan DefaultTtl { get; set; }
 
         /// <inheritdoc/>
-        public void SerializeZone(StreamWriter writer)
+        public Func<IDnsZone, Task> ZoneUpdated { get; set; } = zone => Task.CompletedTask;
+
+        /// <inheritdoc/>
+        public async Task Update(Action<IList<DnsResourceRecord>> modification)
         {
-            writer.WriteLine($"$ORIGIN {Origin}.");
-            writer.WriteLine($"$TTL {(int)DefaultTtl.TotalSeconds}");
+            await _semaphore.WaitAsync();
+            try
+            {
+                modification(_records);
+                await ZoneUpdated(this);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        /// <inheritdoc/>
+        public string SerializeZone()
+        {
+            var writer = new StringBuilder();
+            writer.AppendLine($"$ORIGIN {Origin}.");
+            writer.AppendLine($"$TTL {(int)DefaultTtl.TotalSeconds}");
 
             // Copy the records
             var records = Records.ToList();
@@ -39,17 +64,22 @@ namespace Ae.Dns.Protocol.Zone
 
             foreach (var record in records)
             {
-                writer.WriteLine(record.ToZone(this));
+                writer.AppendLine(record.ToZone(this));
             }
+
+            return writer.ToString();
         }
 
         /// <inheritdoc/>
-        public void DeserializeZone(StreamReader reader)
+        public void DeserializeZone(string zone)
         {
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine()?.Trim() ?? string.Empty;
+            _records.Clear();
 
+            var reader = new StringReader(zone);
+
+            string? line;
+            while ((line = reader.ReadLine()) != null)
+            {
                 if (line.StartsWith("$ORIGIN"))
                 {
                     Origin = line.Substring("$ORIGIN".Length).Trim().Trim('.');
@@ -64,7 +94,7 @@ namespace Ae.Dns.Protocol.Zone
 
                 var record = new DnsResourceRecord();
                 record.FromZone(this, line);
-                Records.Add(record);
+                _records.Add(record);
             }
             
         }

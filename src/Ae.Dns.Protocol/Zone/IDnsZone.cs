@@ -1,7 +1,7 @@
 ﻿using Ae.Dns.Protocol.Records;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Threading.Tasks;
 
 namespace Ae.Dns.Protocol.Zone
 {
@@ -12,8 +12,9 @@ namespace Ae.Dns.Protocol.Zone
     {
         /// <summary>
         /// Get all records in the zone.
+        /// Do not modify records outside of the update method.
         /// </summary>
-        IList<DnsResourceRecord> Records { get; set; }
+        IReadOnlyList<DnsResourceRecord> Records { get; }
 
         /// <summary>
         /// The name of the zone.
@@ -26,16 +27,28 @@ namespace Ae.Dns.Protocol.Zone
         TimeSpan DefaultTtl { get; set; }
 
         /// <summary>
-        /// Serialize the zone to a <see cref="StreamWriter"/>.
+        /// Called when the zone is updated.
+        /// Guaranteed to never be invoked in parallel.
         /// </summary>
-        /// <param name="writer"></param>
-        void SerializeZone(StreamWriter writer);
+        Func<IDnsZone, Task> ZoneUpdated { set; }
 
         /// <summary>
-        /// Deserialize the zone from a <see cref="StreamReader"/>.
+        /// Update the DNS zone; only one update can happen simultaneously.
         /// </summary>
-        /// <param name="reader"></param>
-        void DeserializeZone(StreamReader reader);
+        /// <param name="modification"></param>
+        /// <returns></returns>
+        Task Update(Action<IList<DnsResourceRecord>> modification);
+
+        /// <summary>
+        /// Serialize the zone to a string.
+        /// </summary>
+        string SerializeZone();
+
+        /// <summary>
+        /// Deserialize the zone from a string.
+        /// </summary>
+        /// <param name="zone"></param>
+        void DeserializeZone(string zone);
 
         /// <summary>
         /// Format a host from the zone file format.

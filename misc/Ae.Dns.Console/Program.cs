@@ -214,7 +214,8 @@ namespace Ae.Dns.Console
                 updateClient = new DnsUpdateClient(new DnsZone
                 {
                     Origin = dnsConfiguration.UpdateZoneName,
-                    DefaultTtl = TimeSpan.FromHours(1)
+                    DefaultTtl = TimeSpan.FromHours(1),
+                    ZoneUpdated = async zone => await File.WriteAllTextAsync($"{dnsConfiguration.UpdateZoneName}.zone", zone.SerializeZone())
                 });
 #pragma warning restore CS0618 // Type or member is obsolete
             }
