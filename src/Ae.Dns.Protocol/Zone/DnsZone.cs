@@ -53,16 +53,7 @@ namespace Ae.Dns.Protocol.Zone
             writer.AppendLine($"$ORIGIN {Origin}.");
             writer.AppendLine($"$TTL {(int)DefaultTtl.TotalSeconds}");
 
-            // Copy the records
-            var records = Records.ToList();
-
-            // Singular SOA must come first
-            var soa = records.Single(x => x.Type == DnsQueryType.SOA);
-
-            records.Remove(soa);
-            records.Insert(0, soa);
-
-            foreach (var record in records)
+            foreach (var record in Records)
             {
                 writer.AppendLine(record.ToZone(this));
             }
