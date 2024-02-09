@@ -47,7 +47,7 @@ namespace Ae.Dns.Client
                 }
             };
 
-            if (query.Nameservers.Count == 0 && hostnames.Any(x => x.Last() != _dnsZone.Origin))
+            if (query.Nameservers.Count > 0 && hostnames.All(x => x.Last() == _dnsZone.Origin))
             {
                 await _dnsZone.Update(ChangeRecords);
                 return query.CreateAnswerMessage(DnsResponseCode.NoError, ToString());
