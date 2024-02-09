@@ -33,10 +33,16 @@ namespace Ae.Dns.Client
             query.EnsureOperationCode(DnsOperationCode.UPDATE);
 
             var hostnames = query.Nameservers.Select(x => x.Host).ToArray();
+            var addresses = query.Nameservers.Select(x => x.Resource).OfType<DnsIpAddressResource>().Select(x => x.IPAddress).ToArray();
 
             void ChangeRecords(ICollection<DnsResourceRecord> records)
             {
                 foreach (var recordToRemove in records.Where(x => hostnames.Contains(x.Host)).ToArray())
+                {
+                    records.Remove(recordToRemove);
+                }
+
+                foreach (var recordToRemove in records.Where(x => x.Resource is DnsIpAddressResource ipr && addresses.Contains(ipr.IPAddress)).ToArray())
                 {
                     records.Remove(recordToRemove);
                 }
