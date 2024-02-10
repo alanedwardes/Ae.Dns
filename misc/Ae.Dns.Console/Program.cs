@@ -222,12 +222,14 @@ namespace Ae.Dns.Console
                 {
                     // Load the existing zone file
                     dnsZone.DeserializeZone(File.ReadAllText(zoneFile));
+                    selfLogger.LogInformation("Loaded {RecordCount} records from zone file {ZoneFile}", dnsZone.Records.Count, zoneFile);
                 }
                 else
                 {
                     // Set some defaults for the new zone
                     dnsZone.Origin = dnsConfiguration.UpdateZoneName;
                     dnsZone.DefaultTtl = TimeSpan.FromHours(1);
+                    selfLogger.LogInformation("Created new zone backed by {ZoneFile}", zoneFile);
                 }
 
                 updateClient = new DnsUpdateClient(dnsZone);
