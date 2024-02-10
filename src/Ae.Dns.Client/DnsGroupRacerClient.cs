@@ -65,7 +65,7 @@ namespace Ae.Dns.Client
                 if (winningTask.IsFaulted)
                 {
                     _logger.LogError(aggregatedExceptions, "All tasks using {FaultedClients} from groups {FaultedGroups} failed for query {Query} in {ElapsedMilliseconds}ms", faultedClientsString, faultedGroupsString, query, sw.ElapsedMilliseconds);
-                    return DnsQueryFactory.CreateErrorResponse(query);
+                    return DnsMessageExtensions.CreateAnswerMessage(query, Protocol.Enums.DnsResponseCode.ServFail, ToString());
                 }
                 else
                 {

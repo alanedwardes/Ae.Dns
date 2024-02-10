@@ -71,23 +71,6 @@ namespace Ae.Dns.Protocol
             };
         }
 
-        internal static DnsMessage CreateErrorResponse(DnsMessage message, DnsResponseCode responseCode = DnsResponseCode.ServFail)
-        {
-            return new DnsMessage
-            {
-                Header = new DnsHeader
-                {
-                    Id = message.Header.Id,
-                    Host = message.Header.Host,
-                    QueryType = message.Header.QueryType,
-                    QueryClass = message.Header.QueryClass,
-                    OperationCode = message.Header.OperationCode,
-                    ResponseCode = responseCode,
-                    IsQueryResponse = true
-                }
-            };
-        }
-
         /// <summary>
         /// Truncate the answer (for example, if it has overflowed the size of a UDP packet).
         /// </summary>

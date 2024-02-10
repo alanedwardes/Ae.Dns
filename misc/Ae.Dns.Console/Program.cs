@@ -234,6 +234,8 @@ namespace Ae.Dns.Console
 
                 updateClient = new DnsUpdateClient(dnsZone);
 #pragma warning restore CS0618 // Type or member is obsolete
+
+                queryClient = new DnsZoneClient(queryClient, dnsZone);
             }
 
             // Route query and update operations as appropriate
