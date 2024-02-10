@@ -32,12 +32,12 @@ namespace Ae.Dns.Client
         {
             query.EnsureOperationCode(DnsOperationCode.UPDATE);
 
-            var hostnames = query.Nameservers.Select(x => x.Host).ToArray();
+            var hostnames = query.Nameservers.Select(x => x.Host.ToString()).ToArray();
             var addresses = query.Nameservers.Select(x => x.Resource).OfType<DnsIpAddressResource>().Select(x => x.IPAddress).ToArray();
 
             void ChangeRecords(ICollection<DnsResourceRecord> records)
             {
-                foreach (var recordToRemove in records.Where(x => hostnames.Contains(x.Host)).ToArray())
+                foreach (var recordToRemove in records.Where(x => hostnames.Contains(x.Host.ToString())).ToArray())
                 {
                     records.Remove(recordToRemove);
                 }
@@ -53,7 +53,7 @@ namespace Ae.Dns.Client
                 }
             };
 
-            if (query.Nameservers.Count > 0 && hostnames.All(x => x.Last() == _dnsZone.Origin))
+            if (query.Nameservers.Count > 0 && hostnames.All(x => x.ToString().EndsWith(_dnsZone.Origin)))
             {
                 await _dnsZone.Update(ChangeRecords);
                 return query.CreateAnswerMessage(DnsResponseCode.NoError, ToString());
