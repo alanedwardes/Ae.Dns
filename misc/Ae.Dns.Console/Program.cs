@@ -210,13 +210,27 @@ namespace Ae.Dns.Console
 
             if (dnsConfiguration.UpdateZoneName != null && dnsConfiguration.UpdateZoneFile != null)
             {
+                var zoneFile = $"{dnsConfiguration.UpdateZoneName}.zone";
+
 #pragma warning disable CS0618 // Type or member is obsolete
-                updateClient = new DnsUpdateClient(new DnsZone
+                var dnsZone = new DnsZone
                 {
-                    Origin = dnsConfiguration.UpdateZoneName,
-                    DefaultTtl = TimeSpan.FromHours(1),
-                    ZoneUpdated = async zone => await File.WriteAllTextAsync($"{dnsConfiguration.UpdateZoneName}.zone", zone.SerializeZone())
-                });
+                    ZoneUpdated = async zone => await File.WriteAllTextAsync(zoneFile, zone.SerializeZone())
+                };
+
+                if (File.Exists(zoneFile))
+                {
+                    // Load the existing zone file
+                    dnsZone.DeserializeZone(File.ReadAllText(zoneFile));
+                }
+                else
+                {
+                    // Set some defaults for the new zone
+                    dnsZone.Origin = dnsConfiguration.UpdateZoneName;
+                    dnsZone.DefaultTtl = TimeSpan.FromHours(1);
+                }
+
+                updateClient = new DnsUpdateClient(dnsZone);
 #pragma warning restore CS0618 // Type or member is obsolete
             }
 
