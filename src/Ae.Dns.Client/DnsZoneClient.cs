@@ -42,10 +42,7 @@ namespace Ae.Dns.Client
             if (relevantRecords.Length > 0)
             {
                 var answer = DnsMessageExtensions.CreateAnswerMessage(query, Protocol.Enums.DnsResponseCode.NoError, ToString());
-                foreach (var record in relevantRecords)
-                {
-                    answer.Answers.Add(record);
-                }
+                answer.Answers = relevantRecords;
                 answer.Header.AnswerRecordCount = (short)answer.Answers.Count;
                 return answer;
             }
