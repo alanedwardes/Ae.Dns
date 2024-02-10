@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Ae.Dns.Protocol
 {
@@ -43,6 +44,12 @@ namespace Ae.Dns.Protocol
         /// <inheritdoc/>
         public override string ToString() => _labels == null ? "<none>" : string.Join(".", _labels);
 
+        /// <inheritdoc/>
+        public override bool Equals(object? obj) => obj is DnsLabels labels && this == labels;
+
+        /// <inheritdoc/>
+        public override int GetHashCode() => HashCode.Combine(LabelsNeverNull);
+
         /// <summary>
         /// Convert a string to <see cref="DnsLabels"/>.
         /// </summary>
@@ -54,5 +61,21 @@ namespace Ae.Dns.Protocol
         /// </summary>
         /// <param name="labels"></param>
         public static implicit operator string(DnsLabels labels) => string.Join(".", labels.LabelsNeverNull);
+
+        /// <summary>
+        /// Test whether this instance equals the other instance.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static bool operator ==(DnsLabels a, DnsLabels b) => a.SequenceEqual(b, StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Test whether this instance does not equal the other instance.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static bool operator !=(DnsLabels a, DnsLabels b) => !(a == b);
     }
 }

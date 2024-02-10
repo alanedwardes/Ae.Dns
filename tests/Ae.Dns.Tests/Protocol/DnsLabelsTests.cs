@@ -60,5 +60,27 @@ namespace Ae.Dns.Tests.Protocol
         {
             Assert.Empty((string)DnsLabels.Empty);
         }
+
+        [Fact]
+        public void TestEquality()
+        {
+            Assert.True(new DnsLabels("test.com") == new DnsLabels("test.com"));
+            Assert.True(new DnsLabels("test.com") == new DnsLabels("TEST.COM"));
+            Assert.False(new DnsLabels("test.com") != new DnsLabels("TEST.COM"));
+            Assert.False(new DnsLabels("test.com") != new DnsLabels("test.com"));
+            Assert.True(new DnsLabels("test.com").Equals(new DnsLabels("test.com")));
+            Assert.True(new DnsLabels("test.com").Equals(new DnsLabels("TEST.COM")));
+        }
+
+        [Fact]
+        public void TestGetHashCode()
+        {
+            Assert.Distinct(new[]
+            {
+                DnsLabels.Empty.GetHashCode(),
+                new DnsLabels("test.com").GetHashCode(),
+                new DnsLabels("test.org").GetHashCode()
+            });
+        }
     }
 }
