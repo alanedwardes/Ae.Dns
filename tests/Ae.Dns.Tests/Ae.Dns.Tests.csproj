@@ -50,4 +50,10 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="Zone\*.zone">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

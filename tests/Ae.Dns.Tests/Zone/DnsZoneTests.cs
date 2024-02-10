@@ -2,6 +2,8 @@
 using Ae.Dns.Protocol.Records;
 using Ae.Dns.Protocol.Zone;
 using System;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Xunit;
@@ -11,10 +13,9 @@ namespace Ae.Dns.Tests.Zone
     [Obsolete]
     public sealed class DnsZoneTests
     {
-        [Fact]
-        public async Task TestRoundTripZone()
+        private IDnsZone _wikipediaExampleZone = new DnsZone(new[]
         {
-            var zone = await RoundTripRecords(new DnsResourceRecord
+            new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
                 Type = DnsQueryType.SOA,
@@ -129,7 +130,17 @@ namespace Ae.Dns.Tests.Zone
                 Host = "mail3.example.com",
                 TimeToLive = 3600,
                 Resource = new DnsIpAddressResource { IPAddress = IPAddress.Parse("192.0.2.5") }
-            });
+            }
+        })
+        {
+            Origin = "example.com",
+            DefaultTtl = TimeSpan.FromHours(1)
+        };
+
+        [Fact]
+        public async Task TestRoundTripZone()
+        {
+            var zone = await RoundTripRecords(_wikipediaExampleZone.Records.ToArray());
 
             Assert.NotNull(zone);
         }
@@ -161,6 +172,26 @@ namespace Ae.Dns.Tests.Zone
             });
 
             Assert.NotNull(zone);
+        }
+
+        [Fact]
+        public async Task TestLoadZone1()
+        {
+            var zone = new DnsZone();
+            zone.DeserializeZone(await File.ReadAllTextAsync("Zone/test1.zone"));
+
+            Assert.Equal(zone.Records, _wikipediaExampleZone.Records);
+
+            var serialized = await RoundTripRecords(zone.Records.ToArray());
+
+            Assert.NotNull(serialized);
+        }
+
+        [Fact]
+        public async Task TestLoadZone2()
+        {
+            var zone = new DnsZone();
+            zone.DeserializeZone(await File.ReadAllTextAsync("Zone/test2.zone"));
         }
 
         public async Task<string> RoundTripRecords(params DnsResourceRecord[] records)

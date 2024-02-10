@@ -102,7 +102,7 @@ namespace Ae.Dns.Protocol.Records
             MName = parts[0].Trim('.');
             RName = parts[1].Trim('.');
 
-            var parts1 = parts[2].Trim(new[] { '(', ')' }).Split(null);
+            var parts1 = parts[2].Trim(new[] { '(', ')' }).Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
             Serial = uint.Parse(parts1[0]);
             Refresh = TimeSpan.FromSeconds(int.Parse(parts1[1]));
             Retry = TimeSpan.FromSeconds(int.Parse(parts1[2]));

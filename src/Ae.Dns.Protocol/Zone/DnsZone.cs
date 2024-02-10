@@ -1,5 +1,4 @@
-﻿using Ae.Dns.Protocol.Enums;
-using Ae.Dns.Protocol.Records;
+﻿using Ae.Dns.Protocol.Records;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,6 +17,22 @@ namespace Ae.Dns.Protocol.Zone
     {
         private readonly List<DnsResourceRecord> _records = new List<DnsResourceRecord>();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+
+        /// <summary>
+        /// Construct a new <see cref="DnsZone"/> with no records.
+        /// </summary>
+        public DnsZone()
+        {
+        }
+
+        /// <summary>
+        /// Construct a new <see cref="DnsZone"/> with the specified records.
+        /// </summary>
+        /// <param name="records"></param>
+        public DnsZone(IEnumerable<DnsResourceRecord> records)
+        {
+            _records = records.ToList();
+        }
 
         /// <inheritdoc/>
         public IReadOnlyList<DnsResourceRecord> Records => _records;
@@ -68,9 +83,35 @@ namespace Ae.Dns.Protocol.Zone
 
             var reader = new StringReader(zone);
 
+            string? spillage = null;
             string? line;
+            bool spillover = false;
             while ((line = reader.ReadLine()) != null)
             {
+                line = line.Split(';')[0];
+
+                if (line.Contains("(") && !line.Contains(")"))
+                {
+                    spillover = true;
+                }
+
+                if (line.Contains(")"))
+                {
+                    line = spillage + line;
+                    spillover = false;
+                }
+
+                if (spillover)
+                {
+                    spillage += line;
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
                 if (line.StartsWith("$ORIGIN"))
                 {
                     Origin = line.Substring("$ORIGIN".Length).Trim().Trim('.');
