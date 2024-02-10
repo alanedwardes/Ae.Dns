@@ -37,7 +37,7 @@ namespace Ae.Dns.Tests.Zone
                 Type = DnsQueryType.NS,
                 Host = "example.com",
                 TimeToLive = 3600,
-                Resource = new DnsDomainResource { Entries = "ns" }
+                Resource = new DnsDomainResource { Entries = "ns.example.com" }
             }, new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
@@ -65,7 +65,7 @@ namespace Ae.Dns.Tests.Zone
                 Type = DnsQueryType.MX,
                 Host = "example.com",
                 TimeToLive = 3600,
-                Resource = new DnsMxResource { Preference = 50, Entries = "mail3" }
+                Resource = new DnsMxResource { Preference = 50, Entries = "mail3.example.com" }
             }, new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
@@ -84,49 +84,49 @@ namespace Ae.Dns.Tests.Zone
             {
                 Class = DnsQueryClass.IN,
                 Type = DnsQueryType.A,
-                Host = "ns",
+                Host = "ns.example.com",
                 TimeToLive = 3600,
                 Resource = new DnsIpAddressResource { IPAddress = IPAddress.Parse("192.0.2.2") }
             }, new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
                 Type = DnsQueryType.AAAA,
-                Host = "ns",
+                Host = "ns.example.com",
                 TimeToLive = 3600,
                 Resource = new DnsIpAddressResource { IPAddress = IPAddress.Parse("2001:db8:10::2") }
             }, new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
                 Type = DnsQueryType.CNAME,
-                Host = "www",
+                Host = "www.example.com",
                 TimeToLive = 3600,
                 Resource = new DnsDomainResource { Entries = "example.com" }
             }, new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
                 Type = DnsQueryType.CNAME,
-                Host = "wwwtest",
+                Host = "wwwtest.example.com",
                 TimeToLive = 3600,
-                Resource = new DnsDomainResource { Entries = "www" }
+                Resource = new DnsDomainResource { Entries = "www.example.com" }
             }, new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
                 Type = DnsQueryType.A,
-                Host = "mail",
+                Host = "mail.example.com",
                 TimeToLive = 3600,
                 Resource = new DnsIpAddressResource { IPAddress = IPAddress.Parse("192.0.2.3") }
             }, new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
                 Type = DnsQueryType.A,
-                Host = "mail2",
+                Host = "mail2.example.com",
                 TimeToLive = 3600,
                 Resource = new DnsIpAddressResource { IPAddress = IPAddress.Parse("192.0.2.4") }
             }, new DnsResourceRecord
             {
                 Class = DnsQueryClass.IN,
                 Type = DnsQueryType.A,
-                Host = "mail3",
+                Host = "mail3.example.com",
                 TimeToLive = 3600,
                 Resource = new DnsIpAddressResource { IPAddress = IPAddress.Parse("192.0.2.5") }
             });
@@ -179,8 +179,10 @@ namespace Ae.Dns.Tests.Zone
                 }
             });
 
+            var serialized = originalZone.SerializeZone();
+
             var newZone = new DnsZone();
-            newZone.DeserializeZone(originalZone.SerializeZone());
+            newZone.DeserializeZone(serialized);
 
             Assert.Equal(originalZone.Records, newZone.Records);
 
