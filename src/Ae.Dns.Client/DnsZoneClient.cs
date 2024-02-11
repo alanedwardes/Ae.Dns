@@ -42,16 +42,24 @@ namespace Ae.Dns.Client
 
             var relevantRecords = _dnsZone.Records
                 .Where(x => x.Host == query.Header.Host &&
-                            x.Class == query.Header.QueryClass &&
-                            x.Type == query.Header.QueryType)
+                            x.Class == query.Header.QueryClass)
                 .ToArray();
 
             if (relevantRecords.Length > 0)
             {
-                var answer = DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NoError, ToString());
-                answer.Answers = relevantRecords;
-                answer.Header.AnswerRecordCount = (short)answer.Answers.Count;
-                return answer;
+                var exactRecords = relevantRecords.Where(x => x.Type == query.Header.QueryType).ToArray();
+                if (exactRecords.Length > 0)
+                {
+                    var answer = DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NoError, ToString());
+                    answer.Answers = exactRecords;
+                    answer.Header.AnswerRecordCount = (short)answer.Answers.Count;
+                    return answer;
+                }
+                else
+                {
+                    // TODO: return SOA record
+                    return DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NoError, ToString());
+                }
             }
 
             return DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NXDomain, ToString());
