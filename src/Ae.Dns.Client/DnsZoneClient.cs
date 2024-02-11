@@ -1,4 +1,5 @@
 ﻿using Ae.Dns.Protocol;
+using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Zone;
 using System.Linq;
 using System.Threading;
@@ -33,6 +34,12 @@ namespace Ae.Dns.Client
         /// <inheritdoc/>
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
+            // If this query is not relevant to us
+            if (!query.Header.Host.ToString().EndsWith(_dnsZone.Origin))
+            {
+                return await _dnsClient.Query(query, token);
+            }
+
             var relevantRecords = _dnsZone.Records
                 .Where(x => x.Host == query.Header.Host &&
                             x.Class == query.Header.QueryClass &&
@@ -41,13 +48,13 @@ namespace Ae.Dns.Client
 
             if (relevantRecords.Length > 0)
             {
-                var answer = DnsMessageExtensions.CreateAnswerMessage(query, Protocol.Enums.DnsResponseCode.NoError, ToString());
+                var answer = DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NoError, ToString());
                 answer.Answers = relevantRecords;
                 answer.Header.AnswerRecordCount = (short)answer.Answers.Count;
                 return answer;
             }
 
-            return await _dnsClient.Query(query, token);
+            return DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NXDomain, ToString());
         }
 
         /// <inheritdoc/>
