@@ -5,6 +5,7 @@ using Ae.Dns.Protocol.Zone;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,7 +54,7 @@ namespace Ae.Dns.Client
                 }
             };
 
-            if (query.Nameservers.Count > 0 && hostnames.All(x => x.ToString().EndsWith(_dnsZone.Origin)))
+            if (query.Nameservers.Count > 0 && hostnames.All(x => !Regex.IsMatch(x, @"\s")) && hostnames.All(x => x.ToString().EndsWith(_dnsZone.Origin)))
             {
                 await _dnsZone.Update(ChangeRecords);
                 return query.CreateAnswerMessage(DnsResponseCode.NoError, ToString());

@@ -16,5 +16,11 @@ namespace Ae.Dns.Tests.Protocol
         {
             var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update2);
         }
+
+        [Fact]
+        public void ReadUpdate3()
+        {
+            var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update3);
+        }
     }
 }

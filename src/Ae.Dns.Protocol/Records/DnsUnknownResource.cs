@@ -44,13 +44,14 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public string ToZone(IDnsZone zone)
         {
-            throw new NotImplementedException();
+            return $"({Convert.ToBase64String(Raw.ToArray())})";
         }
 
         /// <inheritdoc/>
         public void FromZone(IDnsZone zone, string input)
         {
-            throw new NotImplementedException();
+            var base64 = input.Trim().Trim(new char[] { '(', ')' });
+            Raw = Convert.FromBase64String(base64);
         }
 
         /// <inheritdoc/>

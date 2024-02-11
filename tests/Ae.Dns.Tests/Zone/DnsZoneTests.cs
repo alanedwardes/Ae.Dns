@@ -1,4 +1,5 @@
-﻿using Ae.Dns.Protocol.Enums;
+﻿using Ae.Dns.Protocol;
+using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using Ae.Dns.Protocol.Zone;
 using System;
@@ -192,6 +193,22 @@ namespace Ae.Dns.Tests.Zone
         {
             var zone = new DnsZone();
             zone.DeserializeZone(await File.ReadAllTextAsync("Zone/test2.zone"));
+        }
+
+        [Fact]
+        public async Task TestLoadZone3()
+        {
+            var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update3);
+
+            // This packet has bad hostnames
+            message.Nameservers[0].Host = "eufyRoboVac.home";
+            message.Nameservers[1].Host = "eufyRoboVac.home";
+
+            var zone = new DnsZone(message.Nameservers);
+
+            var serialized = await RoundTripRecords(zone.Records.ToArray());
+
+            Assert.NotNull(serialized);
         }
 
         public async Task<string> RoundTripRecords(params DnsResourceRecord[] records)

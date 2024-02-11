@@ -60,6 +60,32 @@ namespace Ae.Dns.Tests.Client
         }
 
         [Fact]
+        public async Task TestWhitespaceHostname()
+        {
+            var zone = new TestDnsZone();
+
+            var updateClient = new DnsUpdateClient(zone);
+
+            var result = await updateClient.Query(new DnsMessage
+            {
+                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE },
+                Nameservers = new[]
+                {
+                    new DnsResourceRecord
+                    {
+                        Type = DnsQueryType.A,
+                        Class = DnsQueryClass.IN,
+                        Host = "test me.example.com",
+                        Resource = new DnsIpAddressResource { IPAddress = IPAddress.Parse("192.168.0.1") }
+                    }
+                }
+            });
+            Assert.Equal(DnsResponseCode.Refused, result.Header.ResponseCode);
+
+            Assert.Empty(zone.Records);
+        }
+
+        [Fact]
         public async Task TestAddRecords()
         {
             var zone = new TestDnsZone();

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -154,6 +155,11 @@ namespace Ae.Dns.Protocol.Zone
         /// <inheritdoc/>
         public string ToFormattedHost(string host)
         {
+            if (Regex.IsMatch(host, @"\s"))
+            {
+                throw new InvalidOperationException($"Hostname '{host}' contains invalid characters");
+            }
+
             if (host == Origin)
             {
                 return "@";
