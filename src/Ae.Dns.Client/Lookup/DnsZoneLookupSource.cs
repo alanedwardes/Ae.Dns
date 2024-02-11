@@ -10,16 +10,15 @@ namespace Ae.Dns.Client.Lookup
     /// <summary>
     /// Allows forward and reverse address lookups using an <see cref="IDnsZone"/>.
     /// </summary>
-    [Obsolete("Experimental: May change significantly in the future")]
-    public sealed class DnsZoneLookup : IDnsLookupSource
+    public sealed class DnsZoneLookupSource : IDnsLookupSource
     {
         private readonly IDnsZone _dnsZone;
 
         /// <summary>
-        /// Construct a <see cref="DnsZoneLookup"/> using the specified <see cref="IDnsZone"/>.
+        /// Construct a <see cref="DnsZoneLookupSource"/> using the specified <see cref="IDnsZone"/>.
         /// </summary>
         /// <param name="dnsZone"></param>
-        public DnsZoneLookup(IDnsZone dnsZone)
+        public DnsZoneLookupSource(IDnsZone dnsZone)
         {
             _dnsZone = dnsZone;
         }
@@ -32,13 +31,8 @@ namespace Ae.Dns.Client.Lookup
         /// <inheritdoc/>
         public bool TryForwardLookup(string hostname, out IList<IPAddress> addresses)
         {
-            addresses = _dnsZone.Records.Where(x => x.Host == hostname)
-                .Select(x => x.Resource)
-                .OfType<DnsIpAddressResource>()
-                .Select(x => x.IPAddress)
-                .ToList();
-
-            return addresses.Count > 0;
+            addresses = Array.Empty<IPAddress>();
+            return false;
         }
 
         /// <inheritdoc/>

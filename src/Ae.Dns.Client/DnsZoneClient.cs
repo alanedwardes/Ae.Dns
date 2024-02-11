@@ -35,7 +35,7 @@ namespace Ae.Dns.Client
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
             // If this query is not relevant to us
-            if (!query.Header.Host.ToString().EndsWith(_dnsZone.Origin))
+            if (!query.Header.Host.ToString().EndsWith(_dnsZone.Origin) || _dnsZone.Records.Count == 0)
             {
                 return await _dnsClient.Query(query, token);
             }

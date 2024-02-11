@@ -201,22 +201,15 @@ namespace Ae.Dns.Console
                 staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdLeasesDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdLeasesFile), dnsConfiguration.DhcpdLeasesHostnameSuffix ?? throw new NullReferenceException("DhcpdLeasesHostnameSuffix is null")));
             }
 
-            if (staticLookupSources.Count > 0)
-            {
-                queryClient = new DnsStaticLookupClient(queryClient, staticLookupSources.ToArray());
-            }
+#pragma warning disable CS0618 // Type or member is obsolete
+            var dnsZone = new DnsZone();
+            staticLookupSources.Add(new DnsZoneLookupSource(dnsZone));
 
             IDnsClient updateClient = DnsNotImplementedClient.Instance;
 
             if (dnsConfiguration.UpdateZoneName != null)
             {
                 var zoneFile = $"{dnsConfiguration.UpdateZoneName}.zone";
-
-#pragma warning disable CS0618 // Type or member is obsolete
-                var dnsZone = new DnsZone
-                {
-                    ZoneUpdated = async zone => await File.WriteAllTextAsync(zoneFile, zone.SerializeZone())
-                };
 
                 if (File.Exists(zoneFile))
                 {
@@ -232,11 +225,19 @@ namespace Ae.Dns.Console
                     selfLogger.LogInformation("Created new zone backed by {ZoneFile}", zoneFile);
                 }
 
+                // Update the file when the zone is updated
+                dnsZone.ZoneUpdated = async zone => await File.WriteAllTextAsync(zoneFile, zone.SerializeZone());
+
                 updateClient = new DnsUpdateClient(dnsZone);
 #pragma warning restore CS0618 // Type or member is obsolete
-
-                queryClient = new DnsZoneClient(queryClient, dnsZone);
             }
+
+            if (staticLookupSources.Count > 0)
+            {
+                queryClient = new DnsStaticLookupClient(queryClient, staticLookupSources.ToArray());
+            }
+
+            queryClient = new DnsZoneClient(queryClient, dnsZone);
 
             // Route query and update operations as appropriate
             IDnsClient operationClient = new DnsOperationRouter(new Dictionary<DnsOperationCode, IDnsClient>

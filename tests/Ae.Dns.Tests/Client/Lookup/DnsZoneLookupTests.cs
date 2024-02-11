@@ -68,7 +68,7 @@ namespace Ae.Dns.Tests.Client.Lookup
         [Fact]
         public void TestLookupNoResults()
         {
-            var lookup = new DnsZoneLookup(new DummyZoneNoRecords());
+            var lookup = new DnsZoneLookupSource(new DummyZoneNoRecords());
 
             Assert.False(lookup.TryReverseLookup(IPAddress.Loopback, out var hostnames));
             Assert.Empty(hostnames);
@@ -134,12 +134,12 @@ namespace Ae.Dns.Tests.Client.Lookup
         [Fact]
         public void TestLookupWithResults()
         {
-            var lookup = new DnsZoneLookup(new DummyZoneWithRecords());
+            var lookup = new DnsZoneLookupSource(new DummyZoneWithRecords());
 
             Assert.True(lookup.TryReverseLookup(IPAddress.Loopback, out var hostnames));
             Assert.Equal(new[] { "wibble" }, hostnames);
-            Assert.True(lookup.TryForwardLookup("wibble", out var addresses));
-            Assert.Equal(new[] { IPAddress.Loopback, IPAddress.Broadcast }, addresses);
+            Assert.False(lookup.TryForwardLookup("wibble", out var addresses));
+            Assert.Empty(addresses);
         }
     }
 }
