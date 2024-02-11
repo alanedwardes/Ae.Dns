@@ -26,6 +26,8 @@ using System.Runtime.Caching;
 using System.Threading;
 using System.Threading.Tasks;
 
+#pragma warning disable CS0618 // Type or member is obsolete
+
 namespace Ae.Dns.Console
 {
     class Program
@@ -191,24 +193,11 @@ namespace Ae.Dns.Console
                 staticLookupSources.Add(ActivatorUtilities.CreateInstance<HostsFileDnsLookupSource>(provider, new FileInfo(hostFile)));
             }
 
-            if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdConfigFile))
-            {
-                staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdConfigDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdConfigFile), dnsConfiguration.DhcpdLeasesHostnameSuffix ?? throw new NullReferenceException("DhcpdLeasesHostnameSuffix is null")));
-            }
-
-            if (!string.IsNullOrWhiteSpace(dnsConfiguration.DhcpdLeasesFile))
-            {
-                staticLookupSources.Add(ActivatorUtilities.CreateInstance<DhcpdLeasesDnsLookupSource>(provider, new FileInfo(dnsConfiguration.DhcpdLeasesFile), dnsConfiguration.DhcpdLeasesHostnameSuffix ?? throw new NullReferenceException("DhcpdLeasesHostnameSuffix is null")));
-            }
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            var dnsZone = new DnsZone();
-            staticLookupSources.Add(new DnsZoneLookupSource(dnsZone));
-
             IDnsClient updateClient = DnsNotImplementedClient.Instance;
 
             if (dnsConfiguration.UpdateZoneName != null)
             {
+                var dnsZone = new DnsZone();
                 var zoneFile = $"{dnsConfiguration.UpdateZoneName}.zone";
 
                 if (File.Exists(zoneFile))
@@ -228,9 +217,12 @@ namespace Ae.Dns.Console
                 // Update the file when the zone is updated
                 dnsZone.ZoneUpdated = async zone => await File.WriteAllTextAsync(zoneFile, zone.SerializeZone());
 
+                // Replace the clients with clients for the zone
                 queryClient = new DnsZoneClient(queryClient, dnsZone);
                 updateClient = new DnsUpdateClient(dnsZone);
-#pragma warning restore CS0618 // Type or member is obsolete
+
+                // Add the zone file as a source of automatic reverse lookups
+                staticLookupSources.Add(new DnsZoneLookupSource(dnsZone));
             }
 
             if (staticLookupSources.Count > 0)

@@ -12,9 +12,6 @@ namespace Ae.Dns.Console
         public string[] DisallowedDomainSuffixes { get; set; } = new string[0];
         public string[] DisallowedQueryTypes { get; set; } = new string[0];
         public string[] HostFiles { get; set; } = new string[0];
-        public string? DhcpdLeasesFile { get; set; }
-        public string? DhcpdConfigFile { get; set; }
-        public string? DhcpdLeasesHostnameSuffix { get; set; }
         public string? UpdateZoneName { get; set; }
         public DnsInfluxDbConfiguration? InfluxDbMetrics { get; set; }
         public Dictionary<string, string[]> ClientGroups { get; set; } = new Dictionary<string, string[]>();
