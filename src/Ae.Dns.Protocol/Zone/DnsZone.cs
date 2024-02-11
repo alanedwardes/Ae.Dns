@@ -47,6 +47,9 @@ namespace Ae.Dns.Protocol.Zone
         public Func<IDnsZone, Task> ZoneUpdated { get; set; } = zone => Task.CompletedTask;
 
         /// <inheritdoc/>
+        public override string ToString() => Origin;
+
+        /// <inheritdoc/>
         public async Task Update(Action<IList<DnsResourceRecord>> modification)
         {
             await _semaphore.WaitAsync();

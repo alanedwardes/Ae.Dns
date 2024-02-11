@@ -66,5 +66,8 @@ namespace Ae.Dns.Client
         public void Dispose()
         {
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"{nameof(DnsUpdateClient)}({_dnsZone})";
     }
 }

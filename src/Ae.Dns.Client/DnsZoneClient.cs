@@ -49,5 +49,8 @@ namespace Ae.Dns.Client
 
             return await _dnsClient.Query(query, token);
         }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"{nameof(DnsZoneClient)}({_dnsZone})";
     }
 }
