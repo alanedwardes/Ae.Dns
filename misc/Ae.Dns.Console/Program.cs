@@ -228,6 +228,7 @@ namespace Ae.Dns.Console
                 // Update the file when the zone is updated
                 dnsZone.ZoneUpdated = async zone => await File.WriteAllTextAsync(zoneFile, zone.SerializeZone());
 
+                queryClient = new DnsZoneClient(queryClient, dnsZone);
                 updateClient = new DnsUpdateClient(dnsZone);
 #pragma warning restore CS0618 // Type or member is obsolete
             }
@@ -236,8 +237,6 @@ namespace Ae.Dns.Console
             {
                 queryClient = new DnsStaticLookupClient(queryClient, staticLookupSources.ToArray());
             }
-
-            queryClient = new DnsZoneClient(queryClient, dnsZone);
 
             // Route query and update operations as appropriate
             IDnsClient operationClient = new DnsOperationRouter(new Dictionary<DnsOperationCode, IDnsClient>
