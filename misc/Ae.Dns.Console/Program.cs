@@ -208,7 +208,7 @@ namespace Ae.Dns.Console
 
             IDnsClient updateClient = DnsNotImplementedClient.Instance;
 
-            if (dnsConfiguration.UpdateZoneName != null && dnsConfiguration.UpdateZoneFile != null)
+            if (dnsConfiguration.UpdateZoneName != null)
             {
                 var zoneFile = $"{dnsConfiguration.UpdateZoneName}.zone";
 
