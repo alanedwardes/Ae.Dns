@@ -38,7 +38,7 @@ namespace Ae.Dns.Client.Lookup
         /// <inheritdoc/>
         public bool TryReverseLookup(IPAddress address, out IList<string> hostnames)
         {
-            hostnames = _dnsZone.Records.Where(x => x.Resource is DnsIpAddressResource ip && ip.IPAddress == address)
+            hostnames = _dnsZone.Records.Where(x => x.Resource is DnsIpAddressResource ip && ip.IPAddress.Equals(address))
                 .Select(x => x.Host.ToString())
                 .ToList();
 
