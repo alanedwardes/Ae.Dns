@@ -219,7 +219,7 @@ namespace Ae.Dns.Console
 
                 // Replace the clients with clients for the zone
                 queryClient = new DnsZoneClient(queryClient, dnsZone);
-                updateClient = new DnsUpdateClient(dnsZone);
+                updateClient = ActivatorUtilities.CreateInstance<DnsZoneUpdateClient>(provider, dnsZone);
 
                 // Add the zone file as a source of automatic reverse lookups
                 staticLookupSources.Add(new DnsZoneLookupSource(dnsZone));

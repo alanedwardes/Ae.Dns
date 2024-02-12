@@ -3,6 +3,7 @@ using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using Ae.Dns.Protocol.Zone;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -38,11 +39,11 @@ namespace Ae.Dns.Tests.Client
         {
             var zone = new TestDnsZone();
 
-            var updateClient = new DnsUpdateClient(zone);
+            var updateClient = new DnsZoneUpdateClient(NullLogger<DnsZoneUpdateClient>.Instance, zone);
 
             var result = await updateClient.Query(new DnsMessage
             {
-                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE },
+                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE, QueryType = DnsQueryType.SOA, Host = "example.com" },
                 Nameservers = new[]
                 {
                     new DnsResourceRecord
@@ -64,11 +65,11 @@ namespace Ae.Dns.Tests.Client
         {
             var zone = new TestDnsZone();
 
-            var updateClient = new DnsUpdateClient(zone);
+            var updateClient = new DnsZoneUpdateClient(NullLogger<DnsZoneUpdateClient>.Instance, zone);
 
             var result = await updateClient.Query(new DnsMessage
             {
-                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE },
+                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE, QueryType = DnsQueryType.SOA, Host = "example.com" },
                 Nameservers = new[]
                 {
                     new DnsResourceRecord
@@ -90,11 +91,11 @@ namespace Ae.Dns.Tests.Client
         {
             var zone = new TestDnsZone();
 
-            var updateClient = new DnsUpdateClient(zone);
+            var updateClient = new DnsZoneUpdateClient(NullLogger<DnsZoneUpdateClient>.Instance, zone);
 
             var result1 = await updateClient.Query(new DnsMessage
             {
-                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE },
+                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE, QueryType = DnsQueryType.SOA, Host = "example.com" },
                 Nameservers = new[]
                 {
                     new DnsResourceRecord
@@ -110,7 +111,7 @@ namespace Ae.Dns.Tests.Client
 
             var result2 = await updateClient.Query(new DnsMessage
             {
-                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE },
+                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE, QueryType = DnsQueryType.SOA, Host = "example.com" },
                 Nameservers = new[]
                 {
                     new DnsResourceRecord
@@ -126,7 +127,7 @@ namespace Ae.Dns.Tests.Client
 
             var result3 = await updateClient.Query(new DnsMessage
             {
-                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE },
+                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE, QueryType = DnsQueryType.SOA, Host = "example.com" },
                 Nameservers = new[]
                 {
                     new DnsResourceRecord
@@ -142,7 +143,7 @@ namespace Ae.Dns.Tests.Client
 
             var result4 = await updateClient.Query(new DnsMessage
             {
-                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE },
+                Header = new DnsHeader { OperationCode = DnsOperationCode.UPDATE, QueryType = DnsQueryType.SOA, Host = "example.com" },
                 Nameservers = new[]
                 {
                     new DnsResourceRecord
