@@ -1,4 +1,7 @@
 ﻿using Ae.Dns.Protocol.Enums;
+using Ae.Dns.Protocol.Records;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Zone
@@ -73,7 +76,7 @@ namespace Ae.Dns.Protocol.Zone
                         }
                     }
                 }
-                else if (rr.Class == zone.Records.First().Class)
+                else if (rr.Class == zone.GetZoneClass())
                 {
                     if (!zone.Records.Any(x => x.Host == rr.Host && x.Type == rr.Type && Equals(x.Resource, rr.Resource)))
                     {
@@ -87,6 +90,61 @@ namespace Ae.Dns.Protocol.Zone
             }
 
             return DnsResponseCode.NoError;
+        }
+
+        /// <summary>
+        /// Perform record updates for the specified <see cref="IDnsZone"/>.
+        /// </summary>
+        /// <param name="zone"></param>
+        /// <param name="records"></param>
+        /// <param name="updateMessage"></param>
+        public static void PerformZoneUpdates(this IDnsZone zone, ICollection<DnsResourceRecord> records, DnsMessage updateMessage)
+        {
+            foreach (var rr in updateMessage.Nameservers)
+            {
+                if (rr.Class == zone.GetZoneClass())
+                {
+                    var existingRecords = zone.Records.Where(x => x.Host == rr.Host && x.Type == rr.Type).ToArray();
+                    if (existingRecords.Any())
+                    {
+                        foreach (var existingRecord in existingRecords)
+                        {
+                            existingRecord.Resource = rr.Resource;
+                            existingRecord.TimeToLive = rr.TimeToLive;
+                        }
+                    }
+                    else
+                    {
+                        records.Add(rr);
+                    }
+                }
+
+                if (rr.Class == DnsQueryClass.QCLASS_ANY)
+                {
+
+                }
+
+                if (rr.Class == DnsQueryClass.QCLASS_NONE)
+                {
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get the class of the <see cref="IDnsZone"/>.
+        /// </summary>
+        /// <param name="zone"></param>
+        /// <returns></returns>
+        public static DnsQueryClass GetZoneClass(this IDnsZone zone)
+        {
+            // TODO: force SOA in IDnsZone and use that...
+            if (zone.Records.Any())
+            {
+                return zone.Records.First().Class;
+            }
+
+            return DnsQueryClass.IN;
         }
     }
 }

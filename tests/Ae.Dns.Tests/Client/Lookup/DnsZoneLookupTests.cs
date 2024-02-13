@@ -59,7 +59,7 @@ namespace Ae.Dns.Tests.Client.Lookup
                 throw new NotImplementedException();
             }
 
-            public Task Update(Action<IList<DnsResourceRecord>> modification)
+            public Task<TResult> Update<TResult>(Func<IList<DnsResourceRecord>, TResult> modification)
             {
                 throw new NotImplementedException();
             }
@@ -125,7 +125,7 @@ namespace Ae.Dns.Tests.Client.Lookup
                 throw new NotImplementedException();
             }
 
-            public Task Update(Action<IList<DnsResourceRecord>> modification)
+            public Task<TResult> Update<TResult>(Func<IList<DnsResourceRecord>, TResult> modification)
             {
                 throw new NotImplementedException();
             }

@@ -37,7 +37,7 @@ namespace Ae.Dns.Protocol.Zone
         /// </summary>
         /// <param name="modification"></param>
         /// <returns></returns>
-        Task Update(Action<IList<DnsResourceRecord>> modification);
+        Task<TResult> Update<TResult>(Func<IList<DnsResourceRecord>, TResult> modification);
 
         /// <summary>
         /// Serialize the zone to a string.

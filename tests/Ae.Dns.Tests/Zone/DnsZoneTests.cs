@@ -225,6 +225,8 @@ namespace Ae.Dns.Tests.Zone
                 {
                     recordsToUpdate.Add(record);
                 }
+
+                return true;
             });
 
             var serialized = originalZone.SerializeZone();

@@ -47,8 +47,15 @@ namespace Ae.Dns.Client
             var hostnames = query.Nameservers.Select(x => x.Host.ToString()).ToArray();
             var addresses = query.Nameservers.Select(x => x.Resource).OfType<DnsIpAddressResource>().Select(x => x.IPAddress).ToArray();
 
-            void ChangeRecords(ICollection<DnsResourceRecord> records)
+            DnsResponseCode ChangeRecords(ICollection<DnsResourceRecord> records)
             {
+                var preRequisitesResponseCode = _dnsZone.TestZoneUpdatePreRequisites(query);
+                if (preRequisitesResponseCode != DnsResponseCode.NoError)
+                {
+                    _logger.LogWarning("Pre-requisites check resulted in {ResponseCode} for {Update}", preRequisitesResponseCode, query);
+                    return preRequisitesResponseCode;
+                }
+
                 foreach (var recordToRemove in records.Where(x => hostnames.Contains(x.Host.ToString())).ToArray())
                 {
                     records.Remove(recordToRemove);
@@ -63,12 +70,14 @@ namespace Ae.Dns.Client
                 {
                     records.Add(nameserver);
                 }
+
+                return DnsResponseCode.NoError;
             };
 
             if (query.Nameservers.Count > 0 && hostnames.All(x => !Regex.IsMatch(x, @"\s")) && hostnames.All(x => x.ToString().EndsWith(_dnsZone.Origin)))
             {
-                await _dnsZone.Update(ChangeRecords);
-                return query.CreateAnswerMessage(DnsResponseCode.NoError, ToString());
+                var responseCode = await _dnsZone.Update(ChangeRecords);
+                return query.CreateAnswerMessage(responseCode, ToString());
             }
 
             return query.CreateAnswerMessage(DnsResponseCode.Refused, ToString());

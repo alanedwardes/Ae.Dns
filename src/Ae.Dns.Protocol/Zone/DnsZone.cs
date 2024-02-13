@@ -51,13 +51,14 @@ namespace Ae.Dns.Protocol.Zone
         public override string ToString() => Origin;
 
         /// <inheritdoc/>
-        public async Task Update(Action<IList<DnsResourceRecord>> modification)
+        public async Task<TResult> Update<TResult>(Func<IList<DnsResourceRecord>, TResult> modification)
         {
             await _semaphore.WaitAsync();
             try
             {
-                modification(_records);
+                var result = modification(_records);
                 await ZoneUpdated(this);
+                return result;
             }
             finally
             {

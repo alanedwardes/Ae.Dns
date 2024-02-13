@@ -25,10 +25,9 @@ namespace Ae.Dns.Tests.Client
         public string FromFormattedHost(string host) => throw new NotImplementedException();
         public string SerializeZone() => throw new NotImplementedException();
         public string ToFormattedHost(string host) => throw new NotImplementedException();
-        public Task Update(Action<IList<DnsResourceRecord>> modification)
+        public Task<TResult> Update<TResult>(Func<IList<DnsResourceRecord>, TResult> modification)
         {
-            modification(_records);
-            return Task.CompletedTask;
+            return Task.FromResult(modification(_records));
         }
     }
 
