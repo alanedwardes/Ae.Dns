@@ -274,7 +274,7 @@ namespace Ae.Dns.Console
                     var reverseLookups = (await Task.WhenAll(filteredQueries.Where(x => x.Sender != null).Select(x => x.Sender).Distinct().Select(async x =>
                     {
                         var answer = await dnsClient.Query(DnsQueryFactory.CreateReverseQuery(x));
-                        return (x, answer.Answers.FirstOrDefault()?.Resource.ToString());
+                        return (x, answer.Answers.FirstOrDefault()?.Resource?.ToString());
                     }))).ToDictionary(x => x.x, x => x.Item2);
 
                     await context.Response.WriteAsync($"<h1>Metrics Server</h1>");

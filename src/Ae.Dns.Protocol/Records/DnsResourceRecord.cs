@@ -33,7 +33,7 @@ namespace Ae.Dns.Protocol.Records
         /// cast to the appropriate resource record type
         /// class depending on the <see cref="Type"/>.
         /// </summary>
-        public IDnsResource Resource { get; set; } = new DnsUnknownResource();
+        public IDnsResource? Resource { get; set; }
 
         private IDnsResource CreateResourceRecord(DnsQueryType recordType)
         {
@@ -70,7 +70,7 @@ namespace Ae.Dns.Protocol.Records
                 Type == other.Type &&
                 Class == other.Class &&
                 TimeToLive == other.TimeToLive &&
-                Resource.Equals(other.Resource);
+                Equals(Resource, other.Resource);
         }
 
         /// <inheritdoc/>
@@ -86,9 +86,12 @@ namespace Ae.Dns.Protocol.Records
             Type = (DnsQueryType)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             Class = (DnsQueryClass)DnsByteExtensions.ReadUInt16(bytes, ref offset);
             TimeToLive = DnsByteExtensions.ReadUInt32(bytes, ref offset);
-            Resource = CreateResourceRecord(Type);
             var dataLength = DnsByteExtensions.ReadUInt16(bytes, ref offset);
-            FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
+            if (dataLength > 0)
+            {
+                Resource = CreateResourceRecord(Type);
+                FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
+            }
         }
 
         private static void FromBytesKnownLength(IDnsResource resource, ReadOnlyMemory<byte> bytes, ref int offset, int length)
@@ -111,7 +114,11 @@ namespace Ae.Dns.Protocol.Records
 
             // First, write the resource, but save two bytes for the size (and do not advance the offset)
             var resourceSize = 0;
-            Resource.WriteBytes(bytes.Slice(offset + sizeof(ushort)), ref resourceSize);
+
+            if (Resource != null)
+            {
+                Resource.WriteBytes(bytes.Slice(offset + sizeof(ushort)), ref resourceSize);
+            }
 
             // Write the size of the resource in the two bytes preceeding (current offset)
             DnsByteExtensions.ToBytes((ushort)resourceSize, bytes, ref offset);
@@ -123,7 +130,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public string ToZone(IDnsZone zone)
         {
-            return $"{zone.ToFormattedHost(Host)} {TimeToLive} {Class} {Type} {Resource.ToZone(zone)}";
+            return $"{zone.ToFormattedHost(Host)} {TimeToLive} {Class} {Type} {Resource?.ToZone(zone)}";
         }
 
         /// <inheritdoc/>

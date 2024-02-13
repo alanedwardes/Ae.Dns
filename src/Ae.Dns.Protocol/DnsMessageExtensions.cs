@@ -1,7 +1,6 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -38,7 +37,13 @@ namespace Ae.Dns.Protocol
                     return null;
                 }
 
-                var soaResource = (DnsSoaResource)soaRecord.Resource;
+                var soaResource = (DnsSoaResource?)soaRecord.Resource;
+                if (soaResource == null)
+                {
+                    // The SOA resource is broken
+                    return null;
+                }
+
                 return TimeSpan.FromSeconds(Math.Min(soaRecord.TimeToLive, (uint)soaResource.Minimum.TotalSeconds));
             }
 

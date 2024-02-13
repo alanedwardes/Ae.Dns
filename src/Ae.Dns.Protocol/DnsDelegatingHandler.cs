@@ -44,14 +44,14 @@ namespace Ae.Dns.Protocol
             var answers = await _dnsClient.Query(DnsQueryFactory.CreateQuery(originalHost, _queryType), cancellationToken);
 
             // Pull out the relevant queries
-            var ipResponses = answers.Answers.Where(x => x.Type == _queryType).ToArray();
+            var ipResponses = answers.Answers.Where(x => x.Type == _queryType && x.Resource != null).Select(x => x.Resource).Cast<DnsIpAddressResource>().ToArray();
             if (!ipResponses.Any())
             {
                 throw new InvalidOperationException($"Unable to resolve {_queryType} records for host {originalHost}");
             }
 
             // Pick a random IP address
-            var addressResource = (DnsIpAddressResource)ipResponses.OrderBy(x => Guid.NewGuid()).First().Resource;
+            var addressResource = ipResponses.OrderBy(x => Guid.NewGuid()).First();
 
             // Set the request data to talk to the IP address directly
             request.RequestUri = ChangeHost(request.RequestUri, addressResource.IPAddress.ToString());
