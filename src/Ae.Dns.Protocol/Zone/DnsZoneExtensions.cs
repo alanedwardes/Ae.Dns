@@ -1,5 +1,6 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -98,12 +99,51 @@ namespace Ae.Dns.Protocol.Zone
         /// <param name="zone"></param>
         /// <param name="records"></param>
         /// <param name="updateMessage"></param>
-        public static void PerformZoneUpdates(this IDnsZone zone, ICollection<DnsResourceRecord> records, DnsMessage updateMessage)
+        public static DnsResponseCode PerformZoneUpdates(this IDnsZone zone, ICollection<DnsResourceRecord> records, DnsMessage updateMessage)
         {
-            foreach (var rr in updateMessage.Nameservers)
+            var updates = updateMessage.Nameservers;
+
+            // Pre-scan
+            foreach (var rr in updates)
+            {
+                if (!rr.Host.ToString().EndsWith(zone.Origin))
+                {
+                    return DnsResponseCode.NotZone;
+                }
+
+                if (rr.Class == zone.GetZoneClass())
+                {
+                    if (new[] { DnsQueryType.ANY, DnsQueryType.AXFR, DnsQueryType.MAILA, DnsQueryType.MAILB }.Contains(rr.Type))
+                    {
+                        return DnsResponseCode.FormErr;
+                    }
+                }
+                else if (rr.Class == DnsQueryClass.QCLASS_ANY)
+                {
+                    if (rr.TimeToLive != 0 || rr.Resource != null || new[] { DnsQueryType.AXFR, DnsQueryType.MAILA, DnsQueryType.MAILB }.Contains(rr.Type))
+                    {
+                        return DnsResponseCode.FormErr;
+                    }
+                }
+                else if (rr.Class == DnsQueryClass.QCLASS_NONE)
+                {
+                    if (rr.TimeToLive != 0 || new[] { DnsQueryType.ANY, DnsQueryType.AXFR, DnsQueryType.MAILA, DnsQueryType.MAILB }.Contains(rr.Type))
+                    {
+                        return DnsResponseCode.FormErr;
+                    }
+                }
+                else
+                {
+                    return DnsResponseCode.FormErr;
+                }
+            }
+
+            // Perform updates
+            foreach (var rr in updates)
             {
                 if (rr.Class == zone.GetZoneClass())
                 {
+                    // TODO rewrite this
                     var existingRecords = zone.Records.Where(x => x.Host == rr.Host && x.Type == rr.Type).ToArray();
                     if (existingRecords.Any())
                     {
@@ -118,17 +158,53 @@ namespace Ae.Dns.Protocol.Zone
                         records.Add(rr);
                     }
                 }
-
-                if (rr.Class == DnsQueryClass.QCLASS_ANY)
+                else if (rr.Class == DnsQueryClass.QCLASS_ANY)
                 {
-
+                    if (rr.Type == DnsQueryType.ANY)
+                    {
+                        if (rr.Host == zone.Origin)
+                        {
+                            throw new NotImplementedException();
+                        }
+                        else
+                        {
+                            foreach (var recordToRemove in records.Where(x => x.Host == rr.Host))
+                            {
+                                records.Remove(recordToRemove);
+                            }
+                        }
+                    }
+                    else if (rr.Host == zone.Origin && rr.Type == DnsQueryType.SOA || rr.Type == DnsQueryType.NS)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        foreach (var recordToRemove in records.Where(x => x.Host == rr.Host && x.Type == rr.Type))
+                        {
+                            records.Remove(recordToRemove);
+                        }
+                    }
                 }
-
-                if (rr.Class == DnsQueryClass.QCLASS_NONE)
+                else if (rr.Class == DnsQueryClass.QCLASS_NONE)
                 {
+                    if (rr.Type == DnsQueryType.SOA)
+                    {
+                        continue;
+                    }
+                    if (rr.Type == DnsQueryType.NS)
+                    {
+                        throw new NotImplementedException();
+                    }
 
+                    foreach (var recordToRemove in records.Where(x => x.Host == rr.Host && x.Type == rr.Type && Equals(x.Resource, rr.Resource)))
+                    {
+                        records.Remove(recordToRemove);
+                    }
                 }
             }
+
+            return DnsResponseCode.NoError;
         }
 
         /// <summary>
