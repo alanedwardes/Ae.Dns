@@ -39,7 +39,9 @@ namespace Ae.Dns.Client
             query.EnsureQueryType(DnsQueryType.SOA);
             query.EnsureHost(_dnsZone.Origin);
 
-            _logger.LogInformation("Recieved update query with pre-reqs {PreReqs} and update type {UpdateType}", query.GetZoneUpdatePreRequisite(), query.GetZoneUpdateType());
+            var preRequisites = _dnsZone.TestZoneUpdatePreRequisites(query);
+
+            _logger.LogInformation("Recieved update query {Query} with pre-reqs check result {PreReqs}", query, preRequisites);
 
             // TODO: this logic is bad
             var hostnames = query.Nameservers.Select(x => x.Host.ToString()).ToArray();
