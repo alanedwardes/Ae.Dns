@@ -39,23 +39,12 @@ namespace Ae.Dns.Client
             query.EnsureQueryType(DnsQueryType.SOA);
             query.EnsureHost(_dnsZone.Origin);
 
-            var preRequisites = _dnsZone.TestZoneUpdatePreRequisites(query);
-
-            _logger.LogInformation("Recieved update query {Query} with pre-reqs check result {PreReqs}", query, preRequisites);
-
             // TODO: this logic is bad
             var hostnames = query.Nameservers.Select(x => x.Host.ToString()).ToArray();
             var addresses = query.Nameservers.Select(x => x.Resource).OfType<DnsIpAddressResource>().Select(x => x.IPAddress).ToArray();
 
             DnsResponseCode ChangeRecords(ICollection<DnsResourceRecord> records)
             {
-                var preRequisitesResponseCode = _dnsZone.TestZoneUpdatePreRequisites(query);
-                if (preRequisitesResponseCode != DnsResponseCode.NoError)
-                {
-                    _logger.LogWarning("Pre-requisites check resulted in {ResponseCode} for {Update}", preRequisitesResponseCode, query);
-                    return preRequisitesResponseCode;
-                }
-
                 foreach (var recordToRemove in records.Where(x => hostnames.Contains(x.Host.ToString())).ToArray())
                 {
                     records.Remove(recordToRemove);

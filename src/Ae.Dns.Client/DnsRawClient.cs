@@ -46,6 +46,11 @@ namespace Ae.Dns.Client
                 throw;
             }
 
+            if (query.Header.OperationCode == Protocol.Enums.DnsOperationCode.UPDATE)
+            {
+                _logger.LogInformation("Update query {Bytes}", DnsByteExtensions.ToDebugString(queryBuffer.ToArray()));
+            }
+
             query.Header.Tags.Add("Sender", request.SourceEndpoint);
             query.Header.Tags.Add("Server", request.ServerName);
 
