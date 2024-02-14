@@ -1,12 +1,8 @@
 ﻿using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
-using Ae.Dns.Protocol.Records;
 using Ae.Dns.Protocol.Zone;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,37 +35,27 @@ namespace Ae.Dns.Client
             query.EnsureQueryType(DnsQueryType.SOA);
             query.EnsureHost(_dnsZone.Origin);
 
-            // TODO: this logic is bad
-            var hostnames = query.Nameservers.Select(x => x.Host.ToString()).ToArray();
-            var addresses = query.Nameservers.Select(x => x.Resource).OfType<DnsIpAddressResource>().Select(x => x.IPAddress).ToArray();
-
-            DnsResponseCode ChangeRecords(ICollection<DnsResourceRecord> records)
+            // Early out without requiring a lock (e.g. in the zone update)
+            var firstPreReqsCheckResponseCode = _dnsZone.TestZoneUpdatePreRequisites(query);
+            if (firstPreReqsCheckResponseCode != DnsResponseCode.NoError)
             {
-                foreach (var recordToRemove in records.Where(x => hostnames.Contains(x.Host.ToString())).ToArray())
-                {
-                    records.Remove(recordToRemove);
-                }
-
-                foreach (var recordToRemove in records.Where(x => x.Resource is DnsIpAddressResource ipr && addresses.Contains(ipr.IPAddress)).ToArray())
-                {
-                    records.Remove(recordToRemove);
-                }
-
-                foreach (var nameserver in query.Nameservers)
-                {
-                    records.Add(nameserver);
-                }
-
-                return DnsResponseCode.NoError;
-            };
-
-            if (query.Nameservers.Count > 0 && hostnames.All(x => !Regex.IsMatch(x, @"\s")) && hostnames.All(x => x.ToString().EndsWith(_dnsZone.Origin)))
-            {
-                var responseCode = await _dnsZone.Update(ChangeRecords);
-                return query.CreateAnswerMessage(responseCode, ToString());
+                return query.CreateAnswerMessage(firstPreReqsCheckResponseCode, ToString());
             }
 
-            return query.CreateAnswerMessage(DnsResponseCode.Refused, ToString());
+            // Run the zone update and return the response
+            return query.CreateAnswerMessage(await _dnsZone.Update(records =>
+            {
+                // The update method locks, it's unlikely but things could have changed since
+                // we ran the first pre-reqs check (given that can happen in parallel)
+                var responseCode = _dnsZone.TestZoneUpdatePreRequisites(query);
+                if (responseCode != DnsResponseCode.NoError)
+                {
+                    return responseCode;
+                }
+
+                // Run the updates against the zone.
+                return _dnsZone.PerformZoneUpdates(records, query);
+            }), ToString());
         }
 
         /// <inheritdoc/>
