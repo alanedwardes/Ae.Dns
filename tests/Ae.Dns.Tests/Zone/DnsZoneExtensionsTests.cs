@@ -5,12 +5,13 @@ using Ae.Dns.Protocol.Zone;
 using System.Linq;
 using Xunit;
 
+#pragma warning disable CS0618
+
 namespace Ae.Dns.Tests.Zone
 {
     public sealed class DnsZoneExtensionsTests
     {
         [Fact]
-        [System.Obsolete]
         public void TestUpdate6ModifyZone()
         {
             var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update6);
@@ -29,7 +30,6 @@ namespace Ae.Dns.Tests.Zone
         }
 
         [Fact]
-        [System.Obsolete]
         public void TestUpdate6PreReqsFail()
         {
             var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update6);
@@ -45,7 +45,6 @@ namespace Ae.Dns.Tests.Zone
         }
 
         [Fact]
-        [System.Obsolete]
         public void TestUpdate2PreReqsFail()
         {
             var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update2);
@@ -61,7 +60,6 @@ namespace Ae.Dns.Tests.Zone
         }
 
         [Fact]
-        [System.Obsolete]
         public void TestUpdate2ModifyZone()
         {
             var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update2);
@@ -83,7 +81,6 @@ namespace Ae.Dns.Tests.Zone
         }
 
         [Fact]
-        [System.Obsolete]
         public void TestUpdate7PreReqsFail()
         {
             var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update7);
@@ -99,7 +96,6 @@ namespace Ae.Dns.Tests.Zone
         }
 
         [Fact]
-        [System.Obsolete]
         public void TestUpdate7ModifyZone()
         {
             var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update7);
