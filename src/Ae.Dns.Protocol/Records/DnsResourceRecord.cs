@@ -130,7 +130,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public string ToZone(IDnsZone zone)
         {
-            return $"{zone.ToFormattedHost(Host)} {TimeToLive} {Class} {Type} {Resource?.ToZone(zone)}";
+            return string.Join(" ", new object?[] { zone.ToFormattedHost(Host), TimeToLive, Class, Type, Resource?.ToZone(zone)}.Select(x => x?.ToString()).Where(x => !string.IsNullOrEmpty(x?.ToString())));
         }
 
         /// <inheritdoc/>

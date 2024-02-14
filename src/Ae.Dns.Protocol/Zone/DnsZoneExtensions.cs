@@ -197,7 +197,7 @@ namespace Ae.Dns.Protocol.Zone
                         throw new NotImplementedException();
                     }
 
-                    foreach (var recordToRemove in records.Where(x => x.Host == rr.Host && x.Type == rr.Type && Equals(x.Resource, rr.Resource)))
+                    foreach (var recordToRemove in records.Where(x => x.Host == rr.Host && x.Type == rr.Type && Equals(x.Resource, rr.Resource)).ToArray())
                     {
                         records.Remove(recordToRemove);
                     }
