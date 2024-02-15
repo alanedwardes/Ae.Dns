@@ -257,7 +257,7 @@ namespace Ae.Dns.Protocol.Zone
                     }
                     else
                     {
-                        foreach (var recordToRemove in zone.Records.Where(x => x.Host == rr.Host && x.Type == rr.Type))
+                        foreach (var recordToRemove in zone.Records.Where(x => x.Host == rr.Host && x.Type == rr.Type).ToArray())
                         {
                             zone.Records.Remove(recordToRemove);
                         }

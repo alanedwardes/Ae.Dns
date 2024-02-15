@@ -5,36 +5,6 @@ using System.Linq;
 namespace Ae.Dns.Protocol.Records
 {
     /// <summary>
-    /// Extension methods around <see cref="DnsResourceRecord"/>.
-    /// </summary>
-    public static class DnsResourceRecordExtensions
-    {
-        /// <summary>
-        /// Create the <see cref="DnsResourceRecord"/> using the specified <see cref="DnsQueryType"/>.
-        /// </summary>
-        /// <returns></returns>
-        public static IDnsResource CreateResourceRecord(DnsQueryType dnsQueryType)
-        {
-            return dnsQueryType switch
-            {
-                DnsQueryType.A => new DnsIpAddressResource(),
-                DnsQueryType.AAAA => new DnsIpAddressResource(),
-                DnsQueryType.TEXT => new DnsTextResource(),
-                DnsQueryType.CNAME => new DnsDomainResource(),
-                DnsQueryType.NS => new DnsDomainResource(),
-                DnsQueryType.PTR => new DnsDomainResource(),
-                DnsQueryType.SPF => new DnsTextResource(),
-                DnsQueryType.SOA => new DnsSoaResource(),
-                DnsQueryType.MX => new DnsMxResource(),
-                DnsQueryType.OPT => new DnsOptResource(),
-                DnsQueryType.HTTPS => new DnsServiceBindingResource(),
-                DnsQueryType.SVCB => new DnsServiceBindingResource(),
-                _ => new DnsUnknownResource(),
-            };
-        }
-    }
-
-    /// <summary>
     /// Represents metadata around a DNS resource record returned by a DNS server.
     /// </summary>
     public sealed class DnsResourceRecord : IEquatable<DnsResourceRecord>, IDnsByteArrayReader, IDnsByteArrayWriter
@@ -98,7 +68,7 @@ namespace Ae.Dns.Protocol.Records
             var dataLength = DnsByteExtensions.ReadUInt16(bytes, ref offset);
             if (dataLength > 0)
             {
-                Resource = DnsResourceRecordExtensions.CreateResourceRecord(Type);
+                Resource = DnsResourceFactory.CreateResource(Type);
                 FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
             }
         }
