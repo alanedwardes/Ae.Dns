@@ -180,7 +180,7 @@ namespace Ae.Dns.Protocol.Zone
                     }
                     else
                     {
-                        foreach (var recordToRemove in records.Where(x => x.Host == rr.Host && x.Type == rr.Type))
+                        foreach (var recordToRemove in records.Where(x => x.Host == rr.Host && x.Type == rr.Type).ToArray())
                         {
                             records.Remove(recordToRemove);
                         }
