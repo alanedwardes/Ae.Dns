@@ -1,5 +1,4 @@
-﻿using Ae.Dns.Protocol.Zone;
-using System;
+﻿using System;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
@@ -39,19 +38,6 @@ namespace Ae.Dns.Protocol.Records
         public void ReadBytes(ReadOnlyMemory<byte> bytes, ref int offset, int length)
         {
             Raw = DnsByteExtensions.ReadBytes(bytes, length, ref offset);
-        }
-
-        /// <inheritdoc/>
-        public string ToZone(IDnsZone zone)
-        {
-            return $"({Convert.ToBase64String(Raw.ToArray())})";
-        }
-
-        /// <inheritdoc/>
-        public void FromZone(IDnsZone zone, string input)
-        {
-            var base64 = input.Trim().Trim(new char[] { '(', ')' });
-            Raw = Convert.FromBase64String(base64);
         }
 
         /// <inheritdoc/>

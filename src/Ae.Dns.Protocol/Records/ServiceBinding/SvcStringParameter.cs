@@ -1,5 +1,4 @@
-﻿using Ae.Dns.Protocol.Zone;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -48,18 +47,6 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
             {
                 DnsByteExtensions.ToBytes(entry, bytes, ref offset);
             }
-        }
-
-        /// <inheritdoc/>
-        public string ToZone(IDnsZone zone)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public void FromZone(IDnsZone zone, string input)
-        {
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

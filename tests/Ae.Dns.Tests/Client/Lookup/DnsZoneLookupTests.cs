@@ -1,15 +1,11 @@
-﻿#pragma warning disable CS0618 // Type or member is obsolete
-
-using Ae.Dns.Client.Lookup;
+﻿using Ae.Dns.Client.Lookup;
 using Ae.Dns.Protocol;
 using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using Ae.Dns.Protocol.Zone;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -19,50 +15,10 @@ namespace Ae.Dns.Tests.Client.Lookup
     {
         private sealed class DummyZoneNoRecords : IDnsZone
         {
-            public IReadOnlyList<DnsResourceRecord> Records { get; set; } = new List<DnsResourceRecord>();
-            public DnsLabels Origin { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public TimeSpan DefaultTtl { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public Func<IDnsZone, Task> ZoneUpdated { set => throw new NotImplementedException(); }
-
-            public Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, CancellationToken token = default)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DeserializeZone(StreamReader reader)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DeserializeZone(string zone)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string FromFormattedHost(string host)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void SerializeZone(StreamWriter writer)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string SerializeZone()
-            {
-                throw new NotImplementedException();
-            }
-
-            public string ToFormattedHost(string host)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<TResult> Update<TResult>(Func<IList<DnsResourceRecord>, TResult> modification)
-            {
-                throw new NotImplementedException();
-            }
+            public IList<DnsResourceRecord> Records { get; set; } = new List<DnsResourceRecord>();
+            public DnsLabels Origin { get; set; }
+            public TimeSpan? DefaultTtl { get; set; }
+            public Task<TResult> Update<TResult>(Func<TResult> modification) => throw new NotImplementedException();
         }
 
         [Fact]
@@ -78,7 +34,7 @@ namespace Ae.Dns.Tests.Client.Lookup
 
         private sealed class DummyZoneWithRecords : IDnsZone
         {
-            public IReadOnlyList<DnsResourceRecord> Records { get; set; } = new[]
+            public IList<DnsResourceRecord> Records { get; set; } = new[]
             {
                 new DnsResourceRecord { Host = "wibble", Class = DnsQueryClass.IN, Type = DnsQueryType.A, Resource = new DnsIpAddressResource { IPAddress = IPAddress.Loopback } },
                 new DnsResourceRecord { Host = "wibble", Class = DnsQueryClass.IN, Type = DnsQueryType.A, Resource = new DnsIpAddressResource { IPAddress = IPAddress.Broadcast } },
@@ -86,49 +42,9 @@ namespace Ae.Dns.Tests.Client.Lookup
                 new DnsResourceRecord { Host = "wibble", Class = DnsQueryClass.IN, Type = DnsQueryType.TEXT, Resource = new DnsTextResource { Entries = "hello2" } },
             };
 
-            public DnsLabels Origin { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public TimeSpan DefaultTtl { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public Func<IDnsZone, Task> ZoneUpdated { set => throw new NotImplementedException(); }
-
-            public Task<bool> ChangeRecords(Action<ICollection<DnsResourceRecord>> changeDelegate, CancellationToken token = default)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DeserializeZone(StreamReader reader)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DeserializeZone(string zone)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string FromFormattedHost(string host)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void SerializeZone(StreamWriter writer)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string SerializeZone()
-            {
-                throw new NotImplementedException();
-            }
-
-            public string ToFormattedHost(string host)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<TResult> Update<TResult>(Func<IList<DnsResourceRecord>, TResult> modification)
-            {
-                throw new NotImplementedException();
-            }
+            public DnsLabels Origin { get; set; }
+            public TimeSpan? DefaultTtl { get; set; }
+            public Task<TResult> Update<TResult>(Func<TResult> modification) => throw new NotImplementedException();
         }
 
         [Fact]

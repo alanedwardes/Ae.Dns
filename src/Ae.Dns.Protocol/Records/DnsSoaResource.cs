@@ -1,5 +1,4 @@
-﻿using Ae.Dns.Protocol.Zone;
-using System;
+﻿using System;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
@@ -87,27 +86,6 @@ namespace Ae.Dns.Protocol.Records
             Retry = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
             Expire = TimeSpan.FromSeconds(DnsByteExtensions.ReadInt32(bytes, ref offset));
             Minimum = TimeSpan.FromSeconds(DnsByteExtensions.ReadUInt32(bytes, ref offset));
-        }
-
-        /// <inheritdoc/>
-        public string ToZone(IDnsZone zone)
-        {
-            return string.Join(" ", new string[] { MName + '.', RName + '.', $"({Serial} {(int)Refresh.TotalSeconds} {(int)Retry.TotalSeconds} {(int)Expire.TotalSeconds} {(int)Minimum.TotalSeconds})" });
-        }
-
-        /// <inheritdoc/>
-        public void FromZone(IDnsZone zone, string input)
-        {
-            var parts = input.Split(null, 3);
-            MName = parts[0].Trim('.');
-            RName = parts[1].Trim('.');
-
-            var parts1 = parts[2].Trim(new[] { '(', ')' }).Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
-            Serial = uint.Parse(parts1[0]);
-            Refresh = TimeSpan.FromSeconds(int.Parse(parts1[1]));
-            Retry = TimeSpan.FromSeconds(int.Parse(parts1[2]));
-            Expire = TimeSpan.FromSeconds(int.Parse(parts1[3]));
-            Minimum = TimeSpan.FromSeconds(uint.Parse(parts1[4]));
         }
 
         /// <inheritdoc/>

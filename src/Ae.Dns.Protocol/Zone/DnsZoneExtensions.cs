@@ -1,9 +1,8 @@
 ﻿using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Ae.Dns.Protocol.Zone
 {
@@ -12,6 +11,85 @@ namespace Ae.Dns.Protocol.Zone
     /// </summary>
     public static class DnsZoneExtensions
     {
+        /// <inheritdoc/>
+        public static string FromFormattedHost(this IDnsZone zone, string host)
+        {
+            if (host == "@")
+            {
+                return zone.Origin;
+            }
+            else if (host.EndsWith("."))
+            {
+                return host.Substring(0, host.Length - 1);
+            }
+            else
+            {
+                return host + "." + zone.Origin;
+            }
+        }
+
+        /// <inheritdoc/>
+        public static string ToFormattedHost(this IDnsZone zone, string host)
+        {
+            if (Regex.IsMatch(host, @"\s"))
+            {
+                throw new InvalidOperationException($"Hostname '{host}' contains invalid characters");
+            }
+
+            if (host == zone.Origin)
+            {
+                return "@";
+            }
+            else if (host.EndsWith(zone.Origin))
+            {
+                return host.Substring(0, host.Length - zone.Origin.ToString().Length - 1);
+            }
+            else
+            {
+                return host + '.';
+            }
+        }
+
+        /// <summary>
+        /// Check that this resource record is a valid <see cref="DnsSoaResource"/> record.
+        /// </summary>
+        /// <param name="dnsResourceRecord"></param>
+        /// <returns></returns>
+        public static DnsResourceRecord EnsureValidSoaRecord(DnsResourceRecord dnsResourceRecord)
+        {
+            if (!IsValidSoaRecord(dnsResourceRecord))
+            {
+                throw new InvalidOperationException($"Invalid SOA record: {dnsResourceRecord}");
+            }
+
+            return dnsResourceRecord;
+        }
+
+        /// <summary>
+        /// Check that this resource record is a valid <see cref="DnsSoaResource"/> record.
+        /// </summary>
+        /// <param name="dnsResourceRecord"></param>
+        /// <returns></returns>
+        public static bool IsValidSoaRecord(DnsResourceRecord dnsResourceRecord)
+        {
+            if (dnsResourceRecord.Type != DnsQueryType.SOA)
+            {
+                return false;
+            }
+
+            if (dnsResourceRecord.Resource == null)
+            {
+                return false;
+            }
+
+            if (!(dnsResourceRecord.Resource is DnsSoaResource _))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Test the pre-requisites specified in the <see cref="DnsMessage"/>.
         /// </summary>
@@ -97,9 +175,8 @@ namespace Ae.Dns.Protocol.Zone
         /// Perform record updates for the specified <see cref="IDnsZone"/>.
         /// </summary>
         /// <param name="zone"></param>
-        /// <param name="records"></param>
         /// <param name="updateMessage"></param>
-        public static DnsResponseCode PerformZoneUpdates(this IDnsZone zone, ICollection<DnsResourceRecord> records, DnsMessage updateMessage)
+        public static DnsResponseCode PerformZoneUpdates(this IDnsZone zone, DnsMessage updateMessage)
         {
             var updates = updateMessage.Nameservers;
 
@@ -155,7 +232,7 @@ namespace Ae.Dns.Protocol.Zone
                     }
                     else
                     {
-                        records.Add(rr);
+                        zone.Records.Add(rr);
                     }
                 }
                 else if (rr.Class == DnsQueryClass.QCLASS_ANY)
@@ -168,9 +245,9 @@ namespace Ae.Dns.Protocol.Zone
                         }
                         else
                         {
-                            foreach (var recordToRemove in records.Where(x => x.Host == rr.Host))
+                            foreach (var recordToRemove in zone.Records.Where(x => x.Host == rr.Host))
                             {
-                                records.Remove(recordToRemove);
+                                zone.Records.Remove(recordToRemove);
                             }
                         }
                     }
@@ -180,9 +257,9 @@ namespace Ae.Dns.Protocol.Zone
                     }
                     else
                     {
-                        foreach (var recordToRemove in records.Where(x => x.Host == rr.Host && x.Type == rr.Type))
+                        foreach (var recordToRemove in zone.Records.Where(x => x.Host == rr.Host && x.Type == rr.Type))
                         {
-                            records.Remove(recordToRemove);
+                            zone.Records.Remove(recordToRemove);
                         }
                     }
                 }
@@ -197,9 +274,9 @@ namespace Ae.Dns.Protocol.Zone
                         throw new NotImplementedException();
                     }
 
-                    foreach (var recordToRemove in records.Where(x => x.Host == rr.Host && x.Type == rr.Type && Equals(x.Resource, rr.Resource)).ToArray())
+                    foreach (var recordToRemove in zone.Records.Where(x => x.Host == rr.Host && x.Type == rr.Type && Equals(x.Resource, rr.Resource)).ToArray())
                     {
-                        records.Remove(recordToRemove);
+                        zone.Records.Remove(recordToRemove);
                     }
                 }
             }

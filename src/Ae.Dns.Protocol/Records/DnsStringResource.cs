@@ -1,5 +1,4 @@
-﻿using Ae.Dns.Protocol.Zone;
-using System;
+﻿using System;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
@@ -52,11 +51,5 @@ namespace Ae.Dns.Protocol.Records
         {
             DnsByteExtensions.ToBytes(Entries.ToArray(), bytes, ref offset);
         }
-
-        /// <inheritdoc/>
-        public abstract string ToZone(IDnsZone zone);
-
-        /// <inheritdoc/>
-        public abstract void FromZone(IDnsZone zone, string input);
     }
 }

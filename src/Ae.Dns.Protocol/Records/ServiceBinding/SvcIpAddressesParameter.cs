@@ -1,5 +1,4 @@
-﻿using Ae.Dns.Protocol.Zone;
-using System;
+﻿using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -73,18 +72,6 @@ namespace Ae.Dns.Protocol.Records.ServiceBinding
                 address.CopyTo(bytes.Slice(offset).Span);
                 offset += address.Length;
             }
-        }
-
-        /// <inheritdoc/>
-        public string ToZone(IDnsZone zone)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public void FromZone(IDnsZone zone, string input)
-        {
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

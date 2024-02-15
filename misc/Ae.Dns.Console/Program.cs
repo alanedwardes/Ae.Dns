@@ -197,13 +197,13 @@ namespace Ae.Dns.Console
 
             if (dnsConfiguration.UpdateZoneName != null)
             {
-                var dnsZone = new DnsZone();
+                var dnsZone = new SingleWriterDnsZone();
                 var zoneFile = $"{dnsConfiguration.UpdateZoneName}.zone";
 
                 if (File.Exists(zoneFile))
                 {
                     // Load the existing zone file
-                    dnsZone.DeserializeZone(File.ReadAllText(zoneFile));
+                    DnsZoneSerializer.DeserializeZone(dnsZone, File.ReadAllText(zoneFile));
                     selfLogger.LogInformation("Loaded {RecordCount} records from zone file {ZoneFile}", dnsZone.Records.Count, zoneFile);
                 }
                 else
@@ -215,7 +215,7 @@ namespace Ae.Dns.Console
                 }
 
                 // Update the file when the zone is updated
-                dnsZone.ZoneUpdated = async zone => await File.WriteAllTextAsync(zoneFile, zone.SerializeZone());
+                dnsZone.ZoneUpdated = async zone => await File.WriteAllTextAsync(zoneFile, DnsZoneSerializer.SerializeZone(zone));
 
                 // Replace the clients with clients for the zone
                 queryClient = new DnsZoneClient(queryClient, dnsZone);

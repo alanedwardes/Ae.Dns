@@ -43,7 +43,7 @@ namespace Ae.Dns.Client
             }
 
             // Run the zone update and return the response
-            return query.CreateAnswerMessage(await _dnsZone.Update(records =>
+            return query.CreateAnswerMessage(await _dnsZone.Update(() =>
             {
                 // The update method locks, it's unlikely but things could have changed since
                 // we ran the first pre-reqs check (given that can happen in parallel)
@@ -54,7 +54,7 @@ namespace Ae.Dns.Client
                 }
 
                 // Run the updates against the zone.
-                return _dnsZone.PerformZoneUpdates(records, query);
+                return _dnsZone.PerformZoneUpdates(query);
             }), ToString());
         }
 

@@ -5,7 +5,7 @@ namespace Ae.Dns.Protocol.Records
     /// <summary>
     /// Represents a type of DNS resource.
     /// </summary>
-    public interface IDnsResource : IDnsByteArrayWriter, IDnsZoneConverter
+    public interface IDnsResource : IDnsByteArrayWriter
     {
         /// <summary>
         /// Read from the specified byte array, starting at the specified offset.

@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Protocol.Enums;
-using Ae.Dns.Protocol.Zone;
 using System;
 
 namespace Ae.Dns.Protocol.Records
@@ -51,20 +50,6 @@ namespace Ae.Dns.Protocol.Records
         {
             Preference = DnsByteExtensions.ReadUInt16(bytes, ref offset);
             base.ReadBytes(bytes, ref offset, length - sizeof(ushort));
-        }
-
-        /// <inheritdoc/>
-        public override void FromZone(IDnsZone zone, string input)
-        {
-            var parts = input.Split(null);
-            Preference = ushort.Parse(parts[0]);
-            Entries = zone.FromFormattedHost(parts[1]);
-        }
-
-        /// <inheritdoc/>
-        public override string ToZone(IDnsZone zone)
-        {
-            return $"{Preference} {zone.ToFormattedHost(Entries)}";
         }
 
         /// <inheritdoc/>

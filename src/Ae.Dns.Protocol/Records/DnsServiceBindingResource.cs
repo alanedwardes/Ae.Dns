@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using Ae.Dns.Protocol.Records.ServiceBinding;
-using Ae.Dns.Protocol.Zone;
 
 namespace Ae.Dns.Protocol.Records
 {
@@ -101,18 +100,6 @@ namespace Ae.Dns.Protocol.Records
 
                 offset += resourceLength;
             }
-        }
-
-        /// <inheritdoc/>
-        public string ToZone(IDnsZone zone)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public void FromZone(IDnsZone zone, string input)
-        {
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

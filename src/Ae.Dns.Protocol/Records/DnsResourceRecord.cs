@@ -1,14 +1,43 @@
 ﻿using Ae.Dns.Protocol.Enums;
-using Ae.Dns.Protocol.Zone;
 using System;
 using System.Linq;
 
 namespace Ae.Dns.Protocol.Records
 {
     /// <summary>
+    /// Extension methods around <see cref="DnsResourceRecord"/>.
+    /// </summary>
+    public static class DnsResourceRecordExtensions
+    {
+        /// <summary>
+        /// Create the <see cref="DnsResourceRecord"/> using the specified <see cref="DnsQueryType"/>.
+        /// </summary>
+        /// <returns></returns>
+        public static IDnsResource CreateResourceRecord(DnsQueryType dnsQueryType)
+        {
+            return dnsQueryType switch
+            {
+                DnsQueryType.A => new DnsIpAddressResource(),
+                DnsQueryType.AAAA => new DnsIpAddressResource(),
+                DnsQueryType.TEXT => new DnsTextResource(),
+                DnsQueryType.CNAME => new DnsDomainResource(),
+                DnsQueryType.NS => new DnsDomainResource(),
+                DnsQueryType.PTR => new DnsDomainResource(),
+                DnsQueryType.SPF => new DnsTextResource(),
+                DnsQueryType.SOA => new DnsSoaResource(),
+                DnsQueryType.MX => new DnsMxResource(),
+                DnsQueryType.OPT => new DnsOptResource(),
+                DnsQueryType.HTTPS => new DnsServiceBindingResource(),
+                DnsQueryType.SVCB => new DnsServiceBindingResource(),
+                _ => new DnsUnknownResource(),
+            };
+        }
+    }
+
+    /// <summary>
     /// Represents metadata around a DNS resource record returned by a DNS server.
     /// </summary>
-    public sealed class DnsResourceRecord : IEquatable<DnsResourceRecord>, IDnsByteArrayReader, IDnsByteArrayWriter, IDnsZoneConverter
+    public sealed class DnsResourceRecord : IEquatable<DnsResourceRecord>, IDnsByteArrayReader, IDnsByteArrayWriter
     {
         /// <summary>
         /// The type of DNS query.
@@ -34,26 +63,6 @@ namespace Ae.Dns.Protocol.Records
         /// class depending on the <see cref="Type"/>.
         /// </summary>
         public IDnsResource? Resource { get; set; }
-
-        private IDnsResource CreateResourceRecord(DnsQueryType recordType)
-        {
-            return recordType switch
-            {
-                DnsQueryType.A => new DnsIpAddressResource(),
-                DnsQueryType.AAAA => new DnsIpAddressResource(),
-                DnsQueryType.TEXT => new DnsTextResource(),
-                DnsQueryType.CNAME => new DnsDomainResource(),
-                DnsQueryType.NS => new DnsDomainResource(),
-                DnsQueryType.PTR => new DnsDomainResource(),
-                DnsQueryType.SPF => new DnsTextResource(),
-                DnsQueryType.SOA => new DnsSoaResource(),
-                DnsQueryType.MX => new DnsMxResource(),
-                DnsQueryType.OPT => new DnsOptResource(),
-                DnsQueryType.HTTPS => new DnsServiceBindingResource(),
-                DnsQueryType.SVCB => new DnsServiceBindingResource(),
-                _ => new DnsUnknownResource(),
-            };
-        }
 
         /// <inheritdoc/>
         public override string ToString() => $"Name: {Host} Type: {Type} Class: {Class} TTL: {TimeToLive} Resource: {Resource}";
@@ -89,7 +98,7 @@ namespace Ae.Dns.Protocol.Records
             var dataLength = DnsByteExtensions.ReadUInt16(bytes, ref offset);
             if (dataLength > 0)
             {
-                Resource = CreateResourceRecord(Type);
+                Resource = DnsResourceRecordExtensions.CreateResourceRecord(Type);
                 FromBytesKnownLength(Resource, bytes, ref offset, dataLength);
             }
         }
@@ -125,53 +134,6 @@ namespace Ae.Dns.Protocol.Records
 
             // Advance the offset with the size of the resource
             offset += resourceSize;
-        }
-
-        /// <inheritdoc/>
-        public string ToZone(IDnsZone zone)
-        {
-            return string.Join(" ", new object?[] { zone.ToFormattedHost(Host), TimeToLive, Class, Type, Resource?.ToZone(zone)}.Select(x => x?.ToString()).Where(x => !string.IsNullOrEmpty(x?.ToString())));
-        }
-
-        /// <inheritdoc/>
-        public void FromZone(IDnsZone zone, string input)
-        {
-            var parts = input.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
-
-            var index = 0;
-
-            if (char.IsWhiteSpace(input.First()))
-            {
-                Host = zone.Records.Last().Host;
-            }
-            else
-            {
-                Host = zone.FromFormattedHost(parts[index++]);
-            }
-
-            if (uint.TryParse(parts[index], out var ttl))
-            {
-                TimeToLive = ttl;
-                index++;
-            }
-            else
-            {
-                TimeToLive = (uint)zone.DefaultTtl.TotalSeconds;
-            }
-
-            if (Enum.TryParse<DnsQueryClass>(parts[index], out var cl))
-            {
-                Class = cl;
-                index++;
-            }
-            else
-            {
-                Class = zone.Records.Last().Class;
-            }
-
-            Type = (DnsQueryType)Enum.Parse(typeof(DnsQueryType), parts[index++]);
-            Resource = CreateResourceRecord(Type);
-            Resource.FromZone(zone, string.Join(" ", parts.Skip(index)));
         }
     }
 }
