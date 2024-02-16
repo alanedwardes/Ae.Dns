@@ -226,5 +226,19 @@ namespace Ae.Dns.Protocol
             buffer.Span[offset++] = (byte)(value >> 8);
             buffer.Span[offset++] = (byte)(value >> 0);
         }
+
+        public static byte[] ToBytes(this IDnsByteArrayWriter writer)
+        {
+            var buffer = AllocatePinnedNetworkBuffer();
+
+            var offset = 0;
+            writer.WriteBytes(buffer, ref offset);
+
+#if NET6_0_OR_GREATER
+            return buffer.Slice(0, offset).ToArray();
+#else
+            return buffer.Slice(0, offset).Array;
+#endif
+        }
     }
 }
