@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.Metrics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.Caching;
@@ -254,6 +255,11 @@ namespace Ae.Dns.Console
                         query = query.Where(x => x.Answer?.Resolver == context.Request.Query["resolver"]);
                     }
 
+                    if (context.Request.Query.ContainsKey("upstream"))
+                    {
+                        query = query.Where(x => x.Answer?.Upstream == bool.TryParse(context.Request.Query["upstream"], out bool upstream) && upstream);
+                    }
+
                     if (context.Request.Query.ContainsKey("server"))
                     {
                         query = query.Where(x => x.Query.Server == context.Request.Query["server"]);
@@ -326,6 +332,18 @@ namespace Ae.Dns.Console
                         }
                     }
 
+                    string? UpstreamFilter(DnsQuery dnsQuery)
+                    {
+                        if (dnsQuery.Answer == null)
+                        {
+                            return null;
+                        }
+                        else
+                        {
+                            return $"<a href=\"{CreateQueryString("upstream", dnsQuery.Answer.Upstream)}\">{dnsQuery.Answer.Upstream}</a>";
+                        }
+                    }
+
                     string ServerFilter(DnsQuery dnsQuery)
                     {
                         return $"<a href=\"{CreateQueryString("server", dnsQuery.Query.Server)}\">{dnsQuery.Query.Server}</a>";
@@ -358,8 +376,12 @@ namespace Ae.Dns.Console
                     await GroupToTable(filteredQueries.GroupBy(QueryTypeFilter), "Query Type", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Answer Sources</h2>");
-                    await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code or upstream which generated them.</p>");
+                    await context.Response.WriteAsync($"<p>Top sources of query responses in terms of the code which generated them.</p>");
                     await GroupToTable(filteredQueries.GroupBy(ResolverFilter), "Answer Source", "Hits");
+
+                    await context.Response.WriteAsync($"<h2>Upstream Used</h2>");
+                    await context.Response.WriteAsync($"<p>Whether an upstream generated the response or not.</p>");
+                    await GroupToTable(filteredQueries.GroupBy(UpstreamFilter), "Upstream Used", "Hits");
 
                     await context.Response.WriteAsync($"<h2>Top Servers</h2>");
                     await context.Response.WriteAsync($"<p>Top servers used.</p>");
@@ -390,6 +412,7 @@ namespace Ae.Dns.Console
                 QueryType = header.QueryType;
                 Host = header.Host;
                 Resolver = (header.Tags.ContainsKey("Resolver") ? header.Tags["Resolver"].ToString() : null) ?? "Unknown";
+                Upstream = header.Tags.ContainsKey("Upstream");
                 BlockReason = (header.Tags.ContainsKey("BlockReason") ? header.Tags["BlockReason"].ToString() : null) ?? "None";
                 Server = (header.Tags.ContainsKey("Server") ? header.Tags["Server"].ToString() : null) ?? "Unknown";
             }
@@ -398,6 +421,7 @@ namespace Ae.Dns.Console
             public DnsQueryType QueryType { get; }
             public string Host { get; }
             public string Resolver { get; }
+            public bool Upstream { get; }
             public string BlockReason { get; }
             public string Server { get; }
         }

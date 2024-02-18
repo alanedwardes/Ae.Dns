@@ -159,6 +159,7 @@ namespace Ae.Dns.Client
             // Copy the same ID from the request
             answer.Header.Id = query.Header.Id;
             answer.Header.Tags.Add("Resolver", ToString());
+            answer.Header.Tags.Add("Upstream", _options.Endpoint);
             return answer;
         }
 

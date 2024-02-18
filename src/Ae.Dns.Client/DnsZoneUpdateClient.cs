@@ -39,7 +39,6 @@ namespace Ae.Dns.Client
             var firstPreReqsCheckResponseCode = _dnsZone.TestZoneUpdatePreRequisites(query);
             if (firstPreReqsCheckResponseCode != DnsResponseCode.NoError)
             {
-                _logger.LogWarning("Returning response {ResponseCode} for query {Bytes}", firstPreReqsCheckResponseCode, DnsByteExtensions.ToDebugString(query.ToBytes()));
                 return query.CreateAnswerMessage(firstPreReqsCheckResponseCode, ToString());
             }
 

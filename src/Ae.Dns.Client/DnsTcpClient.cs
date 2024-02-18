@@ -85,6 +85,7 @@ namespace Ae.Dns.Client
 
             var answer = DnsByteExtensions.FromBytes<DnsMessage>(answerBuffer);
             answer.Header.Tags.Add("Resolver", ToString());
+            answer.Header.Tags.Add("Upstream", _options.Endpoint);
             return answer;
         }
 
