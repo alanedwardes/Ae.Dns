@@ -255,9 +255,9 @@ namespace Ae.Dns.Console
                         query = query.Where(x => x.Answer?.Resolver == context.Request.Query["resolver"]);
                     }
 
-                    if (context.Request.Query.ContainsKey("upstream"))
+                    if (context.Request.Query.ContainsKey("upstream") && bool.TryParse(context.Request.Query["upstream"], out bool upstream))
                     {
-                        query = query.Where(x => x.Answer?.Upstream == bool.TryParse(context.Request.Query["upstream"], out bool upstream) && upstream);
+                        query = query.Where(x => x.Answer?.Upstream == upstream);
                     }
 
                     if (context.Request.Query.ContainsKey("server"))
