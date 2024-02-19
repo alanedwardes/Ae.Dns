@@ -272,7 +272,15 @@ namespace Ae.Dns.Console
 
                     if (context.Request.Query.ContainsKey("host"))
                     {
-                        query = query.Where(x => x.Query.Host.EndsWith(context.Request.Query["host"]));
+                        switch (context.Request.Query.TryGetValue("hostFilterType", out var rawFilterType) ? rawFilterType.ToString() : "suffix")
+                        {
+                            case "match":
+                                query = query.Where(x => x.Query.Host.Contains(context.Request.Query["host"], StringComparison.InvariantCultureIgnoreCase));
+                                break;
+                            case "suffix":
+                                query = query.Where(x => x.Query.Host.EndsWith(context.Request.Query["host"], StringComparison.InvariantCultureIgnoreCase));
+                                break;
+                        }
                     }
 
                     var filteredQueries = query.ToArray();
