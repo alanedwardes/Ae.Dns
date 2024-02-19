@@ -270,9 +270,11 @@ namespace Ae.Dns.Console
                         query = query.Where(x => x.Query.BlockReason == context.Request.Query["blockReason"]);
                     }
 
+                    var hostFilter = context.Request.Query.TryGetValue("hostFilter", out var rawHostFilter) ? rawHostFilter.ToString() : "suffix";
+
                     if (context.Request.Query.ContainsKey("host"))
                     {
-                        switch (context.Request.Query.TryGetValue("hostFilterType", out var rawFilterType) ? rawFilterType.ToString() : "suffix")
+                        switch (hostFilter)
                         {
                             case "match":
                                 query = query.Where(x => x.Query.Host.Contains(context.Request.Query["host"], StringComparison.InvariantCultureIgnoreCase));
@@ -299,6 +301,23 @@ namespace Ae.Dns.Console
                     {
                         await context.Response.WriteAsync($"<p>Filters applied: {string.Join(", ", context.Request.Query.Select(x => $"<a href=\"{CreateQueryStringWithout(x.Key)}\">{x.Key} is {x.Value}</a>"))}.</p>");
                     }
+
+                    await context.Response.WriteAsync($"<form action=\"\" method=\"GET\">");
+                    foreach (var queryItem in context.Request.Query.Where(x => x.Key != "hostFilter" && x.Key != "host"))
+                    {
+                        await context.Response.WriteAsync($"<input type=\"hidden\" name=\"{queryItem.Key}\" value=\"{queryItem.Value}\"/>");
+                    }
+
+                    await context.Response.WriteAsync($"<input placeholder=\"Query\" type=\"text\" name=\"host\" value=\"{(context.Request.Query.TryGetValue("host", out var rawHost) ? rawHost.ToString() : "")}\"/>");
+
+                    await context.Response.WriteAsync($"<select name=\"hostFilter\">");
+                    await context.Response.WriteAsync($"<option value=\"match\" {(hostFilter == "match" ? "selected" : string.Empty)}>Match</option>");
+                    await context.Response.WriteAsync($"<option value=\"suffix\" {(hostFilter == "suffix" ? "selected" : string.Empty)}>Suffix</option>");
+                    await context.Response.WriteAsync($"</select>");
+
+                    await context.Response.WriteAsync($"<input type=\"submit\" value=\"Submit\"/>");
+
+                    await context.Response.WriteAsync($"</form>");
 
                     var domainParts = 1;
                     if (context.Request.Query.ContainsKey("parts") && int.TryParse(context.Request.Query["parts"], out var parts))
