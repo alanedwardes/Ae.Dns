@@ -10,6 +10,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="AK.App.Metrics.Reporting.InfluxDB2" Version="4.2.0" />
+		<PackageReference Include="App.Metrics.AspNetCore.All" Version="4.3.0" />
+		<PackageReference Include="App.Metrics.Prometheus" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
 		<PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />

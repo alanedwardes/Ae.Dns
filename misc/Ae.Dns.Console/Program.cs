@@ -8,6 +8,8 @@ using Ae.Dns.Protocol.Zone;
 using Ae.Dns.Server;
 using Ae.Dns.Server.Http;
 using App.Metrics;
+using App.Metrics.AspNetCore;
+using App.Metrics.Formatters.Prometheus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -157,18 +159,7 @@ namespace Ae.Dns.Console
 
             var metricsBuilder = new MetricsBuilder();
 
-            if (dnsConfiguration.InfluxDbMetrics != null)
-            {
-                metricsBuilder.Report.ToInfluxDb(options =>
-                {
-                    options.InfluxDb.BaseUri = dnsConfiguration.InfluxDbMetrics.BaseUri;
-                    options.InfluxDb.Organization = dnsConfiguration.InfluxDbMetrics.Organization;
-                    options.InfluxDb.Bucket = dnsConfiguration.InfluxDbMetrics.Bucket;
-                    options.InfluxDb.Token = dnsConfiguration.InfluxDbMetrics.Token;
-                });
-            }
-
-            var metrics = metricsBuilder.Build();
+            var metrics = new MetricsBuilder().OutputMetrics.AsPrometheusPlainText().Build();
 
             async Task ReportStats(CancellationToken token)
             {
@@ -253,6 +244,14 @@ namespace Ae.Dns.Console
 
             // Add a very basic stats panel
             var builder = Host.CreateDefaultBuilder()
+                .ConfigureMetrics(metrics)
+                .UseMetrics(options =>
+                {
+                    options.EndpointOptions = endpointsOptions =>
+                    {
+                        endpointsOptions.MetricsTextEndpointOutputFormatter = metrics.OutputMetricsFormatters.OfType<MetricsPrometheusTextOutputFormatter>().First();
+                    };
+                })
                 .ConfigureLogging(x =>
                 {
                     x.AddConsole();

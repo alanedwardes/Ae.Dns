@@ -13,7 +13,6 @@ namespace Ae.Dns.Console
         public string[] DisallowedQueryTypes { get; set; } = new string[0];
         public string[] HostFiles { get; set; } = new string[0];
         public string? UpdateZoneName { get; set; }
-        public DnsInfluxDbConfiguration? InfluxDbMetrics { get; set; }
         public Dictionary<string, string[]> ClientGroups { get; set; } = new Dictionary<string, string[]>();
     }
 }
