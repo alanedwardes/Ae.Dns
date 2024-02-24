@@ -73,7 +73,7 @@ namespace Ae.Dns.Client
 
             var answer = DnsByteExtensions.FromBytes<DnsMessage>(buffer);
             answer.Header.Tags.Add("Resolver", ToString());
-            answer.Header.Tags.Add("Upstream", _httpClient.BaseAddress);
+            answer.Header.Tags.Add("Upstream", true);
             return answer;
         }
 
