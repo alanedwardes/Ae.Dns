@@ -61,9 +61,9 @@ namespace Ae.Dns.Metrics.InfluxDb
                 { "QueryType", answer.Header.QueryType.ToString() }
             };
 
-            if (answer.Header.Tags.TryGetValue("Resolver", out var resolver))
+            foreach (var tag in answer.Header.Tags)
             {
-                tags.Add("Resolver", resolver.ToString());
+                tags.Add(tag.Key, tag.Value.ToString());
             }
 
             _metrics.Measure.Timer.Time(new TimerOptions
