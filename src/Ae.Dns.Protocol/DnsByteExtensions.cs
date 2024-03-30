@@ -205,14 +205,17 @@ namespace Ae.Dns.Protocol
             offset += 1 + length;
         }
 
-        public static void ToBytes(ReadOnlySpan<string> strings, Memory<byte> buffer, ref int offset)
+        public static void ToBytes(ReadOnlySpan<string> strings, Memory<byte> buffer, ref int offset, bool nullTerminator = true)
         {
             for (int i = 0; i < strings.Length; i++)
             {
                 ToBytes(strings[i], buffer, ref offset);
             }
 
-            buffer.Span[offset++] = 0;
+            if (nullTerminator)
+            {
+                buffer.Span[offset++] = 0;
+            }
         }
 
         public static void ToBytes(int value, Memory<byte> buffer, ref int offset)

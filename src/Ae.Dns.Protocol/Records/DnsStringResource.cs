@@ -35,6 +35,10 @@ namespace Ae.Dns.Protocol.Records
 
         /// <summary>
         /// Describes whether this string resource can use string compression.
+        /// If this resource describes a &lt;domain-name&gt; as per RFC 1035 terminology,
+        /// then compression can be used. If it describes a &lt;character-string&gt; as per
+        /// RFC 1035 terminology, compression cannot be used. In addition, &lt;domain-name&gt;
+        /// entries end in a null terminator, whereas &lt;character-string&gt; resources do not.
         /// </summary>
         protected abstract bool CanUseCompression { get; }
 
@@ -49,7 +53,7 @@ namespace Ae.Dns.Protocol.Records
         /// <inheritdoc/>
         public virtual void WriteBytes(Memory<byte> bytes, ref int offset)
         {
-            DnsByteExtensions.ToBytes(Entries.ToArray(), bytes, ref offset);
+            DnsByteExtensions.ToBytes(Entries.ToArray(), bytes, ref offset, !CanUseCompression);
         }
     }
 }
