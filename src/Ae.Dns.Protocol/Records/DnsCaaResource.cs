@@ -29,6 +29,21 @@ namespace Ae.Dns.Protocol.Records
         /// </summary>
         public ReadOnlyMemory<byte> Value { get; set; }
 
+        /// <summary>
+        /// If this value is known to be a string, return it as ASCII.
+        /// </summary>
+        public string ValueAsString
+        {
+            get
+            {
+#if NETSTANDARD2_0
+                return Encoding.ASCII.GetString(Value.ToArray());
+#else
+                return Encoding.ASCII.GetString(Value.Span);
+#endif
+            }
+        }
+
         /// <inheritdoc/>
         public bool Equals(DnsCaaResource? other)
         {
@@ -57,7 +72,7 @@ namespace Ae.Dns.Protocol.Records
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"{Flag} {Tag} {Encoding.ASCII.GetString(Value.ToArray())}";
+        public override string ToString() => $"{Flag} {Tag} {ValueAsString}";
 
         /// <inheritdoc/>
         public void WriteBytes(Memory<byte> bytes, ref int offset)
