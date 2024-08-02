@@ -277,10 +277,10 @@ namespace Ae.Dns.Console
                         switch (hostFilter)
                         {
                             case "match":
-                                query = query.Where(x => x.Query.Host.Contains(context.Request.Query["host"], StringComparison.InvariantCultureIgnoreCase));
+                                query = query.Where(x => x.Query.Host.Contains(context.Request.Query["host"]!, StringComparison.InvariantCultureIgnoreCase));
                                 break;
                             case "suffix":
-                                query = query.Where(x => x.Query.Host.EndsWith(context.Request.Query["host"], StringComparison.InvariantCultureIgnoreCase));
+                                query = query.Where(x => x.Query.Host.EndsWith(context.Request.Query["host"]!, StringComparison.InvariantCultureIgnoreCase));
                                 break;
                         }
                     }
