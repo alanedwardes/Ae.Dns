@@ -28,6 +28,7 @@ namespace Ae.Dns.Protocol.Records
                 DnsQueryType.OPT => new DnsOptResource(),
                 DnsQueryType.HTTPS => new DnsServiceBindingResource(),
                 DnsQueryType.SVCB => new DnsServiceBindingResource(),
+                DnsQueryType.CAA => new DnsCaaResource(),
                 _ => new DnsUnknownResource(),
             };
         }

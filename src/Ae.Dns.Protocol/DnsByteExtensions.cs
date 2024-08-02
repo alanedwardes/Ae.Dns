@@ -67,15 +67,20 @@ namespace Ae.Dns.Protocol
             return data;
         }
 
-        private static string ReadStringSimple(ReadOnlyMemory<byte> bytes, ref int offset)
+        private static string ReadStringFromBuffer(ReadOnlySpan<byte> bytes)
+        {
+#if NETSTANDARD2_0
+            return Encoding.ASCII.GetString(bytes.ToArray());
+#else
+            return Encoding.ASCII.GetString(bytes);
+#endif
+        }
+
+        public static string ReadStringWithLengthPrefix(ReadOnlyMemory<byte> bytes, ref int offset)
         {
             byte labelLength = bytes.Span[offset];
             offset += 1;
-#if NETSTANDARD2_0
-            var str = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength).ToArray());
-#else
-            var str = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength).Span);
-#endif
+            var str = ReadStringFromBuffer(bytes.Slice(offset, labelLength).Span);
             offset += labelLength;
             return str;
         }
@@ -106,7 +111,7 @@ namespace Ae.Dns.Protocol
                     offset = ReadUInt16(bytes.Span[offset + 1], (byte)(bytes.Span[offset] & (1 << 6) - 1));
                 }
 
-                parts.Add(ReadStringSimple(bytes, ref offset));
+                parts.Add(ReadStringWithLengthPrefix(bytes, ref offset));
             }
 
             if (preCompressionOffset.HasValue)
@@ -171,16 +176,27 @@ namespace Ae.Dns.Protocol
             return reader;
         }
 
+        private static int ToBytesNoLengthPrefix(string value, Memory<byte> buffer, ref int offset)
+        {
+#if NETSTANDARD2_0
+            var stringBytes = Encoding.ASCII.GetBytes(value);
+            stringBytes.CopyTo(buffer.Slice(offset, value.Length));
+            var length = stringBytes.Length;
+#else
+            var length = Encoding.ASCII.GetBytes(value, buffer.Slice(offset, value.Length).Span);
+#endif
+            // Finally advance the offset past the length and value
+            offset += length;
+
+            return length;
+        }
+
         public static void ToBytes(string value, Memory<byte> buffer, ref int offset)
         {
             // First write the value 1 byte from the offset to leave room for the length byte
-#if NETSTANDARD2_0
-            var stringBytes = Encoding.ASCII.GetBytes(value);
-            stringBytes.CopyTo(buffer.Slice(offset + 1, value.Length));
-            var length = stringBytes.Length;
-#else
-            var length = Encoding.ASCII.GetBytes(value, buffer.Slice(offset + 1, value.Length).Span);
-#endif
+            var offsetPlusOne = offset + 1;
+            var length = ToBytesNoLengthPrefix(value, buffer, ref offsetPlusOne);
+
 
             // Then write the length before the value
             buffer.Span[offset] = (byte)length;
@@ -189,14 +205,17 @@ namespace Ae.Dns.Protocol
             offset += 1 + length;
         }
 
-        public static void ToBytes(ReadOnlySpan<string> strings, Memory<byte> buffer, ref int offset)
+        public static void ToBytes(ReadOnlySpan<string> strings, Memory<byte> buffer, ref int offset, bool nullTerminator = true)
         {
             for (int i = 0; i < strings.Length; i++)
             {
                 ToBytes(strings[i], buffer, ref offset);
             }
 
-            buffer.Span[offset++] = 0;
+            if (nullTerminator)
+            {
+                buffer.Span[offset++] = 0;
+            }
         }
 
         public static void ToBytes(int value, Memory<byte> buffer, ref int offset)
