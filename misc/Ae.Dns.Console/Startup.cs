@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -66,6 +67,12 @@ namespace Ae.Dns.Console
                     await context.Response.WriteAsync("</table>");
                 }
 
+                var pageLimit = 20;
+                if (context.Request.Query.ContainsKey("limit"))
+                {
+                    _ = int.TryParse(context.Request.Query["limit"], out pageLimit);
+                }
+
                 async Task GroupToTable(IEnumerable<IGrouping<string?, DnsQuery>> groups, params string[] headings)
                 {
                     var table = new DataTable();
@@ -77,17 +84,17 @@ namespace Ae.Dns.Console
 
                     table.Columns.Add("Percentage");
 
-                    var itemCounts = groups.Select(x => KeyValuePair.Create<string?, int>(x.Key, x.Count())).OrderByDescending(x => x.Value).ToList();
+                    var itemCounts = groups.Select(x => KeyValuePair.Create(x.Key, x.Count())).OrderByDescending(x => x.Value).ToList();
                     var totalCount = itemCounts.Sum(x => x.Value);
 
                     int CalculatePercentage(int count) => (int)(count / (double)totalCount * (double)100d);
 
-                    foreach (var group in itemCounts.Take(20))
+                    foreach (var group in itemCounts.Take(pageLimit))
                     {
                         table.Rows.Add(group.Key, group.Value, CalculatePercentage(group.Value) + "%");
                     }
 
-                    var remaining = itemCounts.Skip(20).Sum(x => x.Value);
+                    var remaining = itemCounts.Skip(pageLimit).Sum(x => x.Value);
                     if (remaining > 0)
                     {
                         table.Rows.Add("Other", remaining, CalculatePercentage(remaining) + "%");
