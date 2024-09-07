@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -22,6 +21,12 @@ namespace Ae.Dns.Console
 {
     public sealed class Startup
     {
+        private static readonly string MINIMAL_CSS = 
+            "<style>" +
+            "form{display:inline;}" +
+            "body{background-color:Canvas;color:CanvasText;color-scheme:light dark;font-family:sans-serif;}" +
+            "</style>";
+
         public void Configure(IApplicationBuilder app)
         {
             MeterListener meterListener = new()
@@ -123,6 +128,7 @@ namespace Ae.Dns.Console
 
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync(MINIMAL_CSS);
 
                     await context.Response.WriteAsync($"<h1>{resolverCache.Name}</h1>");
                     await context.Response.WriteAsync($"<p>Cached Objects = {cacheEntries.Count()}</p>");
@@ -185,6 +191,7 @@ namespace Ae.Dns.Console
 
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync(MINIMAL_CSS);
 
                     await context.Response.WriteAsync($"<h1>Captures</h1>");
                     await context.Response.WriteAsync($"<p>Captures are {(captureClient.IsEnabled ? "on" : "off")}, captured = {captureClient.Captures.Count()}</p>");
@@ -223,6 +230,7 @@ namespace Ae.Dns.Console
 
                     context.Response.StatusCode = StatusCodes.Status200OK;
                     context.Response.ContentType = "text/html; charset=utf-8";
+                    await context.Response.WriteAsync(MINIMAL_CSS);
 
                     string CreateQueryString(string name, object? value)
                     {
@@ -422,7 +430,7 @@ namespace Ae.Dns.Console
                     await GroupToTable(filteredQueries.GroupBy(ServerFilter), "Server", "Hits");
 
                     var recentQueries = new DataTable { Columns = { "Timestamp", "Sender", "Duration", "Host", "Type", "Response" } };
-                    foreach (var dnsQuery in filteredQueries.Take(50))
+                    foreach (var dnsQuery in filteredQueries.Take(pageLimit))
                     {
                         recentQueries.Rows.Add(dnsQuery.Created, SenderFilter(dnsQuery), dnsQuery.Elapsed?.TotalSeconds.ToString("F"), HostSuffixFilter(dnsQuery.Query.Host), QueryTypeFilter(dnsQuery), ResponseFilter(dnsQuery));
                     }
