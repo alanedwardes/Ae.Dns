@@ -12,6 +12,12 @@ namespace Ae.Dns.Protocol.Zone
     public static class DnsZoneExtensions
     {
         /// <inheritdoc/>
+        public static bool IsValidHostname(string hostname)
+        {
+            return Regex.IsMatch(hostname, @"\s");
+        }
+
+        /// <inheritdoc/>
         public static string FromFormattedHost(this IDnsZone zone, string host)
         {
             if (host == "@")
@@ -31,7 +37,7 @@ namespace Ae.Dns.Protocol.Zone
         /// <inheritdoc/>
         public static string ToFormattedHost(this IDnsZone zone, string host)
         {
-            if (Regex.IsMatch(host, @"\s"))
+            if (!IsValidHostname(host))
             {
                 throw new InvalidOperationException($"Hostname '{host}' contains invalid characters");
             }
@@ -111,6 +117,11 @@ namespace Ae.Dns.Protocol.Zone
                 if (!rr.Host.ToString().EndsWith(zone.Origin))
                 {
                     return DnsResponseCode.NotZone;
+                }
+
+                if (!IsValidHostname(rr.Host))
+                {
+                    return DnsResponseCode.Refused;
                 }
 
                 if (rr.Class == DnsQueryClass.QCLASS_ANY)
