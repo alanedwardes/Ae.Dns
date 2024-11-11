@@ -14,7 +14,7 @@ namespace Ae.Dns.Protocol.Zone
         /// <inheritdoc/>
         public static bool IsValidHostname(string hostname)
         {
-            return Regex.IsMatch(hostname, @"\s");
+            return !Regex.IsMatch(hostname, @"\s");
         }
 
         /// <inheritdoc/>
