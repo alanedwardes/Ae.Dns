@@ -221,11 +221,15 @@ namespace Ae.Dns.Console
                 queryClient = new DnsStaticLookupClient(queryClient, staticLookupSources.ToArray());
             }
 
+            // Notify client for handling NOTIFY messages
+            var notifyClient = new DnsNotifyClient();
+
             // Route query and update operations as appropriate
             IDnsClient operationClient = new DnsOperationRouter(new Dictionary<DnsOperationCode, IDnsClient>
             {
                 { DnsOperationCode.QUERY, queryClient },
-                { DnsOperationCode.UPDATE, updateClient }
+                { DnsOperationCode.UPDATE, updateClient },
+                { DnsOperationCode.NOTIFY, notifyClient }
             });
 
             // Track metrics last
