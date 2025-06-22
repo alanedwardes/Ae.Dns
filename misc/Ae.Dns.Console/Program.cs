@@ -1,4 +1,4 @@
-﻿using Ae.Dns.Client;
+using Ae.Dns.Client;
 using Ae.Dns.Client.Filters;
 using Ae.Dns.Client.Lookup;
 using Ae.Dns.Metrics.InfluxDb;
@@ -205,7 +205,7 @@ namespace Ae.Dns.Console
                             using var client = new DnsUdpClient(IPAddress.Parse(secondary));
                             var answer = await client.Query(DnsQueryFactory.CreateNotify(dnsZone.Origin), CancellationToken.None);
                             selfLogger.LogInformation("Sent NOTIFY to secondary {Secondary} for zone {ZoneName} ({RecordCount} records), got response {Answer}", secondary, dnsZone.Origin, dnsZone.Records.Count, answer);
-                        });
+                        }).ToArray();
                     };
                     updateClient = ActivatorUtilities.CreateInstance<DnsZoneUpdateClient>(provider, dnsZone);
                 }
