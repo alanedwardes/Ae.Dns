@@ -185,44 +185,70 @@ namespace Ae.Dns.Console
             }
 
             IDnsClient updateClient = DnsNotImplementedClient.Instance;
+            IDnsClient notifyClient = DnsNotImplementedClient.Instance;
 
-            if (dnsConfiguration.UpdateZoneName != null)
+            foreach (var (zoneName, zoneConfiguration) in dnsConfiguration.Zones)
             {
                 var dnsZone = new SingleWriterDnsZone();
-                var zoneFile = $"{dnsConfiguration.UpdateZoneName}.zone";
+                DnsZoneSerializer.DeserializeZone(dnsZone, File.ReadAllText(zoneConfiguration.File));
+                selfLogger.LogInformation("Loaded {RecordCount} records from zone file {ZoneFile}", dnsZone.Records.Count, zoneConfiguration.File);
 
-                if (File.Exists(zoneFile))
+                if (zoneConfiguration.AllowUpdate)
                 {
-                    // Load the existing zone file
-                    DnsZoneSerializer.DeserializeZone(dnsZone, File.ReadAllText(zoneFile));
-                    selfLogger.LogInformation("Loaded {RecordCount} records from zone file {ZoneFile}", dnsZone.Records.Count, zoneFile);
+                    dnsZone.ZoneUpdated = async zone =>
+                    {
+                        await File.WriteAllTextAsync(zoneConfiguration.File, DnsZoneSerializer.SerializeZone(zone));
+
+                        foreach (var secondary in zoneConfiguration.Secondaries)
+                        {
+                            using var client = new DnsUdpClient(IPAddress.Parse(secondary));
+                            var answer = await client.Query(DnsQueryFactory.CreateNotify(dnsZone.Origin), CancellationToken.None);
+                            answer.EnsureSuccessResponseCode();
+                            selfLogger.LogInformation("Sent NOTIFY to secondary {Secondary} for zone {ZoneName}", secondary, zoneName);
+                        }
+                    };
+                    updateClient = ActivatorUtilities.CreateInstance<DnsZoneUpdateClient>(provider, dnsZone);
                 }
-                else
+
+                if (zoneConfiguration.AllowQuery)
                 {
-                    // Set some defaults for the new zone
-                    dnsZone.Origin = dnsConfiguration.UpdateZoneName;
-                    dnsZone.DefaultTtl = TimeSpan.FromHours(1);
-                    selfLogger.LogInformation("Created new zone backed by {ZoneFile}", zoneFile);
+                    queryClient = new DnsZoneClient(queryClient, dnsZone);
+                    staticLookupSources.Add(new DnsZoneLookupSource(dnsZone));
                 }
 
-                // Update the file when the zone is updated
-                dnsZone.ZoneUpdated = async zone => await File.WriteAllTextAsync(zoneFile, DnsZoneSerializer.SerializeZone(zone));
+                async Task UpdateZoneFromPrimary(string primary)
+                {
+                    selfLogger.LogInformation("Updating zone {ZoneName} from primary {Primary}", zoneName, primary);
+                    using var client = new DnsTcpClient(IPAddress.Parse(primary));
+                    var answer = await client.Query(DnsQueryFactory.CreateQuery(zoneName, DnsQueryType.IXFR), CancellationToken.None);
+                    answer.EnsureSuccessResponseCode();
+                    selfLogger.LogInformation("Received IXFR response with {RecordCount} records from {Primary}", answer.Answers.Count, primary);
 
-                // Replace the clients with clients for the zone
-                queryClient = new DnsZoneClient(queryClient, dnsZone);
-                updateClient = ActivatorUtilities.CreateInstance<DnsZoneUpdateClient>(provider, dnsZone);
+                    await dnsZone.Update(() =>
+                    {
+                        dnsZone.Records = answer.Answers.Take(answer.Answers.Count - 1).ToList();
+                        return Task.CompletedTask;
+                    });
 
-                // Add the zone file as a source of automatic reverse lookups
-                staticLookupSources.Add(new DnsZoneLookupSource(dnsZone));
+                    selfLogger.LogInformation("Updated zone {ZoneName} with {RecordCount} records from {Primary}", zoneName, dnsZone.Records.Count, primary);
+                }
+
+                // Only one primary is supported for now
+                foreach (var primary in zoneConfiguration.Primaries.Take(1))
+                {
+                    await UpdateZoneFromPrimary(primary);
+
+                    notifyClient = new DnsNotifyClient(async message =>
+                    {
+                        await UpdateZoneFromPrimary(primary);
+                    });
+                }
             }
 
             if (staticLookupSources.Count > 0)
             {
                 queryClient = new DnsStaticLookupClient(queryClient, staticLookupSources.ToArray());
             }
-
-            // Notify client for handling NOTIFY messages
-            var notifyClient = new DnsNotifyClient();
 
             // Route query and update operations as appropriate
             IDnsClient operationClient = new DnsOperationRouter(new Dictionary<DnsOperationCode, IDnsClient>

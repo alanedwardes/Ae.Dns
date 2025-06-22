@@ -45,6 +45,29 @@ namespace Ae.Dns.Protocol
         }
 
         /// <summary>
+        /// Create a DNS notify message for the specified zone.
+        /// </summary>
+        /// <param name="zone"></param>
+        /// <returns></returns>
+        public static DnsMessage CreateNotify(string zone)
+        {
+            return new DnsMessage
+            {
+                Header = new DnsHeader
+                {
+                    Id = GenerateId(),
+                    Host = zone,
+                    AuthoritativeAnswer = true,
+                    QueryType = DnsQueryType.SOA,
+                    QueryClass = DnsQueryClass.IN,
+                    OperationCode = DnsOperationCode.NOTIFY,
+                    QuestionCount = 1,
+                    RecursionDesired = true
+                }
+            };
+        }
+
+        /// <summary>
         /// Clone the <see cref="DnsHeader"/> to a new object.
         /// </summary>
         /// <param name="header"></param>

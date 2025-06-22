@@ -32,7 +32,17 @@
     // Host files to monitor for changes and incorporate into DNS lookups
     // For example: "C:\\Windows\\System32\\drivers\\etc\\hosts"
   ],
-  "updateZoneName": "ae.dns",
+  "zones": {
+    "ae.dns": {
+      "file": "ae.dns.zone",
+      "allowQuery": true,
+      "allowUpdate": true,
+      // If this is a secondary, set the primary to obtain the zone from
+      //"primaries": ["1.2.3.4"],
+      // If this is a primary, set the secondaries to send notifications to
+      //"secondaries": ["1.2.3.5", "1.2.3.6"]
+    }
+  },
   "clientGroups": {
     // When racing each upstream, pick one client from each group
     // for redundancy. Optional section - if omitted, clients are
