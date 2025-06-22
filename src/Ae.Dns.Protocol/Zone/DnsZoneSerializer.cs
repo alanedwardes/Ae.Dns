@@ -81,6 +81,10 @@ namespace Ae.Dns.Protocol.Zone
                 var record = new DnsResourceRecord();
                 DeserializeRecord(record, result, line);
                 result.Records.Add(record);
+
+                // Reset state
+                spillover = false;
+                spillage = null;
             }
         }
 

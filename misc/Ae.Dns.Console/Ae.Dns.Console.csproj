@@ -28,7 +28,7 @@
 		<None Update="config.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="ae.dns.zone">
+		<None Update="*.zone">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
