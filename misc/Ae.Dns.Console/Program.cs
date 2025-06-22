@@ -220,9 +220,9 @@ namespace Ae.Dns.Console
                 {
                     selfLogger.LogInformation("Updating zone {ZoneName} from primary {Primary}", dnsZone.Origin, primary);
                     using var client = new DnsTcpClient(IPAddress.Parse(primary));
-                    var answer = await client.Query(DnsQueryFactory.CreateQuery(dnsZone.Origin, DnsQueryType.IXFR), CancellationToken.None);
+                    var answer = await client.Query(DnsQueryFactory.CreateQuery(dnsZone.Origin, DnsQueryType.AXFR), CancellationToken.None);
                     answer.EnsureSuccessResponseCode();
-                    selfLogger.LogInformation("Received IXFR response with {RecordCount} records from {Primary}", answer.Answers.Count, primary);
+                    selfLogger.LogInformation("Received AXFR response with {RecordCount} records from {Primary}", answer.Answers.Count, primary);
 
                     await dnsZone.Update(() =>
                     {
