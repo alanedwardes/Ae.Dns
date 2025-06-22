@@ -230,6 +230,7 @@ namespace Ae.Dns.Console
                         return Task.CompletedTask;
                     });
 
+                    await File.WriteAllTextAsync(zoneConfiguration.File, DnsZoneSerializer.SerializeZone(dnsZone));
                     selfLogger.LogInformation("Updated zone {ZoneName} with {RecordCount} records from {Primary}", dnsZone.Origin, dnsZone.Records.Count, primary);
                 }
 
