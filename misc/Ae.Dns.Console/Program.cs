@@ -199,13 +199,13 @@ namespace Ae.Dns.Console
                     {
                         await File.WriteAllTextAsync(zoneConfiguration.File, DnsZoneSerializer.SerializeZone(zone));
 
-                        foreach (var secondary in zoneConfiguration.Secondaries)
+                        // Fire and forget NOTIFY to secondaries
+                        var _ = zoneConfiguration.Secondaries.Select(async secondary =>
                         {
                             using var client = new DnsUdpClient(IPAddress.Parse(secondary));
                             var answer = await client.Query(DnsQueryFactory.CreateNotify(dnsZone.Origin), CancellationToken.None);
-                            answer.EnsureSuccessResponseCode();
-                            selfLogger.LogInformation("Sent NOTIFY to secondary {Secondary} for zone {ZoneName}", secondary, dnsZone.Origin);
-                        }
+                            selfLogger.LogInformation("Sent NOTIFY to secondary {Secondary} for zone {ZoneName} ({RecordCount} records), got response {Answer}", secondary, dnsZone.Origin, dnsZone.Records.Count, answer);
+                        });
                     };
                     updateClient = ActivatorUtilities.CreateInstance<DnsZoneUpdateClient>(provider, dnsZone);
                 }
