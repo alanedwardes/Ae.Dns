@@ -14,7 +14,7 @@ namespace Ae.Dns.Console
         public string[] HostFiles { get; set; } = [];
         public string? UpdateZoneName { get; set; }
         public Dictionary<string, string[]> ClientGroups { get; set; } = new Dictionary<string, string[]>();
-        public Dictionary<string, DnsZoneConfiguration> Zones { get; set; } = new Dictionary<string, DnsZoneConfiguration>();
+        public DnsZoneConfiguration[] Zones { get; set; } = [];
     }
 
     public sealed class DnsZoneConfiguration

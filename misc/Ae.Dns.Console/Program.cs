@@ -187,7 +187,7 @@ namespace Ae.Dns.Console
             IDnsClient updateClient = DnsNotImplementedClient.Instance;
             IDnsClient notifyClient = DnsNotImplementedClient.Instance;
 
-            foreach (var (zoneName, zoneConfiguration) in dnsConfiguration.Zones)
+            foreach (var zoneConfiguration in dnsConfiguration.Zones)
             {
                 var dnsZone = new SingleWriterDnsZone();
                 DnsZoneSerializer.DeserializeZone(dnsZone, File.ReadAllText(zoneConfiguration.File));
@@ -204,7 +204,7 @@ namespace Ae.Dns.Console
                             using var client = new DnsUdpClient(IPAddress.Parse(secondary));
                             var answer = await client.Query(DnsQueryFactory.CreateNotify(dnsZone.Origin), CancellationToken.None);
                             answer.EnsureSuccessResponseCode();
-                            selfLogger.LogInformation("Sent NOTIFY to secondary {Secondary} for zone {ZoneName}", secondary, zoneName);
+                            selfLogger.LogInformation("Sent NOTIFY to secondary {Secondary} for zone {ZoneName}", secondary, dnsZone.Origin);
                         }
                     };
                     updateClient = ActivatorUtilities.CreateInstance<DnsZoneUpdateClient>(provider, dnsZone);
@@ -218,9 +218,9 @@ namespace Ae.Dns.Console
 
                 async Task UpdateZoneFromPrimary(string primary)
                 {
-                    selfLogger.LogInformation("Updating zone {ZoneName} from primary {Primary}", zoneName, primary);
+                    selfLogger.LogInformation("Updating zone {ZoneName} from primary {Primary}", dnsZone.Origin, primary);
                     using var client = new DnsTcpClient(IPAddress.Parse(primary));
-                    var answer = await client.Query(DnsQueryFactory.CreateQuery(zoneName, DnsQueryType.IXFR), CancellationToken.None);
+                    var answer = await client.Query(DnsQueryFactory.CreateQuery(dnsZone.Origin, DnsQueryType.IXFR), CancellationToken.None);
                     answer.EnsureSuccessResponseCode();
                     selfLogger.LogInformation("Received IXFR response with {RecordCount} records from {Primary}", answer.Answers.Count, primary);
 
@@ -230,7 +230,7 @@ namespace Ae.Dns.Console
                         return Task.CompletedTask;
                     });
 
-                    selfLogger.LogInformation("Updated zone {ZoneName} with {RecordCount} records from {Primary}", zoneName, dnsZone.Records.Count, primary);
+                    selfLogger.LogInformation("Updated zone {ZoneName} with {RecordCount} records from {Primary}", dnsZone.Origin, dnsZone.Records.Count, primary);
                 }
 
                 // Only one primary is supported for now
