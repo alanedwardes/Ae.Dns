@@ -42,11 +42,26 @@ namespace Ae.Dns.Client
 
             if (query.Header.QueryType == DnsQueryType.AXFR)
             {
+                var soaRecord = _dnsZone.Records.SingleOrDefault(x => x.Type == DnsQueryType.SOA);
+                if (soaRecord == null)
+                {
+                    return DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NXDomain, ToString());
+                }
+
+                var records = _dnsZone.Records
+                    .Where(x => x.Type != DnsQueryType.SOA)
+                    .ToList();
+
+                // SOA must start and end answers
+                // See https://datatracker.ietf.org/doc/html/rfc5936#section-2.2
+                records.Insert(0, soaRecord);
+                records.Insert(records.Count, soaRecord);
+
                 var answer = DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NoError, ToString());
                 answer.Header.AuthoritativeAnswer = true;
                 answer.Header.QuestionCount = 1;
-                answer.Header.AnswerRecordCount = (short)_dnsZone.Records.Count;
-                answer.Answers = _dnsZone.Records;
+                answer.Header.AnswerRecordCount = (short)records.Count;
+                answer.Answers = records;
                 return answer;
             }
 
