@@ -1,0 +1,10 @@
+$ORIGIN ae.dns.
+$TTL 3600
+ae.dns. 3600  IN  SOA   ns.ae.dns.  admin.ae.dns. (
+                                 2023062201 ; serial
+                                 7200       ; refresh (2 hours)
+                                 3600       ; retry (1 hour)
+                                 1209600    ; expire (2 weeks)
+                                 3600       ; minimum (1 hour)
+                                 )
+test1 3600 IN A 1.1.1.1

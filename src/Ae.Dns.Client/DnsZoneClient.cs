@@ -35,9 +35,19 @@ namespace Ae.Dns.Client
         public async Task<DnsMessage> Query(DnsMessage query, CancellationToken token = default)
         {
             // If this query is not relevant to us
-            if (!query.Header.Host.ToString().EndsWith(_dnsZone.Origin) || _dnsZone.Records.Count == 0)
+            if (!query.Header.Host.ToString().EndsWith(_dnsZone.Origin))
             {
                 return await _dnsClient.Query(query, token);
+            }
+
+            if (query.Header.QueryType == DnsQueryType.AXFR)
+            {
+                var answer = DnsMessageExtensions.CreateAnswerMessage(query, DnsResponseCode.NoError, ToString());
+                answer.Header.AuthoritativeAnswer = true;
+                answer.Header.QuestionCount = 1;
+                answer.Header.AnswerRecordCount = (short)_dnsZone.Records.Count;
+                answer.Answers = _dnsZone.Records;
+                return answer;
             }
 
             var relevantRecords = _dnsZone.Records

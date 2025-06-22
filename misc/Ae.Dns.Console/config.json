@@ -32,6 +32,7 @@
     // Host files to monitor for changes and incorporate into DNS lookups
     // For example: "C:\\Windows\\System32\\drivers\\etc\\hosts"
   ],
+  "updateZoneName": "ae.dns",
   "clientGroups": {
     // When racing each upstream, pick one client from each group
     // for redundancy. Optional section - if omitted, clients are
