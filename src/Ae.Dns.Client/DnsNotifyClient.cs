@@ -9,6 +9,7 @@ namespace Ae.Dns.Client
     /// <summary>
     /// A DNS client that recieves notifications from a DNS server.
     /// </summary>
+    [Obsolete("Experimental: May change significantly in the future")]
     public sealed class DnsNotifyClient : IDnsClient
     {
         private readonly Func<DnsMessage, Task> _notify;
