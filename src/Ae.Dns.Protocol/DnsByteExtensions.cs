@@ -99,8 +99,8 @@ namespace Ae.Dns.Protocol
                     break;
                 }
 
-                // Pointers are always 192 or more, because the first two bits are 1s
-                if (bytes.Span[offset] >= 192 && compressionPermitted)
+                // Loop in case a pointer points to another pointer
+                while (bytes.Span[offset] >= 192 && compressionPermitted)
                 {
                     if (!preCompressionOffset.HasValue)
                     {

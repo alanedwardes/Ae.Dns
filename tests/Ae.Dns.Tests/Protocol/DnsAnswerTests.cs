@@ -291,5 +291,33 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal("Ut dapibus magna nec ante euismod, ut ornare justo sagittis. Vestibulum at elit id arcu convallis vehicula. Sed ac odio non augue ornare tempus sit amet vitae ligula.", answers[11]);
             Assert.Equal("Suspendisse ornare porttitor massa ac tempor. Fusce eu cursus quam. Aliquam elit libero, dapibus eu accumsan et, accumsan sit amet ipsum. Ut consectetur et odio ut tempor.", answers[12]);
         }
+
+        [Fact]
+        public void ReadAnswer18()
+        {
+            var value = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Answer18);
+
+            Assert.Equal(DnsQueryClass.IN, value.Header.QueryClass);
+            Assert.Equal(DnsQueryType.A, value.Header.QueryType);
+            Assert.Equal(4, value.Header.AnswerRecordCount);
+            Assert.Equal(0, value.Header.AdditionalRecordCount);
+            Assert.Equal(1, value.Header.QuestionCount);
+            Assert.Equal(4, value.Answers.Count);
+            Assert.Equal("edge.microsoft.com", value.Header.Host);
+
+            var answers = value.Answers.Select(x => (x.Host, x.Resource)).ToArray();
+
+            Assert.Equal("edge.microsoft.com", answers[0].Host);
+            Assert.Equal("edge-microsoft-com.ax-0002.ax-msedge.net", ((DnsDomainResource)answers[0].Resource).Domain);
+
+            Assert.Equal("edge-microsoft-com.ax-0002.ax-msedge.net", answers[1].Host);
+            Assert.Equal("ax-0002.ax-msedge.net", ((DnsDomainResource)answers[1].Resource).Domain);
+
+            Assert.Equal("ax-0002.ax-msedge.net", answers[2].Host);
+            Assert.Equal("150.171.27.11", ((DnsIpAddressResource)answers[2].Resource).IPAddress.ToString());
+
+            Assert.Equal("ax-0002.ax-msedge.net", answers[3].Host);
+            Assert.Equal("150.171.28.11", ((DnsIpAddressResource)answers[3].Resource).IPAddress.ToString());
+        }
     }
 }
