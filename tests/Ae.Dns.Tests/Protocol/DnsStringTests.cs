@@ -33,14 +33,6 @@ namespace Ae.Dns.Tests.Protocol
         }
 
         [Theory]
-        [InlineData(new byte[] { 0xC0, 0x00 })]
-        public void InfiniteLoopTests(byte[] input)
-        {
-            var offset = 0;
-            Assert.Throws<InvalidOperationException>(() => DnsByteExtensions.ReadString(input, ref offset, true));
-        }
-
-        [Theory]
         [InlineData(3, 50, new byte[] { 216, 58, 210, 206 })]
         [InlineData(4, 118, new byte[] { 143, 204, 191, 46 })]
         [InlineData(4, 134, new byte[] { 143, 204, 191, 37 })]
@@ -50,6 +42,13 @@ namespace Ae.Dns.Tests.Protocol
         {
             var value = DnsByteExtensions.ReadBytes(SampleDnsPackets.Answers[example - 1], 4, ref offset);
             Assert.Equal(expected, value.ToArray());
+        }
+
+        [Fact]
+        public void ReadInfiniteLoop()
+        {
+            var offset = 0;
+            Assert.Throws<InvalidOperationException>(() => DnsByteExtensions.ReadString(new byte[] { 0xC0, 0x00 }, ref offset, true));
         }
     }
 }
