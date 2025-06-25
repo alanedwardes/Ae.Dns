@@ -1,4 +1,5 @@
-﻿using Ae.Dns.Protocol;
+﻿using System;
+using Ae.Dns.Protocol;
 using Xunit;
 
 namespace Ae.Dns.Tests.Protocol
@@ -29,6 +30,14 @@ namespace Ae.Dns.Tests.Protocol
         {
             var value = DnsByteExtensions.ReadLabels(SampleDnsPackets.Answers[example - 1], ref offset);
             Assert.Equal(expected, value);
+        }
+
+        [Theory]
+        [InlineData(new byte[] { 0xC0, 0x00 })]
+        public void InfiniteLoopTests(byte[] input)
+        {
+            var offset = 0;
+            Assert.Throws<InvalidOperationException>(() => DnsByteExtensions.ReadString(input, ref offset, true));
         }
 
         [Theory]

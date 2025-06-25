@@ -85,12 +85,15 @@ namespace Ae.Dns.Protocol
             return str;
         }
 
-        private static List<string> ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
+        internal static List<string> ReadString(ReadOnlyMemory<byte> bytes, ref int offset, bool compressionPermitted = true)
         {
             // Assume most labels consist of 3 parts
             var parts = new List<string>(3);
 
             int? preCompressionOffset = null;
+            // Track visited offsets to prevent infinite pointer loops
+            var visitedOffsets = new HashSet<int>();
+
             while (offset < bytes.Length)
             {
                 if (bytes.Span[offset] == 0)
@@ -108,7 +111,15 @@ namespace Ae.Dns.Protocol
                     }
 
                     // Read the 14 bit pointer as our new offset
-                    offset = ReadUInt16(bytes.Span[offset + 1], (byte)(bytes.Span[offset] & (1 << 6) - 1));
+                    int pointerOffset = ReadUInt16(bytes.Span[offset + 1], (byte)(bytes.Span[offset] & (1 << 6) - 1));
+
+                    // Detect pointer loops
+                    if (!visitedOffsets.Add(pointerOffset))
+                    {
+                        throw new InvalidOperationException("DNS label compression pointer loop detected.");
+                    }
+
+                    offset = pointerOffset;
                 }
 
                 parts.Add(ReadStringWithLengthPrefix(bytes, ref offset));
