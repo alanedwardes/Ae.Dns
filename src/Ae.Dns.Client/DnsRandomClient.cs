@@ -1,5 +1,4 @@
 ﻿using Ae.Dns.Protocol;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +18,6 @@ namespace Ae.Dns.Client
         /// Create a new random DNS client selector using the specified <see cref="IDnsClient"/> instances to delegate to.
         /// </summary>
         /// <param name="dnsClients">The enumerable of DNS clients to use.</param>
-        [ActivatorUtilitiesConstructor]
         public DnsRandomClient(IEnumerable<IDnsClient> dnsClients) => _dnsClients = dnsClients.ToList();
 
         /// <summary>

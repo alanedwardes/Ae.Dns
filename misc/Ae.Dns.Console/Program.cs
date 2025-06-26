@@ -128,7 +128,7 @@ namespace Ae.Dns.Console
             }
             else
             {
-                queryClient = ActivatorUtilities.CreateInstance<DnsRandomClient>(provider, upstreams.AsEnumerable());
+                queryClient = new DnsRandomClient(upstreams);
             }
 
             queryClient = ActivatorUtilities.CreateInstance<DnsRebindMitigationClient>(provider, queryClient);
