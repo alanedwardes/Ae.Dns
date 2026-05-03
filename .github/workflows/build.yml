@@ -25,4 +25,4 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --framework net8.0 --no-restore --verbosity normal
+      run: dotnet test --framework net10.0 --no-restore --verbosity normal
