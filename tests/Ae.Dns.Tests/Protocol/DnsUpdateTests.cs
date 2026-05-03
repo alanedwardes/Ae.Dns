@@ -1,4 +1,5 @@
 ﻿using Ae.Dns.Protocol;
+using Ae.Dns.Protocol.Enums;
 using Ae.Dns.Protocol.Records;
 using Ae.Dns.Protocol.Zone;
 using System.Collections.Generic;
@@ -111,6 +112,16 @@ namespace Ae.Dns.Tests.Protocol
             Assert.Equal(2, message.Nameservers.Count);
             Assert.Equal("nuc 3600 IN A 192.168.178.5", DnsZoneSerializer.SerializeRecord(message.Nameservers[0], zone));
             Assert.Equal("nuc 3600 IN DHCID (AAIBpsbVTmzjTQGmnXepaN82N79Wi1P9aDlYUNirVwBnu30=)", DnsZoneSerializer.SerializeRecord(message.Nameservers[1], zone));
+        }
+
+        [Fact]
+        public void UpdateResponsePreservesOperationCode()
+        {
+            var message = DnsByteExtensions.FromBytes<DnsMessage>(SampleDnsPackets.Update1);
+            Assert.Equal(DnsOperationCode.UPDATE, message.Header.OperationCode);
+
+            var response = message.CreateAnswerMessage(DnsResponseCode.NoError, "test");
+            Assert.Equal(DnsOperationCode.UPDATE, response.Header.OperationCode);
         }
     }
 }

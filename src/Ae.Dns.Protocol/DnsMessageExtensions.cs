@@ -149,6 +149,7 @@ namespace Ae.Dns.Protocol
                 QueryClass = query.Header.QueryClass,
                 QuestionCount = query.Header.QuestionCount,
                 QueryType = query.Header.QueryType,
+                OperationCode = query.Header.OperationCode,
                 Tags = { { "Resolver", resolver } }
             }
         };
