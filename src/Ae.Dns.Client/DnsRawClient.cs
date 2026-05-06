@@ -38,7 +38,9 @@ namespace Ae.Dns.Client
             DnsMessage query;
             try
             {
-                query = DnsByteExtensions.FromBytes<DnsMessage>(queryBuffer);
+                var offset = 0;
+                query = new DnsMessage();
+                query.ReadBytes(queryBuffer, ref offset);
             }
             catch (Exception e)
             {
