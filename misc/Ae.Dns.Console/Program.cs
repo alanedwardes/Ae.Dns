@@ -187,11 +187,15 @@ namespace Ae.Dns.Console
             IDnsClient updateClient = DnsNotImplementedClient.Instance;
             IDnsClient notifyClient = DnsNotImplementedClient.Instance;
 
+            var zoneEntries = new List<ZoneRegistry.ZoneEntry>();
+
             foreach (var zoneConfiguration in dnsConfiguration.Zones)
             {
                 var dnsZone = new SingleWriterDnsZone();
                 DnsZoneSerializer.DeserializeZone(dnsZone, File.ReadAllText(zoneConfiguration.File));
                 selfLogger.LogInformation("Loaded {RecordCount} records from zone file {ZoneFile}", dnsZone.Records.Count, zoneConfiguration.File);
+
+                zoneEntries.Add(new ZoneRegistry.ZoneEntry { Zone = dnsZone, FilePath = zoneConfiguration.File });
 
                 if (zoneConfiguration.AllowUpdate)
                 {
@@ -300,6 +304,7 @@ namespace Ae.Dns.Console
                     x.AddSingleton(mainCache);
                     x.AddSingleton<IDnsMiddlewareConfig>(new DnsMiddlewareConfig());
                     x.AddSingleton(operationClient);
+                    x.AddSingleton(new ZoneRegistry(zoneEntries));
                 });
 
             await Task.WhenAll(
