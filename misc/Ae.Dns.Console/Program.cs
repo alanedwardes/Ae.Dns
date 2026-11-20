@@ -241,7 +241,24 @@ namespace Ae.Dns.Console
                 // Only one primary is supported for now
                 foreach (var primary in zoneConfiguration.Primaries.Take(1))
                 {
-                    await UpdateZoneFromPrimary(primary);
+                    _ = Task.Run(async () =>
+                    {
+                        var delay = TimeSpan.FromSeconds(5);
+                        while (true)
+                        {
+                            try
+                            {
+                                await UpdateZoneFromPrimary(primary);
+                                return;
+                            }
+                            catch (Exception ex)
+                            {
+                                selfLogger.LogWarning(ex, "Failed to update zone {ZoneName} from primary {Primary}, retrying in {Delay}", dnsZone.Origin, primary, delay);
+                                await Task.Delay(delay);
+                                delay = TimeSpan.FromSeconds(Math.Min(delay.TotalSeconds * 2, 300));
+                            }
+                        }
+                    });
 
                     notifyClient = new DnsNotifyClient(async message =>
                     {
